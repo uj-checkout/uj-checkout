@@ -644,21 +644,30 @@ function clearCash(){DENOMS.forEach(d=>cc[d.v]=0);renderCash();}
 function calcResult(){
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  // 今日零用金池 = 前日餘額 + 今日清點金額（含零用金） - 3000（備用金）- 今日支出
-  // 簡化：池 = prevPool + (cashT - FUND) - expT
-  // 但 cashT 本身包含零用金3000，所以：
-  // 今日池 = cashT - expT（清點扣支出），包回 = MAX(0, 今日池 - 3000)
-  // 零用金餘額顯示 = 前日池 + 今日收入 - 今日支出
-  const todayIncome = cashT - FUND; // 今日純收入（清點扣備用金）
-  const pool = prevPool + todayIncome - expT; // 累積零用金池
-  const ret=Math.max(0, pool-FUND); // 超過3000的包回
-  const deficit=Math.max(0, FUND-pool); // 虧空
+  const hasCounted = cashT > 0; // 是否已清點
 
-  // 更新零用金餘額卡片（顯示累積池餘額）
+  let pool, todayIncome, ret, deficit;
+
+  if(!hasCounted){
+    // 尚未清點：只顯示前日餘額，支出先從零用金扣
+    pool = prevPool - expT;
+    todayIncome = 0;
+    ret = 0;
+    deficit = Math.max(0, FUND - pool);
+  } else {
+    // 已清點：完整計算
+    todayIncome = cashT - FUND; // 今日純收入（清點扣備用金）
+    pool = prevPool + todayIncome - expT; // 累積零用金池
+    ret = Math.max(0, pool - FUND); // 包回金額
+    deficit = Math.max(0, FUND - pool); // 虧空
+  }
+
+  // 更新零用金餘額卡片
   const mpool=$('m-pool');
   if(mpool){
-    mpool.textContent=fmt(Math.min(pool,FUND)); // 最多顯示3000，超出部分是包回
-    mpool.style.color=pool<FUND?'#e08080':'rgba(255,255,255,.9)';
+    const displayPool = Math.min(pool, FUND);
+    mpool.textContent = fmt(displayPool);
+    mpool.style.color = pool < FUND ? '#e08080' : 'rgba(255,255,255,.9)';
   }
   $('m-exp').textContent=fmt(expT);
   $('m-ret').textContent=fmt(ret);
@@ -671,18 +680,24 @@ function calcResult(){
 
   // 更新結果框
   const box=$('result');
-  if(deficit>0){
+  if(!hasCounted){
+    box.className = deficit > 0 ? 'result warn' : 'result';
+    $('r-tit').textContent = '尚未清點現金';
+    $('r-hint').textContent = deficit > 0
+      ? `前日虧空 ${fmt(deficit)}，請清點後結帳`
+      : `前日餘額 ${fmt(prevPool)}，請清點後結帳`;
+  } else if(deficit > 0){
     box.className='result warn';
     $('r-tit').textContent='今日包回 $0';
     $('r-hint').textContent=`零用金餘額 ${fmt(pool)}，虧空 ${fmt(deficit)} 待次日補回`;
-  }else if(ret===0){
+  } else if(ret===0){
     box.className='result';
     $('r-tit').textContent='今日包回金額';
-    $('r-hint').textContent=`零用金剛好 ${fmt(pool)}，收支平衡`;
-  }else{
+    $('r-hint').textContent=`零用金剛好 ${fmt(FUND)}，收支平衡`;
+  } else {
     box.className='result';
     $('r-tit').textContent='今日包回金額';
-    $('r-hint').textContent=`前日餘額 ${fmt(prevPool)} + 今日收入 ${fmt(todayIncome)} − 支出 ${fmt(expT)}`;
+    $('r-hint').textContent=`前日餘額 ${fmt(prevPool)} + 收入 ${fmt(todayIncome)} − 支出 ${fmt(expT)}`;
   }
 }
 
