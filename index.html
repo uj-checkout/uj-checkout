@@ -451,6 +451,7 @@ const DENOMS=[
 let db=null, currentStore=null, selStore=null;
 let expenses=[];
 let cc={};
+let prevPool=FUND; // 前一日零用金池餘額，預設3000
 DENOMS.forEach(d=>cc[d.v]=0);
 
 const $=id=>document.getElementById(id);
@@ -561,8 +562,44 @@ async function enterApp(key){
   showLoad('連線中…');
   const ok=await connectDB();
   hideLoad();
-  if(ok)await loadHistory();
-  else toast('⚠ 離線模式，資料庫連線失敗');
+  if(ok){
+    await loadPrevPool();
+    await loadHistory();
+  }else toast('⚠ 離線模式，資料庫連線失敗');
+}
+
+// 載入前一日零用金池餘額
+async function loadPrevPool(){
+  if(!db||!currentStore)return;
+  const today=new Date().toISOString().slice(0,10);
+  try{
+    // 抓今天以前最近一筆紀錄
+    const {data,error}=await db.from('daily_records').select('date,cash_total,total_expense,return_amount,deficit')
+      .eq('store',currentStore)
+      .lt('date',today)
+      .order('date',{ascending:false})
+      .limit(1);
+    if(error)throw error;
+    if(data&&data.length>0){
+      const r=data[0];
+      // 前一日池 = 清點 - 支出（若有虧空則 < 3000，若有包回則 = 3000）
+      const lastPool=Number(r.cash_total||0)-Number(r.total_expense||0);
+      // 若上次包回後，池應重置為 3000（包回代表多的已收走，池留 3000）
+      // 若有虧空（pool < 3000），則今天繼承虧空狀態
+      prevPool=Math.min(lastPool, FUND); // 最多3000，虧空則帶入虧空值
+    } else {
+      prevPool=FUND; // 沒有歷史紀錄，從3000開始
+    }
+    // 更新零用金餘額卡片顯示前日結餘
+    const mpool=$('m-pool');
+    if(mpool){
+      mpool.textContent=fmt(prevPool);
+      mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
+    }
+  }catch(e){
+    console.error('loadPrevPool error:',e);
+    prevPool=FUND;
+  }
 }
 
 // Cash
@@ -607,15 +644,21 @@ function clearCash(){DENOMS.forEach(d=>cc[d.v]=0);renderCash();}
 function calcResult(){
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const pool=cashT-expT;           // 零用金餘額（清點 - 支出）
-  const ret=Math.max(0,pool-FUND); // 包回金額（零用金池超出3000的部分）
-  const deficit=Math.max(0,FUND-pool); // 虧空金額
+  // 今日零用金池 = 前日餘額 + 今日清點金額（含零用金） - 3000（備用金）- 今日支出
+  // 簡化：池 = prevPool + (cashT - FUND) - expT
+  // 但 cashT 本身包含零用金3000，所以：
+  // 今日池 = cashT - expT（清點扣支出），包回 = MAX(0, 今日池 - 3000)
+  // 零用金餘額顯示 = 前日池 + 今日收入 - 今日支出
+  const todayIncome = cashT - FUND; // 今日純收入（清點扣備用金）
+  const pool = prevPool + todayIncome - expT; // 累積零用金池
+  const ret=Math.max(0, pool-FUND); // 超過3000的包回
+  const deficit=Math.max(0, FUND-pool); // 虧空
 
-  // 更新零用金餘額卡片
+  // 更新零用金餘額卡片（顯示累積池餘額）
   const mpool=$('m-pool');
   if(mpool){
-    mpool.textContent=fmt(pool);
-    mpool.style.color=pool<FUND?'#e08080':pool>FUND?'#7aab85':'rgba(255,255,255,.9)';
+    mpool.textContent=fmt(Math.min(pool,FUND)); // 最多顯示3000，超出部分是包回
+    mpool.style.color=pool<FUND?'#e08080':'rgba(255,255,255,.9)';
   }
   $('m-exp').textContent=fmt(expT);
   $('m-ret').textContent=fmt(ret);
@@ -639,7 +682,7 @@ function calcResult(){
   }else{
     box.className='result';
     $('r-tit').textContent='今日包回金額';
-    $('r-hint').textContent=`零用金餘額 ${fmt(pool)} − 備用金 $3,000 = ${fmt(ret)}`;
+    $('r-hint').textContent=`前日餘額 ${fmt(prevPool)} + 今日收入 ${fmt(todayIncome)} − 支出 ${fmt(expT)}`;
   }
 }
 
@@ -821,9 +864,9 @@ async function saveDay(){
   if(!db){toast('⚠ 尚未連線資料庫');return;}
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const pool=cashT-expT;
-  const income=cashT-FUND; // 當日毛收入（清點-備用金）
-  const ret=Math.max(0,pool-FUND); // 實際包回
+  const income=cashT-FUND; // 今日純收入（清點扣備用金）
+  const pool=prevPool+income-expT; // 累積零用金池
+  const ret=Math.max(0,pool-FUND); // 包回金額
   const deficit=Math.max(0,FUND-pool); // 虧空
   const today=new Date().toISOString().slice(0,10);
   showLoad('儲存中…');
