@@ -424,6 +424,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 
   <div id="admin-his-list"><div class="empty">請選擇門市</div></div>
 
+  <!-- 區間匯款紀錄 -->
+  <div class="sh" style="margin-top:24px;"><span class="st">區間營收匯款紀錄</span><div class="sl"></div></div>
+  <div id="admin-tr-list"><div class="empty">請選擇門市</div></div>
+
 </div>
 
 <div class="load-ov" id="load-ov"><div class="spin"></div><div class="load-txt" id="load-txt">載入中</div></div>
@@ -1235,6 +1239,7 @@ async function enterAdminApp(){
 function adminSelectStore(key){
   adminStore=key;
   document.querySelectorAll('.store-tab').forEach(b=>b.classList.toggle('active',b.dataset.k===key));
+  $('admin-tr-list').innerHTML='<div class="empty">載入中…</div>';
   adminLoadHistory();
 }
 
@@ -1260,16 +1265,51 @@ async function adminLoadHistory(){
   const mm=String(adminMonth).padStart(2,'0');
   const lastDay=new Date(adminYear,adminMonth,0).getDate();
   const from=`${adminYear}-${mm}-01`;
-  const to=`${adminYear}-${mm}-${lastDay}`;
+  const to=`${adminYear}-${mm}-${String(lastDay).padStart(2,'0')}`;
   showLoad('載入中…');
   try{
-    const {data,error}=await db.from('daily_records').select('*')
-      .eq('store',adminStore).gte('date',from).lte('date',to)
-      .order('date',{ascending:true});
+    const [{data,error},{data:trData}]=await Promise.all([
+      db.from('daily_records').select('*')
+        .eq('store',adminStore).gte('date',from).lte('date',to)
+        .order('date',{ascending:true}),
+      db.from('transfer_records').select('*')
+        .eq('store',adminStore)
+        .lte('date_from',to).gte('date_to',from)
+        .order('date_from',{ascending:true})
+    ]);
     if(error)throw error;
     hideLoad();
     adminRenderHistory(data||[]);
-  }catch{hideLoad();toast('⚠ 載入失敗');}
+    adminRenderTransfers(trData||[]);
+  }catch(e){hideLoad();toast('⚠ 載入失敗：'+e.message);}
+}
+
+function adminRenderTransfers(rs){
+  const el=$('admin-tr-list');
+  if(!rs.length){el.innerHTML='<div class="empty">該月份尚無匯款紀錄</div>';return;}
+  const totalAmt=rs.reduce((s,r)=>s+Number(r.transfer_amt||0),0);
+  const totalIncome=rs.reduce((s,r)=>s+Number(r.range_income||0),0);
+  el.innerHTML=rs.map(r=>{
+    const fd=new Date(r.date_from+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
+    const td=new Date(r.date_to+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
+    const diff=Number(r.diff||0);
+    let diffTag='';
+    if(diff===0) diffTag=`<span class="tr-diff ok">✓ 相符</span>`;
+    else if(diff>0) diffTag=`<span class="tr-diff ov">多 ${fmt(diff)}</span>`;
+    else diffTag=`<span class="tr-diff un">少 ${fmt(-diff)}</span>`;
+    return`<div class="tr-item">
+      <div class="tr-dates">
+        <div class="td">💳 ${fd} ～ ${td}</div>
+        <div class="tm">區間應收回 ${fmt(r.range_income||0)}</div>
+      </div>
+      ${diffTag}
+      <span class="tr-amt">${fmt(r.transfer_amt||0)}</span>
+    </div>`;
+  }).join('')
+  +`<div class="tr-summary">
+    <span class="tr-sum-label">總匯款 / 總區間應收回</span>
+    <span class="tr-sum-val">${fmt(totalAmt)} / ${fmt(totalIncome)}</span>
+  </div>`;
 }
 
 function adminRenderHistory(rs){
