@@ -1297,10 +1297,13 @@ function adminRenderTransfers(rs){
     if(diff===0) diffTag=`<span class="tr-diff ok">✓ 相符</span>`;
     else if(diff>0) diffTag=`<span class="tr-diff ov">多 ${fmt(diff)}</span>`;
     else diffTag=`<span class="tr-diff un">少 ${fmt(-diff)}</span>`;
+    const createdDate=r.created_at
+      ? new Date(r.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '';
     return`<div class="tr-item">
       <div class="tr-dates">
         <div class="td">💳 ${fd} ～ ${td}</div>
-        <div class="tm">區間應收回 ${fmt(r.range_income||0)}</div>
+        <div class="tm">區間應收回 ${fmt(r.range_income||0)}${createdDate?' · 匯款時間 '+createdDate:''}</div>
       </div>
       ${diffTag}
       <span class="tr-amt">${fmt(r.transfer_amt||0)}</span>
@@ -1331,7 +1334,7 @@ function adminRenderHistory(rs){
     return`<div class="his-item">
       <div>
         <div class="his-d">${lbl}</div>
-        <div class="his-m">清點 ${fmt(r.cash_total||0)} · 支出 ${fmt(r.total_expense)} · 包回 ${fmt(r.return_amount)}${r.deficit>0?' · ⚠虧空'+fmt(r.deficit):''} · ${items}</div>
+        <div class="his-m">清點 ${fmt(r.cash_total||0)} · 支出 ${fmt(r.total_expense)} · 包回 ${fmt(r.return_amount)} · ${items}</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="his-r${neg?' neg':''}">${fmt(r.return_amount)}</div>
