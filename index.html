@@ -573,28 +573,31 @@ async function enterApp(key){
 }
 
 // 載入前一日零用金池餘額
+// 從最早一筆開始逐日累積，包回後重置為3000
 async function loadPrevPool(){
   if(!db||!currentStore)return;
   const today=new Date().toISOString().slice(0,10);
   try{
-    // 抓今天以前最近一筆紀錄
-    const {data,error}=await db.from('daily_records').select('date,cash_total,total_expense,return_amount,deficit')
+    const {data,error}=await db.from('daily_records')
+      .select('date,cash_total,total_expense')
       .eq('store',currentStore)
       .lt('date',today)
-      .order('date',{ascending:false})
-      .limit(1);
+      .order('date',{ascending:true});
     if(error)throw error;
     if(data&&data.length>0){
-      const r=data[0];
-      // 前一日池 = 清點 - 支出（若有虧空則 < 3000，若有包回則 = 3000）
-      const lastPool=Number(r.cash_total||0)-Number(r.total_expense||0);
-      // 若上次包回後，池應重置為 3000（包回代表多的已收走，池留 3000）
-      // 若有虧空（pool < 3000），則今天繼承虧空狀態
-      prevPool=Math.min(lastPool, FUND); // 最多3000，虧空則帶入虧空值
-    } else {
-      prevPool=FUND; // 沒有歷史紀錄，從3000開始
+      let pool=FUND;
+      data.forEach(r=>{
+        const cashT=Number(r.cash_total||0);
+        const expT=Number(r.total_expense||0);
+        const income=cashT-FUND;
+        pool=pool+income-expT;
+        const ret=Math.max(0,pool-FUND);
+        if(ret>0) pool=FUND; // 包回後池重置為3000
+      });
+      prevPool=pool;
+    }else{
+      prevPool=FUND;
     }
-    // 更新零用金餘額卡片顯示前日結餘
     const mpool=$('m-pool');
     if(mpool){
       mpool.textContent=fmt(prevPool);
