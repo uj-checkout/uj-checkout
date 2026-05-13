@@ -360,34 +360,21 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
     <div class="login-title">Urban Jungle</div>
     <div class="login-sub">下班結帳系統 3.0</div>
 
-    <!-- Tabs -->
-    <div class="login-tabs">
-      <div class="login-tab active" id="tab-manager" onclick="switchTab('manager')">店長 / 管理者</div>
-      <div class="login-tab" id="tab-staff" onclick="switchTab('staff')">夥伴登入</div>
+    <div style="margin-bottom:12px;">
+      <input id="login-username" type="text" placeholder="帳號"
+        style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:13px 16px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"/>
     </div>
-
-    <!-- Manager tab -->
-    <div id="panel-manager">
-      <div class="store-grid" id="store-grid"></div>
-      <div class="pw-wrap">
-        <input type="password" id="pw" placeholder="門市密碼" onkeydown="if(event.key==='Enter')doLogin()"/>
-        <button class="pw-eye" onclick="togglePw()">👁</button>
-      </div>
-    </div>
-
-    <!-- Staff tab -->
-    <div id="panel-staff" style="display:none;">
-      <div class="pw-wrap" style="margin-bottom:10px;">
-        <input type="text" id="staff-username" placeholder="帳號（如：uj-yang）" onkeydown="if(event.key==='Enter')$('staff-pw').focus()" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:11px 14px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
-      </div>
-      <div class="pw-wrap">
-        <input type="password" id="staff-pw" placeholder="密碼" onkeydown="if(event.key==='Enter')doStaffLogin()"/>
-        <button class="pw-eye" onclick="toggleStaffPw()">👁</button>
-      </div>
+    <div style="position:relative;margin-bottom:16px;">
+      <input id="login-pw" type="password" placeholder="密碼"
+        style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:13px 44px 13px 16px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;"
+        onkeydown="if(event.key==='Enter')doUnifiedLogin()"/>
+      <button onclick="toggleLoginPw()"
+        style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:16px;padding:4px;">👁</button>
     </div>
 
     <div class="login-err" id="lerr"></div>
-    <button class="btn-login" id="btn-login-main" onclick="doLogin()">登　入</button>
+    <button class="btn-login" onclick="doUnifiedLogin()">登　入</button>
   </div>
 </div>
 
@@ -765,8 +752,8 @@ function doLogout(){
   $('main').style.display='none';
   $('admin-main').style.display='none';
   $('login-ov').style.display='flex';
-  $('pw').value='';$('lerr').textContent='';selStore=null;
-  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('sel'));
+  $('login-username').value='';$('login-pw').value='';
+  $('lerr').textContent='';selStore=null;
 }
 
 async function enterApp(key){
@@ -1827,55 +1814,74 @@ async function confirmTopup(){
   }catch(e){ hideLoad(); toast('✗ 充值失敗：'+e.message); }
 }
 
-// ── Tab switching ─────────────────────────────────────────
-let loginTab='manager';
-
-function switchTab(tab){
-  loginTab=tab;
-  $('tab-manager').classList.toggle('active',tab==='manager');
-  $('tab-staff').classList.toggle('active',tab==='staff');
-  $('panel-manager').style.display=tab==='manager'?'block':'none';
-  $('panel-staff').style.display=tab==='staff'?'block':'none';
-  $('btn-login-main').onclick=tab==='manager'?doLogin:doStaffLogin;
-  $('lerr').textContent='';
-}
-
-function toggleStaffPw(){
-  const i=$('staff-pw');
+// ── Unified Login ──────────────────────────────────────────
+function toggleLoginPw(){
+  const i=$('login-pw');
   i.type=i.type==='password'?'text':'password';
 }
+// keep old toggles for compat
+function togglePw(){}
+function toggleStaffPw(){}
+function switchTab(){}
 
-// ── Staff Login ───────────────────────────────────────────
-async function doStaffLogin(){
-  const username=$('staff-username').value.trim().toLowerCase();
-  const pw=$('staff-pw').value;
+// ── Unified Login ──────────────────────────────────────────
+// Built-in manager accounts (store + admin)
+const BUILTIN_ACCOUNTS = {
+  'uj-tpe':   {type:'manager', store:'taipei',    display:'台北旗艦店'},
+  'uj-hsz':   {type:'manager', store:'hsinchu',   display:'新竹形象店'},
+  'uj-txg':   {type:'manager', store:'taichung',  display:'台中主題店'},
+  'uj-khh':   {type:'manager', store:'kaohsiung', display:'高雄概念店'},
+  'uj-admin': {type:'admin',   store:null,        display:'總覽管理'},
+};
+
+async function doUnifiedLogin(){
+  const username=$('login-username').value.trim().toLowerCase();
+  const pw=$('login-pw').value;
   if(!username||!pw){$('lerr').textContent='請填寫帳號和密碼';return;}
-  if(!db){
-    // DB not connected yet, connect first
+  $('lerr').textContent='';
+
+  // Check built-in accounts first (no DB needed)
+  if(BUILTIN_ACCOUNTS[username]){
+    if(pw!==username){$('lerr').textContent='密碼錯誤，請再試一次';$('login-pw').value='';return;}
+    const acct=BUILTIN_ACCOUNTS[username];
     showLoad('連線中…');
-    const ok=await connectDB();
+    await connectDB();
     hideLoad();
-    if(!ok){$('lerr').textContent='資料庫連線失敗，請稍後再試';return;}
+    if(acct.type==='admin'){
+      isAdmin=true;selStore='__admin__';
+      localStorage.setItem('uj_store','__admin__');
+      enterAdminApp();
+    } else {
+      selStore=acct.store;
+      localStorage.setItem('uj_store',acct.store);
+      enterApp(acct.store);
+    }
+    return;
   }
+
+  // Check staff accounts in DB
   showLoad('登入中…');
   try{
+    if(!db){
+      const ok=await connectDB();
+      if(!ok){hideLoad();$('lerr').textContent='資料庫連線失敗，請稍後再試';return;}
+    }
     const {data,error}=await db.from('staff_accounts').select('*')
       .eq('username',username).eq('active',true).limit(1);
     if(error)throw error;
     if(!data||!data.length){hideLoad();$('lerr').textContent='帳號不存在或已停用';return;}
     const staff=data[0];
-    if(staff.password!==pw){hideLoad();$('lerr').textContent='密碼錯誤，請再試一次';$('staff-pw').value='';return;}
+    if(staff.password!==pw){hideLoad();$('lerr').textContent='密碼錯誤，請再試一次';$('login-pw').value='';return;}
     hideLoad();
     currentUser={id:staff.id,username:staff.username,display_name:staff.display_name,role:staff.role,store:staff.store,must_change_pw:staff.password===staff.username};
     localStorage.setItem('uj_staff',JSON.stringify(currentUser));
-    // Check if must change password (default pw = username)
-    if(currentUser.must_change_pw){
-      openChangePw(true);
-    } else {
-      enterStaffApp();
-    }
+    if(currentUser.must_change_pw){openChangePw(true);}
+    else{enterStaffApp();}
   }catch(e){hideLoad();$('lerr').textContent='登入失敗：'+e.message;}
 }
+
+// keep doStaffLogin alias
+async function doStaffLogin(){ await doUnifiedLogin(); }
 
 // ── Change Password ───────────────────────────────────────
 function openChangePw(forced=false){
@@ -2024,8 +2030,7 @@ async function finalizeDay(){
 async function saveDay(){ await finalizeDay(); }
 
 // Init
-window.addEventListener('DOMContentLoaded',()=>{
-  buildGrid();
+window.addEventListener('DOMContentLoaded', async ()=>{
   $('exp-name').addEventListener('keydown',e=>{if(e.key==='Enter')$('exp-amt').focus();});
   $('exp-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addExp();});
 
@@ -2040,8 +2045,13 @@ window.addEventListener('DOMContentLoaded',()=>{
     }catch(e){localStorage.removeItem('uj_staff');}
   }
   const saved=localStorage.getItem('uj_store');
-  if(saved==='__admin__'){isAdmin=true;selStore='__admin__';enterAdminApp();}
-  else if(saved&&STORES[saved]){selStore=saved;enterApp(saved);}
+  if(saved==='__admin__'){
+    await connectDB();
+    isAdmin=true;selStore='__admin__';enterAdminApp();
+  } else if(saved&&STORES[saved]){
+    await connectDB();
+    selStore=saved;enterApp(saved);
+  }
 });
 </script>
 </body>
