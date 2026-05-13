@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Urban Jungle · 下班結帳</title>
+<title>Urban Jungle · 下班結帳 3.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -293,6 +293,41 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 .btn-topup-confirm{background:var(--gd);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity .2s;}
 .btn-topup-confirm:hover{opacity:.85;}
 
+
+/* Staff login tab */
+.login-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--bd);}
+.login-tab{flex:1;padding:10px;text-align:center;font-size:14px;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
+.login-tab.active{color:var(--gs);border-bottom-color:var(--gs);font-weight:500;}
+
+/* Change password modal */
+.chpw-modal{display:none;position:fixed;inset:0;background:rgba(28,43,26,.85);z-index:500;align-items:center;justify-content:center;padding:20px;}
+.chpw-modal.open{display:flex;}
+.chpw-box{background:var(--cr);border-radius:var(--rl);padding:32px 28px;max-width:400px;width:100%;}
+.chpw-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--gd);margin-bottom:6px;}
+.chpw-sub{font-size:13px;color:var(--t3);margin-bottom:20px;}
+.chpw-input{width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:11px 14px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;margin-bottom:10px;transition:border-color .2s;}
+.chpw-input:focus{border-color:var(--gs);}
+.chpw-err{font-size:13px;color:var(--red);min-height:18px;margin-bottom:10px;}
+.btn-chpw{width:100%;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:13px;font-size:15px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:opacity .2s;}
+.btn-chpw:hover{opacity:.88;}
+
+/* User badge in topbar */
+.user-badge{font-size:12px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:5px;}
+.user-role-dot{width:6px;height:6px;border-radius:50%;background:#5db87a;}
+.user-role-dot.user{background:#f0b060;}
+
+/* Draft badge */
+.draft-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(184,150,60,.12);border:1px solid rgba(184,150,60,.3);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--gold);margin-bottom:12px;}
+.draft-actions{display:flex;gap:10px;margin-bottom:18px;}
+.btn-draft{flex:1;background:none;border:1.5px solid var(--bd2);color:var(--t2);border-radius:var(--r);padding:12px;font-size:14px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-draft:hover{border-color:var(--gold);color:var(--gold);}
+.btn-finalize{flex:2;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:12px;font-size:15px;font-weight:500;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-finalize:hover{opacity:.88;}
+
+/* User mode - hide manager sections */
+.manager-only{transition:opacity .3s;}
+.user-mode .manager-only{display:none!important;}
+
 </style>
 </head>
 <body>
@@ -303,10 +338,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
       onerror="this.style.display='none';document.getElementById('ltxt').style.display='block'"/>
     <span id="ltxt" class="logo-txt" style="display:none">URBAN JUNGLE</span>
     <div class="logo-div"></div>
-    <span class="logo-sub">下班結帳</span>
+    <span class="logo-sub">下班結帳 3.0</span>
   </div>
   <div class="topbar-r">
     <span class="store-badge" id="store-badge" style="display:none"></span>
+    <div class="user-badge" id="user-badge" style="display:none">
+      <div class="user-role-dot" id="user-role-dot"></div>
+      <span id="user-display-name"></span>
+    </div>
     <span class="date-b" id="date-b"></span>
     <div class="sdot" id="sdot"></div>
   </div>
@@ -317,15 +356,37 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   <div class="login-box">
     <img class="login-logo" src="https://urbanjungle.com.tw/wp-content/uploads/2020/05/logo-H.svg" alt=""
       onerror="this.style.display='none'"/>
-    <div class="login-title">門市登入</div>
-    <div class="login-sub">選擇門市並輸入密碼</div>
-    <div class="store-grid" id="store-grid"></div>
-    <div class="pw-wrap">
-      <input type="password" id="pw" placeholder="門市密碼" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <button class="pw-eye" onclick="togglePw()">👁</button>
+    <div class="login-title">Urban Jungle</div>
+    <div class="login-sub">下班結帳系統 3.0</div>
+
+    <!-- Tabs -->
+    <div class="login-tabs">
+      <div class="login-tab active" id="tab-manager" onclick="switchTab('manager')">店長 / 管理者</div>
+      <div class="login-tab" id="tab-staff" onclick="switchTab('staff')">夥伴登入</div>
     </div>
+
+    <!-- Manager tab -->
+    <div id="panel-manager">
+      <div class="store-grid" id="store-grid"></div>
+      <div class="pw-wrap">
+        <input type="password" id="pw" placeholder="門市密碼" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="pw-eye" onclick="togglePw()">👁</button>
+      </div>
+    </div>
+
+    <!-- Staff tab -->
+    <div id="panel-staff" style="display:none;">
+      <div class="pw-wrap" style="margin-bottom:10px;">
+        <input type="text" id="staff-username" placeholder="帳號（如：uj-yang）" onkeydown="if(event.key==='Enter')$('staff-pw').focus()" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:11px 14px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
+      </div>
+      <div class="pw-wrap">
+        <input type="password" id="staff-pw" placeholder="密碼" onkeydown="if(event.key==='Enter')doStaffLogin()"/>
+        <button class="pw-eye" onclick="toggleStaffPw()">👁</button>
+      </div>
+    </div>
+
     <div class="login-err" id="lerr"></div>
-    <button class="btn-login" onclick="doLogin()">登　入</button>
+    <button class="btn-login" id="btn-login-main" onclick="doLogin()">登　入</button>
   </div>
 </div>
 
@@ -358,8 +419,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   </div>
 
   <!-- 清點 -->
-  <div class="sh"><span class="st">現金清點</span><div class="sl"></div></div>
-  <div class="card">
+  <div class="sh manager-only"><span class="st">現金清點</span><div class="sl"></div></div>
+  <div class="card manager-only">
     <div id="cash-rows"></div>
     <div class="cash-foot">
       <div class="cash-foot-l">
@@ -372,19 +433,28 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   </div>
 
   <!-- 總覽 -->
-  <div class="sh"><span class="st">結帳總覽</span><div class="sl"></div></div>
-  <div class="card" style="margin-bottom:14px">
+  <div class="sh manager-only"><span class="st">結帳總覽</span><div class="sl"></div></div>
+  <div class="card manager-only" style="margin-bottom:14px">
     <div class="sum-row"><span class="sum-label">清點現金（含零用金）</span><span class="vg" id="s-cash">$0</span></div>
     <div class="sum-row"><span class="sum-label">扣除當日支出</span><span class="vr" id="s-exp">-$0</span></div>
     <div class="sum-row tot"><span class="sum-label">今日包回金額（超出備用金部分）</span><span class="vt" id="s-ret">$0</span></div>
   </div>
 
-  <div class="result" id="result">
+  <div class="result manager-only" id="result">
     <div><div class="r-tit" id="r-tit">應收回金額</div><div class="r-hint" id="r-hint">清點 − 零用金 − 支出</div></div>
     <div class="r-num" id="r-num">$0</div>
   </div>
 
-  <button class="btn-save" onclick="saveDay()">儲存今日結帳紀錄</button>
+  <!-- Draft status indicator -->
+  <div id="draft-indicator" style="display:none;">
+    <div class="draft-badge">🟡 草稿暫存中 — 尚未完成結帳</div>
+  </div>
+
+  <!-- Save buttons -->
+  <div class="draft-actions manager-only">
+    <button class="btn-draft" onclick="saveDraft()">💾 暫存草稿</button>
+    <button class="btn-finalize" onclick="finalizeDay()">✅ 完成結帳</button>
+  </div>
 
   <!-- 洗浴巾記錄（台北旗艦店專用） -->
   <div id="laundry-section" style="display:none;">
@@ -444,8 +514,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   </div>
 
   <!-- 區間匯款紀錄 -->
-  <div class="sh"><span class="st">區間營收匯款</span><div class="sl"></div></div>
-  <div class="tr-section">
+  <div class="sh manager-only"><span class="st">區間營收匯款</span><div class="sl"></div></div>
+  <div class="tr-section manager-only">
     <div class="tr-row">
       <div class="ig" style="flex:1;min-width:130px;">
         <label>開始日期</label>
@@ -563,6 +633,18 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 
 </div>
 
+<!-- Change Password Modal -->
+<div class="chpw-modal" id="chpw-modal">
+  <div class="chpw-box">
+    <div class="chpw-title">設定新密碼</div>
+    <div class="chpw-sub" id="chpw-sub">首次登入請設定專屬密碼</div>
+    <input class="chpw-input" type="password" id="chpw-new" placeholder="新密碼（至少 6 個字元）"/>
+    <input class="chpw-input" type="password" id="chpw-confirm" placeholder="確認新密碼"/>
+    <div class="chpw-err" id="chpw-err"></div>
+    <button class="btn-chpw" onclick="confirmChangePw()">確認更新</button>
+  </div>
+</div>
+
 <div class="load-ov" id="load-ov"><div class="spin"></div><div class="load-txt" id="load-txt">載入中</div></div>
 <div class="toast" id="toast"></div>
 
@@ -579,6 +661,8 @@ const STORES={
 };
 const ADMIN_PW='uj-admin';
 let isAdmin=false;
+let currentUser=null; // {id, username, display_name, role, store, must_change_pw}
+// role: 'manager' = 店長（完整功能）, 'user' = 員工（僅支出+洗浴巾）
 
 const DENOMS=[
   {v:1000,t:'鈔'},{v:500,t:'鈔'},{v:100,t:'硬'},
@@ -669,7 +753,13 @@ function doLogin(){
 
 function doLogout(){
   localStorage.removeItem('uj_store');
-  currentStore=null;isAdmin=false;expenses=[];DENOMS.forEach(d=>cc[d.v]=0);
+  localStorage.removeItem('uj_staff');
+  currentStore=null;currentUser=null;isAdmin=false;
+  isDraft=false;draftId=null;
+  expenses=[];DENOMS.forEach(d=>cc[d.v]=0);
+  document.getElementById('main').classList.remove('user-mode');
+  $('user-badge').style.display='none';
+  $('draft-indicator').style.display='none';
   showLaundrySection(false);
   $('main').style.display='none';
   $('admin-main').style.display='none';
@@ -680,6 +770,8 @@ function doLogout(){
 
 async function enterApp(key){
   currentStore=key;
+  currentUser=null; // manager login, no staff user
+  isDraft=false;draftId=null;
   const s=STORES[key];
   $('login-ov').style.display='none';
   $('main').style.display='block';
@@ -687,6 +779,9 @@ async function enterApp(key){
   $('hero-addr').textContent=s.addr;
   $('store-badge').textContent=s.name;
   $('store-badge').style.display='block';
+  $('user-badge').style.display='none';
+  document.getElementById('main').classList.remove('user-mode');
+  $('draft-indicator').style.display='none';
   viewYear=new Date().getFullYear();
   viewMonth=new Date().getMonth()+1;
   updateMonthLabel();
@@ -1077,7 +1172,7 @@ function updateMonthLabel(){
 
 async function loadHistory(){
   if(!db||!currentStore)return;
-  loadTransfers();  // async, runs in parallel
+  loadTransfers();
   const mm=String(viewMonth).padStart(2,'0');
   const lastDay=new Date(viewYear,viewMonth,0).getDate();
   const from=`${viewYear}-${mm}-01`;
@@ -1731,11 +1826,218 @@ async function confirmTopup(){
   }catch(e){ hideLoad(); toast('✗ 充值失敗：'+e.message); }
 }
 
+// ── Tab switching ─────────────────────────────────────────
+let loginTab='manager';
+
+function switchTab(tab){
+  loginTab=tab;
+  $('tab-manager').classList.toggle('active',tab==='manager');
+  $('tab-staff').classList.toggle('active',tab==='staff');
+  $('panel-manager').style.display=tab==='manager'?'block':'none';
+  $('panel-staff').style.display=tab==='staff'?'block':'none';
+  $('btn-login-main').onclick=tab==='manager'?doLogin:doStaffLogin;
+  $('lerr').textContent='';
+}
+
+function toggleStaffPw(){
+  const i=$('staff-pw');
+  i.type=i.type==='password'?'text':'password';
+}
+
+// ── Staff Login ───────────────────────────────────────────
+async function doStaffLogin(){
+  const username=$('staff-username').value.trim().toLowerCase();
+  const pw=$('staff-pw').value;
+  if(!username||!pw){$('lerr').textContent='請填寫帳號和密碼';return;}
+  if(!db){
+    // DB not connected yet, connect first
+    showLoad('連線中…');
+    const ok=await connectDB();
+    hideLoad();
+    if(!ok){$('lerr').textContent='資料庫連線失敗，請稍後再試';return;}
+  }
+  showLoad('登入中…');
+  try{
+    const {data,error}=await db.from('staff_accounts').select('*')
+      .eq('username',username).eq('active',true).limit(1);
+    if(error)throw error;
+    if(!data||!data.length){hideLoad();$('lerr').textContent='帳號不存在或已停用';return;}
+    const staff=data[0];
+    if(staff.password!==pw){hideLoad();$('lerr').textContent='密碼錯誤，請再試一次';$('staff-pw').value='';return;}
+    hideLoad();
+    currentUser={id:staff.id,username:staff.username,display_name:staff.display_name,role:staff.role,store:staff.store,must_change_pw:staff.password===staff.username};
+    localStorage.setItem('uj_staff',JSON.stringify(currentUser));
+    // Check if must change password (default pw = username)
+    if(currentUser.must_change_pw){
+      openChangePw(true);
+    } else {
+      enterStaffApp();
+    }
+  }catch(e){hideLoad();$('lerr').textContent='登入失敗：'+e.message;}
+}
+
+// ── Change Password ───────────────────────────────────────
+function openChangePw(forced=false){
+  $('chpw-sub').textContent=forced?'首次登入請設定您的專屬密碼（至少 6 個字元）':'請設定新密碼';
+  $('chpw-new').value='';$('chpw-confirm').value='';$('chpw-err').textContent='';
+  $('chpw-modal').classList.add('open');
+}
+
+async function confirmChangePw(){
+  const newPw=$('chpw-new').value;
+  const confirm=$('chpw-confirm').value;
+  if(newPw.length<6){$('chpw-err').textContent='密碼至少需要 6 個字元';return;}
+  if(newPw!==confirm){$('chpw-err').textContent='兩次輸入的密碼不一致';return;}
+  if(!currentUser){$('chpw-err').textContent='請先登入';return;}
+  showLoad('更新密碼…');
+  try{
+    const {error}=await db.from('staff_accounts').update({password:newPw}).eq('id',currentUser.id);
+    if(error)throw error;
+    currentUser.must_change_pw=false;
+    localStorage.setItem('uj_staff',JSON.stringify(currentUser));
+    hideLoad();
+    $('chpw-modal').classList.remove('open');
+    toast('✓ 密碼已更新！');
+    enterStaffApp();
+  }catch(e){hideLoad();$('chpw-err').textContent='更新失敗：'+e.message;}
+}
+
+// ── Staff App ─────────────────────────────────────────────
+async function enterStaffApp(){
+  $('login-ov').style.display='none';
+  $('main').style.display='block';
+  selStore=currentUser.store;
+  currentStore=currentUser.store;
+  const s=STORES[currentStore];
+  $('hero-name').textContent=s.name;
+  $('hero-addr').textContent=s.addr;
+  $('store-badge').textContent=s.name;
+  $('store-badge').style.display='block';
+  // Show user badge
+  $('user-badge').style.display='flex';
+  $('user-display-name').textContent=currentUser.display_name;
+  const dot=$('user-role-dot');
+  if(currentUser.role==='user'){dot.classList.add('user');}
+  // Apply user mode restrictions
+  if(currentUser.role==='user'){
+    document.getElementById('main').classList.add('user-mode');
+  } else {
+    document.getElementById('main').classList.remove('user-mode');
+  }
+  renderCash();calcResult();
+  showLoad('連線中…');
+  const ok=await connectDB();
+  hideLoad();
+  if(ok){
+    await loadPrevPool();
+    await loadHistory();
+    await loadDraft();
+    if(currentStore==='taipei') await initLaundry();
+  } else toast('⚠ 離線模式');
+}
+
+// ── Draft system ──────────────────────────────────────────
+let isDraft=false;
+let draftId=null;
+
+async function loadDraft(){
+  if(!db||!currentStore)return;
+  const today=new Date().toISOString().slice(0,10);
+  try{
+    const {data}=await db.from('daily_records').select('*')
+      .eq('store',currentStore).eq('date',today).eq('status','draft').limit(1);
+    if(data&&data.length){
+      const r=data[0];
+      draftId=r.id;
+      isDraft=true;
+      // Restore draft data
+      expenses=(r.expenses||[]);
+      const savedCc=r.cash_counts||{};
+      DENOMS.forEach(d=>cc[d.v]=Number(savedCc[d.v]||0));
+      renderExp();renderCash();calcResult();
+      $('draft-indicator').style.display='block';
+      toast('🟡 載入今日草稿');
+    }
+  }catch(e){console.error('loadDraft:',e);}
+}
+
+async function saveDraft(){
+  if(!db){toast('⚠ 尚未連線資料庫');return;}
+  const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
+  const expT=expenses.reduce((s,e)=>s+e.amount,0);
+  const today=new Date().toISOString().slice(0,10);
+  showLoad('暫存中…');
+  try{
+    const payload={
+      date:today,store:currentStore,fund:FUND,
+      cash_total:cashT,income:0,total_expense:expT,
+      return_amount:0,deficit:0,
+      expenses,cash_counts:cc,status:'draft'
+    };
+    if(draftId){
+      const {error}=await db.from('daily_records').update(payload).eq('id',draftId);
+      if(error)throw error;
+    } else {
+      const {data,error}=await db.from('daily_records').insert(payload).select();
+      if(error)throw error;
+      draftId=data[0].id;
+    }
+    isDraft=true;
+    $('draft-indicator').style.display='block';
+    hideLoad();toast('🟡 草稿已暫存！');
+  }catch(e){hideLoad();toast('✗ 暫存失敗：'+e.message);}
+}
+
+async function finalizeDay(){
+  if(!db){toast('⚠ 尚未連線資料庫');return;}
+  const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
+  const expT=expenses.reduce((s,e)=>s+e.amount,0);
+  const netCash=cashT-expT;
+  const income=cashT-prevPool;
+  const ret=Math.max(0,netCash-FUND);
+  const deficit=Math.max(0,FUND-netCash);
+  const today=new Date().toISOString().slice(0,10);
+  showLoad('完成結帳…');
+  try{
+    const payload={
+      date:today,store:currentStore,fund:FUND,
+      cash_total:cashT,income,total_expense:expT,
+      return_amount:ret,deficit,
+      expenses,cash_counts:cc,status:'final'
+    };
+    if(draftId){
+      const {error}=await db.from('daily_records').update(payload).eq('id',draftId);
+      if(error)throw error;
+    } else {
+      const {error}=await db.from('daily_records').upsert({...payload},{onConflict:'date,store'});
+      if(error)throw error;
+    }
+    isDraft=false;draftId=null;
+    $('draft-indicator').style.display='none';
+    hideLoad();toast('✅ 今日結帳完成！');
+    await loadHistory();
+  }catch(e){hideLoad();toast('✗ 結帳失敗：'+e.message);}
+}
+
+// Override saveDay to use finalizeDay for backward compat
+async function saveDay(){ await finalizeDay(); }
+
 // Init
 window.addEventListener('DOMContentLoaded',()=>{
   buildGrid();
   $('exp-name').addEventListener('keydown',e=>{if(e.key==='Enter')$('exp-amt').focus();});
   $('exp-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addExp();});
+
+  // Check saved sessions
+  const savedStaff=localStorage.getItem('uj_staff');
+  if(savedStaff){
+    try{
+      currentUser=JSON.parse(savedStaff);
+      await connectDB();
+      await enterStaffApp();
+      return;
+    }catch(e){localStorage.removeItem('uj_staff');}
+  }
   const saved=localStorage.getItem('uj_store');
   if(saved==='__admin__'){isAdmin=true;selStore='__admin__';enterAdminApp();}
   else if(saved&&STORES[saved]){selStore=saved;enterApp(saved);}
