@@ -237,6 +237,62 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 .his-item{flex-direction:column;align-items:stretch;}
 .his-item-top{display:flex;align-items:center;justify-content:space-between;}
 
+
+/* Laundry (台北專用) */
+.laundry-section{margin-top:8px;}
+.laundry-card-stat{
+  background:linear-gradient(135deg,var(--gd),var(--gm));
+  border-radius:var(--r);
+  padding:16px 20px;
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;
+}
+.ls-left .ls-label{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
+.ls-left .ls-store{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:2px;}
+.ls-right{text-align:right;}
+.ls-right .ls-pts-label{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:3px;}
+.ls-right .ls-pts{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:#fff;}
+.ls-right .ls-pts span{font-size:13px;font-weight:400;opacity:.5;margin-left:4px;}
+.btn-topup{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
+.btn-topup:hover{background:rgba(255,255,255,.18);color:#fff;}
+
+.laundry-form{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;}
+.lg{flex:1;min-width:90px;}
+.lg label{display:block;font-size:11px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;}
+.lg input{width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:8px 10px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
+.lg input:focus{border-color:var(--gs);}
+.btn-laundry-add{background:var(--gd);color:#fff;border:none;border-radius:var(--r);padding:9px 16px;font-size:13px;cursor:pointer;white-space:nowrap;transition:opacity .2s;flex-shrink:0;}
+.btn-laundry-add:hover{opacity:.85;}
+
+.laundry-list{margin-top:4px;}
+.laundry-item{
+  background:var(--pa);
+  border:1px solid var(--bd);
+  border-radius:var(--r);
+  padding:11px 14px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:8px;
+}
+.li-left .li-date{font-size:14px;font-weight:500;color:var(--gd);}
+.li-left .li-meta{font-size:12px;color:var(--t3);margin-top:3px;line-height:1.6;}
+.li-right{display:flex;align-items:center;gap:10px;}
+.li-pts{text-align:right;}
+.li-pts .li-deduct{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--red);font-weight:500;}
+.li-pts .li-remain{font-size:11px;color:var(--t3);margin-top:2px;}
+
+/* topup modal */
+.topup-modal{display:none;position:fixed;inset:0;background:rgba(28,43,26,.7);z-index:400;align-items:center;justify-content:center;padding:20px;}
+.topup-modal.open{display:flex;}
+.topup-box{background:var(--cr);border-radius:var(--rl);padding:28px 24px;max-width:360px;width:100%;}
+.topup-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gd);margin-bottom:16px;}
+.topup-row{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.topup-input{width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:10px 13px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
+.topup-input:focus{border-color:var(--gs);}
+.topup-actions{display:flex;gap:10px;justify-content:flex-end;}
+.btn-topup-cancel{background:none;border:1px solid var(--bd2);color:var(--t2);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.btn-topup-confirm{background:var(--gd);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity .2s;}
+.btn-topup-confirm:hover{opacity:.85;}
+
 </style>
 </head>
 <body>
@@ -329,6 +385,63 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   </div>
 
   <button class="btn-save" onclick="saveDay()">儲存今日結帳紀錄</button>
+
+  <!-- 洗浴巾記錄（台北旗艦店專用） -->
+  <div id="laundry-section" style="display:none;">
+    <div class="sh"><span class="st">🧺 洗浴巾記錄</span><div class="sl"></div></div>
+    <div class="card laundry-section">
+      <!-- 點數卡狀態 -->
+      <div class="laundry-card-stat">
+        <div class="ls-left">
+          <div class="ls-label">點數卡剩餘點數</div>
+          <div class="ls-store">台北旗艦店</div>
+        </div>
+        <div class="ls-right">
+          <div class="ls-pts-label">目前點數</div>
+          <div class="ls-pts"><span id="lau-pts">—</span> <span>點</span></div>
+        </div>
+        <button class="btn-topup" onclick="openTopup()" style="margin-left:16px;">＋ 充值</button>
+      </div>
+
+      <!-- 新增記錄 -->
+      <div class="laundry-form">
+        <div class="lg" style="flex:1.5;min-width:130px;">
+          <label>日期時間</label>
+          <input type="datetime-local" id="lau-datetime"/>
+        </div>
+        <div class="lg" style="min-width:70px;">
+          <label>浴巾數量</label>
+          <input type="number" id="lau-qty" placeholder="0" min="1"/>
+        </div>
+        <div class="lg" style="min-width:70px;">
+          <label>扣除點數</label>
+          <input type="number" id="lau-deduct" placeholder="0" min="1"/>
+        </div>
+        <div class="lg" style="min-width:90px;">
+          <label>負責人</label>
+          <input type="text" id="lau-who" placeholder="姓名"/>
+        </div>
+        <button class="btn-laundry-add" onclick="addLaundry()">＋ 新增</button>
+      </div>
+      <div class="laundry-list" id="lau-list"><div class="empty">尚無洗浴巾記錄</div></div>
+    </div>
+  </div>
+
+  <!-- 充值 Modal -->
+  <div class="topup-modal" id="topup-modal">
+    <div class="topup-box">
+      <div class="topup-title">點數卡充值</div>
+      <div class="topup-row">
+        <input class="topup-input" type="number" id="topup-pts" placeholder="充值點數" min="1"/>
+        <input class="topup-input" type="text" id="topup-who" placeholder="充值人姓名"/>
+        <input class="topup-input" type="datetime-local" id="topup-datetime"/>
+      </div>
+      <div class="topup-actions">
+        <button class="btn-topup-cancel" onclick="closeTopup()">取消</button>
+        <button class="btn-topup-confirm" onclick="confirmTopup()">確認充值</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 區間匯款紀錄 -->
   <div class="sh"><span class="st">區間營收匯款</span><div class="sl"></div></div>
@@ -427,6 +540,26 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   <!-- 區間匯款紀錄 -->
   <div class="sh" style="margin-top:24px;"><span class="st">區間營收匯款紀錄</span><div class="sl"></div></div>
   <div id="admin-tr-list"><div class="empty">請選擇門市</div></div>
+
+  <!-- 洗浴巾記錄（台北店） -->
+  <div id="admin-laundry-section" style="display:none;margin-top:24px;">
+    <div class="sh"><span class="st">🧺 洗浴巾記錄</span><div class="sl"></div></div>
+    <div class="laundry-card-stat" style="border-radius:var(--r);margin-bottom:12px;">
+      <div class="ls-left">
+        <div class="ls-label">點數卡剩餘點數</div>
+        <div class="ls-store">台北旗艦店</div>
+      </div>
+      <div class="ls-right">
+        <div class="ls-pts-label">目前點數</div>
+        <div class="ls-pts"><span id="admin-lau-pts">—</span> <span>點</span></div>
+      </div>
+    </div>
+    <div id="admin-lau-list"><div class="empty">尚無洗浴巾記錄</div></div>
+    <div style="margin-top:16px;">
+      <div class="sh"><span class="st" style="font-size:15px;">充值紀錄</span><div class="sl"></div></div>
+      <div id="admin-topup-list"><div class="empty">尚無充值記錄</div></div>
+    </div>
+  </div>
 
 </div>
 
@@ -537,6 +670,7 @@ function doLogin(){
 function doLogout(){
   localStorage.removeItem('uj_store');
   currentStore=null;isAdmin=false;expenses=[];DENOMS.forEach(d=>cc[d.v]=0);
+  showLaundrySection(false);
   $('main').style.display='none';
   $('admin-main').style.display='none';
   $('login-ov').style.display='flex';
@@ -569,6 +703,7 @@ async function enterApp(key){
   if(ok){
     await loadPrevPool();
     await loadHistory();
+    await initLaundry();
   }else toast('⚠ 離線模式，資料庫連線失敗');
 }
 
@@ -1243,7 +1378,67 @@ function adminSelectStore(key){
   adminStore=key;
   document.querySelectorAll('.store-tab').forEach(b=>b.classList.toggle('active',b.dataset.k===key));
   $('admin-tr-list').innerHTML='<div class="empty">載入中…</div>';
+  const lauSec=$('admin-laundry-section');
+  if(lauSec) lauSec.style.display=key==='taipei'?'block':'none';
   adminLoadHistory();
+  if(key==='taipei') adminLoadLaundry();
+}
+
+async function adminLoadLaundry(){
+  if(!db)return;
+  try{
+    const [{data:topups},{data:uses}]=await Promise.all([
+      db.from('laundry_topups').select('*').eq('store','taipei').order('topup_at',{ascending:false}),
+      db.from('laundry_records').select('*').eq('store','taipei').order('done_at',{ascending:false}).limit(30)
+    ]);
+    // 計算剩餘點數
+    const totalIn=(topups||[]).reduce((s,r)=>s+Number(r.pts||0),0);
+    const totalOut=(uses||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    const remain=totalIn-totalOut;
+    const ptsEl=$('admin-lau-pts');
+    if(ptsEl) ptsEl.textContent=remain;
+
+    // 洗浴巾列表
+    const lauEl=$('admin-lau-list');
+    if(lauEl){
+      if(!uses||!uses.length){lauEl.innerHTML='<div class="empty">尚無洗浴巾記錄</div>';}
+      else{
+        lauEl.innerHTML=(uses||[]).map(r=>{
+          const dt=new Date(r.done_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+          return`<div class="laundry-item">
+            <div class="li-left">
+              <div class="li-date">${dt}</div>
+              <div class="li-meta">浴巾 ${r.qty} 條・負責人：${r.who}</div>
+            </div>
+            <div class="li-right">
+              <div class="li-pts">
+                <div class="li-deduct">−${r.deduct} 點</div>
+                <div class="li-remain">使用後剩 ${r.remain_pts} 點</div>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // 充值列表
+    const topupEl=$('admin-topup-list');
+    if(topupEl){
+      if(!topups||!topups.length){topupEl.innerHTML='<div class="empty">尚無充值記錄</div>';}
+      else{
+        topupEl.innerHTML=(topups||[]).map(r=>{
+          const dt=new Date(r.topup_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+          return`<div class="his-item" style="margin-bottom:8px;">
+            <div>
+              <div class="his-d">${dt}</div>
+              <div class="his-m">充值人：${r.who}</div>
+            </div>
+            <div class="his-r">+${r.pts} 點</div>
+          </div>`;
+        }).join('');
+      }
+    }
+  }catch(e){toast('⚠ 洗浴巾記錄載入失敗：'+e.message);}
 }
 
 function adminChangeMonth(delta){
@@ -1385,6 +1580,144 @@ async function adminExportExcel(){
     XLSX.writeFile(wb,`UJ_總覽_${sn}_${lbl}.xlsx`);
     hideLoad();toast('✓ Excel 已匯出！');
   }catch(e){hideLoad();toast('✗ 匯出失敗');}
+}
+
+// ── Laundry (台北旗艦店專用) ──────────────────────────────
+const LAUNDRY_STORE = 'taipei';
+let laundryPts = null; // 目前剩餘點數（null=尚未載入）
+
+function showLaundrySection(show){
+  const el = $('laundry-section');
+  if(el) el.style.display = show ? 'block' : 'none';
+}
+
+async function initLaundry(){
+  if(currentStore !== LAUNDRY_STORE) return;
+  showLaundrySection(true);
+  // 設定預設日期時間為現在
+  const now = new Date();
+  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  $('lau-datetime').value = local;
+  $('topup-datetime').value = local;
+  await loadLaundryPts();
+  await loadLaundryList();
+}
+
+async function loadLaundryPts(){
+  if(!db) return;
+  try{
+    // 從充值記錄和洗浴記錄計算目前點數
+    const [{data:topups},{data:uses}] = await Promise.all([
+      db.from('laundry_topups').select('pts').eq('store', LAUNDRY_STORE),
+      db.from('laundry_records').select('deduct').eq('store', LAUNDRY_STORE)
+    ]);
+    const totalIn  = (topups||[]).reduce((s,r)=>s+Number(r.pts||0),0);
+    const totalOut = (uses||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    laundryPts = totalIn - totalOut;
+    $('lau-pts').textContent = laundryPts;
+  }catch(e){ console.error('loadLaundryPts:',e); }
+}
+
+async function loadLaundryList(){
+  if(!db) return;
+  try{
+    const {data,error} = await db.from('laundry_records').select('*')
+      .eq('store', LAUNDRY_STORE)
+      .order('done_at',{ascending:false})
+      .limit(30);
+    if(error) throw error;
+    renderLaundryList(data||[]);
+  }catch(e){ toast('⚠ 洗浴巾記錄載入失敗'); }
+}
+
+function renderLaundryList(rs){
+  const el = $('lau-list');
+  if(!rs.length){ el.innerHTML='<div class="empty">尚無洗浴巾記錄</div>'; return; }
+  el.innerHTML = rs.map(r=>{
+    const dt = new Date(r.done_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="laundry-item">
+      <div class="li-left">
+        <div class="li-date">${dt}</div>
+        <div class="li-meta">浴巾 ${r.qty} 條・負責人：${r.who}</div>
+      </div>
+      <div class="li-right">
+        <div class="li-pts">
+          <div class="li-deduct">−${r.deduct} 點</div>
+          <div class="li-remain">使用後剩 ${r.remain_pts} 點</div>
+        </div>
+        <button class="btn-del" onclick="delLaundry(${r.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addLaundry(){
+  const dt     = $('lau-datetime').value;
+  const qty    = parseInt($('lau-qty').value)||0;
+  const deduct = parseInt($('lau-deduct').value)||0;
+  const who    = $('lau-who').value.trim();
+  if(!dt||!qty||!deduct||!who){ toast('請填寫所有欄位'); return; }
+  if(laundryPts !== null && deduct > laundryPts){
+    toast(`⚠ 點數不足！目前剩 ${laundryPts} 點`); return;
+  }
+  if(!db){ toast('⚠ 尚未連線資料庫'); return; }
+  const remain = (laundryPts||0) - deduct;
+  showLoad('儲存中…');
+  try{
+    const {error} = await db.from('laundry_records').insert({
+      store: LAUNDRY_STORE,
+      done_at: new Date(dt).toISOString(),
+      qty, deduct, who, remain_pts: remain
+    });
+    if(error) throw error;
+    hideLoad();
+    $('lau-qty').value=''; $('lau-deduct').value=''; $('lau-who').value='';
+    toast('✓ 洗浴巾記錄已儲存！');
+    await loadLaundryPts();
+    await loadLaundryList();
+  }catch(e){ hideLoad(); toast('✗ 儲存失敗：'+e.message); }
+}
+
+async function delLaundry(id){
+  if(!confirm('確定刪除此筆洗浴巾記錄？')) return;
+  showLoad('刪除中…');
+  try{
+    const {error} = await db.from('laundry_records').delete().eq('id',id);
+    if(error) throw error;
+    hideLoad(); toast('✓ 已刪除');
+    await loadLaundryPts();
+    await loadLaundryList();
+  }catch(e){ hideLoad(); toast('✗ 刪除失敗'); }
+}
+
+function openTopup(){
+  const now = new Date();
+  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  $('topup-datetime').value = local;
+  $('topup-modal').classList.add('open');
+}
+function closeTopup(){ $('topup-modal').classList.remove('open'); }
+
+async function confirmTopup(){
+  const pts  = parseInt($('topup-pts').value)||0;
+  const who  = $('topup-who').value.trim();
+  const dt   = $('topup-datetime').value;
+  if(!pts||!who||!dt){ toast('請填寫所有充值資訊'); return; }
+  if(!db){ toast('⚠ 尚未連線資料庫'); return; }
+  showLoad('儲存充值記錄…');
+  try{
+    const {error} = await db.from('laundry_topups').insert({
+      store: LAUNDRY_STORE,
+      topup_at: new Date(dt).toISOString(),
+      pts, who
+    });
+    if(error) throw error;
+    hideLoad();
+    closeTopup();
+    $('topup-pts').value=''; $('topup-who').value='';
+    toast(`✓ 充值 ${pts} 點完成！`);
+    await loadLaundryPts();
+  }catch(e){ hideLoad(); toast('✗ 充值失敗：'+e.message); }
 }
 
 // Init
