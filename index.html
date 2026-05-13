@@ -646,6 +646,7 @@ const STORES={
   hsinchu:  {name:'新竹形象店',addr:'新竹市北區經國路一段 830 號',        pw:'uj-hsz'},
   taichung: {name:'台中主題店',addr:'台中市南屯區文心南路 227 號 8 樓',   pw:'uj-txg'},
   kaohsiung:{name:'高雄概念店',addr:'高雄市前金區中華三路 66 號 4 樓',    pw:'uj-khh'},
+  test:     {name:'🧪 測試店',  addr:'系統測試專用',                       pw:'uj-test'},
 };
 const ADMIN_PW='uj-admin';
 let isAdmin=false;
@@ -1554,6 +1555,7 @@ function adminUpdateMonthLabel(){
 
 async function adminLoadHistory(){
   if(!db||!adminStore)return;
+  if(adminStore==='test'){toast('⚠ 測試店不顯示於總覽');return;}
   const mm=String(adminMonth).padStart(2,'0');
   const lastDay=new Date(adminYear,adminMonth,0).getDate();
   const from=`${adminYear}-${mm}-01`;
@@ -1832,6 +1834,7 @@ const BUILTIN_ACCOUNTS = {
   'uj-txg':   {type:'manager', store:'taichung',  display:'台中主題店'},
   'uj-khh':   {type:'manager', store:'kaohsiung', display:'高雄概念店'},
   'uj-admin': {type:'admin',   store:null,        display:'總覽管理'},
+  'uj-test':  {type:'manager', store:'test',      display:'🧪 測試店', pw:'uj_123123'},
 };
 
 async function doUnifiedLogin(){
@@ -1842,7 +1845,8 @@ async function doUnifiedLogin(){
 
   // Check built-in accounts first (no DB needed)
   if(BUILTIN_ACCOUNTS[username]){
-    if(pw!==username){$('lerr').textContent='密碼錯誤，請再試一次';$('login-pw').value='';return;}
+    const expectedPw = BUILTIN_ACCOUNTS[username].pw || username;
+    if(pw!==expectedPw){$('lerr').textContent='密碼錯誤，請再試一次';$('login-pw').value='';return;}
     const acct=BUILTIN_ACCOUNTS[username];
     showLoad('連線中…');
     await connectDB();
