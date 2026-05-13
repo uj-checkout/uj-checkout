@@ -33,12 +33,12 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 
 /* LOGIN */
 .login-ov{position:fixed;inset:0;z-index:200;background:var(--gd);display:flex;align-items:center;justify-content:center;padding:20px;}
-.login-box{background:var(--cr);border-radius:var(--rl);padding:36px 28px;max-width:420px;width:100%;text-align:center;}
+.login-box{background:var(--cr);border-radius:var(--rl);padding:28px 28px;max-width:440px;width:100%;text-align:center;max-height:90vh;overflow-y:auto;}
 .login-logo{height:30px;margin-bottom:24px;}
 .login-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--gd);margin-bottom:5px;}
 .login-sub{font-size:13px;color:var(--t3);margin-bottom:24px;}
-.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px;}
-.sbtn{border:1.5px solid var(--bd);border-radius:var(--r);padding:12px 8px;background:var(--pa);cursor:pointer;transition:all .2s;text-align:center;}
+.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.sbtn{border:1.5px solid var(--bd);border-radius:var(--r);padding:10px 8px;background:var(--pa);cursor:pointer;transition:all .2s;text-align:center;}
 .sbtn:hover{border-color:var(--gs);}
 .sbtn.sel{border-color:var(--gs);background:rgba(74,124,89,.07);}
 .sbtn .sn{font-size:14px;font-weight:500;color:var(--gd);display:block;margin-bottom:2px;}
@@ -295,8 +295,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 
 
 /* Staff login tab */
-.login-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--bd);}
-.login-tab{flex:1;padding:10px;text-align:center;font-size:14px;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
+.login-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--bd);position:relative;z-index:1;}
+.login-tab{flex:1;padding:12px 10px;text-align:center;font-size:14px;color:var(--t3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Noto Sans TC',sans-serif;transition:all .2s;user-select:none;-webkit-user-select:none;}
+.login-tab:hover{color:var(--t2);}
 .login-tab.active{color:var(--gs);border-bottom-color:var(--gs);font-weight:500;}
 
 /* Change password modal */
