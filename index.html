@@ -2089,17 +2089,17 @@ async function finalizeDay(){
   if(!db){toast('⚠ 尚未連線資料庫');return;}
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const netCash=cashT-expT;
-  const income=cashT-prevPool;
-  const ret=Math.max(0,netCash-FUND);
-  const deficit=Math.max(0,FUND-netCash);
-  const today=new Date().toISOString().slice(0,10);
+  // 正確公式：包回 = 清點 - 昨日池(prevPool) - 支出
+  const income=Math.max(0,cashT-prevPool);
+  const ret=Math.max(0,cashT-prevPool-expT);
+  const deficit=Math.max(0,prevPool+expT-cashT);
+  const now=new Date();
+  const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   showLoad('完成結帳…');
   try{
-    const todayIncomeVal=parseFloat(($('today-income')||{}).value)||0;
     const payload={
       date:today,store:currentStore,fund:FUND,
-      cash_total:cashT,income:todayIncomeVal||income,total_expense:expT,
+      cash_total:cashT,income,total_expense:expT,
       return_amount:ret,deficit,
       expenses,cash_counts:cc,status:'final'
     };
@@ -2112,11 +2112,8 @@ async function finalizeDay(){
     }
     isDraft=false;draftId=null;
     $('draft-indicator').style.display='none';
-    // Clear all inputs after finalize
     expenses=[];renderExp();
     DENOMS.forEach(d=>cc[d.v]=0);renderCash();
-    const ti=$('today-income');if(ti)ti.value='';
-    const vr=$('verify-result');if(vr)vr.style.display='none';
     calcResult();
     hideLoad();toast('✅ 今日結帳完成！');
     await loadHistory();
