@@ -394,6 +394,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
     <div class="metric" style="position:relative;overflow:hidden;">
       <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-wallet" aria-hidden="true"></i></div>
       <div class="ml">零用金餘額</div><div class="mv" id="m-pool">$3,000</div>
+      <div id="pool-debug" style="display:none;font-size:9px;color:#aaa;margin-top:4px;word-break:break-all;"></div>
     </div>
     <div class="metric" style="position:relative;overflow:hidden;">
       <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-receipt" aria-hidden="true"></i></div>
@@ -845,14 +846,20 @@ async function loadPrevPool(){
     }else{
       prevPool=FUND;
     }
-    console.log('[prevPool] final prevPool=', prevPool);
     const mpool=$('m-pool');
     if(mpool){
       mpool.textContent=fmt(prevPool);
       mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
     }
+    // 顯示除錯資訊在頁面上
+    const dbg=$('pool-debug');
+    if(dbg){
+      dbg.textContent='prevPool='+prevPool+', 共'+( data?data.length:0)+'筆, store='+currentStore+', today='+today;
+      dbg.style.display='block';
+    }
   }catch(e){
-    console.error('loadPrevPool error:',e);
+    const dbg=$('pool-debug');
+    if(dbg){dbg.textContent='ERROR: '+e.message;dbg.style.display='block';}
     prevPool=FUND;
   }
 }
