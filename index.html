@@ -704,18 +704,26 @@ $('date-b').textContent=new Date().toLocaleDateString('zh-TW',{year:'numeric',mo
 
 // DB
 async function connectDB(){
-  try{
-    const c=window.supabase.createClient(SB_URL,SB_KEY);
-    const {data,error}=await c.from('daily_records').select('id').limit(1);
-    if(error)throw error;
-    db=c;
-    sdot('ok');
-    return true;
-  }catch(e){
-    sdot('err');
-    console.error('DB Error:',e);
-    return false;
+  // 最多重試3次，每次間隔1秒
+  for(let i=0;i<3;i++){
+    try{
+      if(!window.supabase){
+        await new Promise(r=>setTimeout(r,800));
+        continue;
+      }
+      const c=window.supabase.createClient(SB_URL,SB_KEY);
+      const {data,error}=await c.from('daily_records').select('id').limit(1);
+      if(error)throw error;
+      db=c;
+      sdot('ok');
+      return true;
+    }catch(e){
+      console.error('DB Error attempt'+(i+1),e);
+      if(i<2) await new Promise(r=>setTimeout(r,1000));
+    }
   }
+  sdot('err');
+  return false;
 }
 
 async function retryConnect(){
@@ -825,8 +833,18 @@ async function enterApp(key){
   if(ok){
     await loadPrevPool();
     await loadHistory();
+    await loadTransfers();
     await initLaundry();
-  }else toast('⚠ 離線模式，資料庫連線失敗');
+    // 強制更新零用金顯示
+    const mpool=$('m-pool');
+    if(mpool){
+      mpool.textContent=fmt(prevPool);
+      mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
+    }
+    calcResult();
+  }else{
+    toast('⚠ 資料庫連線失敗，請按下方重新連線');
+  }
 }
 
 // 載入前一日零用金池餘額
