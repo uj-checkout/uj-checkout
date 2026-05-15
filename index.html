@@ -858,13 +858,12 @@ async function loadPrevPool(){
       data.forEach(r=>{
         const cashT=Number(r.cash_total||0);
         const expT=Number(r.total_expense||0);
-        // cashT 本身就是「前日池 + 今日收款」的結果
-        const netCash=cashT-expT; // 清點扣支出
-        const ret=Math.max(0,netCash-FUND);
+        // 包回 = 清點 - $3,000 - 支出
+        const ret=Math.max(0,cashT-FUND-expT);
         if(ret>0){
-          pool=FUND; // 包回後零用金池重置為3000
+          pool=FUND; // 有包回 → 次日池重置為3000
         }else{
-          pool=netCash; // 不夠包回，池 = 實際剩餘
+          pool=cashT-expT; // 無包回 → 次日池 = 清點-支出（可能虧空）
         }
       });
       prevPool=pool;
@@ -1200,10 +1199,9 @@ async function saveDay(){
   if(!db){toast('⚠ 尚未連線資料庫');return;}
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const netCash=cashT-expT; // 清點扣支出
-  const income=cashT-prevPool; // 今日實際收款 = 清點 - 前日池
-  const ret=Math.max(0,netCash-FUND); // 包回金額
-  const deficit=Math.max(0,FUND-netCash); // 虧空
+  const income=Math.max(0,cashT-prevPool); // 今日收入 = 清點 - 昨日池
+  const ret=Math.max(0,cashT-FUND-expT);  // 包回 = 清點 - $3,000 - 支出
+  const deficit=Math.max(0,FUND-(cashT-expT)); // 虧空
   const today=new Date().toISOString().slice(0,10);
   showLoad('儲存中…');
   try{
