@@ -407,22 +407,18 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 
   <!-- 支出 -->
   <!-- 快速操作圖標列 -->
-  <div class="manager-only" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;">
-    <div onclick="scrollToSection('income-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
-      <i class="ti ti-cash" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
-      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">收款</div>
+  <div class="manager-only" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;">
+    <div onclick="scrollToSection('exp-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
+      <i class="ti ti-receipt" style="font-size:24px;color:var(--gs);" aria-hidden="true"></i>
+      <div style="font-size:11px;color:var(--t2);margin-top:6px;font-weight:500;">支出</div>
     </div>
-    <div onclick="scrollToSection('exp-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
-      <i class="ti ti-receipt" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
-      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">支出</div>
+    <div onclick="scrollToSection('cash-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
+      <i class="ti ti-coins" style="font-size:24px;color:var(--gs);" aria-hidden="true"></i>
+      <div style="font-size:11px;color:var(--t2);margin-top:6px;font-weight:500;">清點</div>
     </div>
-    <div onclick="scrollToSection('cash-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
-      <i class="ti ti-coins" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
-      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">清點</div>
-    </div>
-    <div onclick="scrollToSection('history-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
-      <i class="ti ti-history" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
-      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">歷史</div>
+    <div onclick="scrollToSection('history-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
+      <i class="ti ti-history" style="font-size:24px;color:var(--gs);" aria-hidden="true"></i>
+      <div style="font-size:11px;color:var(--t2);margin-top:6px;font-weight:500;">歷史</div>
     </div>
   </div>
 
