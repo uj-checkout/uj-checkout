@@ -859,7 +859,7 @@ async function loadPrevPool(){
         const cashT=Number(r.cash_total||0);
         const expT=Number(r.total_expense||0);
         // 包回 = 清點 - $3,000 - 支出
-        const ret=Math.max(0,cashT-FUND-expT);
+        const ret=Math.max(0,cashT-pool-expT);
         if(ret>0){
           pool=FUND; // 有包回 → 次日池重置為3000
         }else{
@@ -1200,8 +1200,8 @@ async function saveDay(){
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
   const income=Math.max(0,cashT-prevPool); // 今日收入 = 清點 - 昨日池
-  const ret=Math.max(0,cashT-FUND-expT);  // 包回 = 清點 - $3,000 - 支出
-  const deficit=Math.max(0,FUND-(cashT-expT)); // 虧空
+  const ret=Math.max(0,cashT-prevPool-expT);  // 包回 = 清點 - 昨日池 - 支出
+  const deficit=Math.max(0,prevPool+expT-cashT); // 虧空
   const today=new Date().toISOString().slice(0,10);
   showLoad('儲存中…');
   try{
