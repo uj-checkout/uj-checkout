@@ -708,11 +708,12 @@ async function connectDB(){
     const c=window.supabase.createClient(SB_URL,SB_KEY);
     const {data,error}=await c.from('daily_records').select('id').limit(1);
     if(error)throw error;
-    db=c;sdot('ok');return true;
+    db=c;
+    sdot('ok');
+    return true;
   }catch(e){
     sdot('err');
     console.error('DB Error:',e);
-    toast('連線失敗：'+( e.message||e.code||JSON.stringify(e)));
     return false;
   }
 }
@@ -722,7 +723,10 @@ async function retryConnect(){
   const ok = await connectDB();
   if(ok){
     toast('✓ 連線成功！');
+    await loadPrevPool();
     await loadHistory();
+    await loadTransfers();
+    if(currentStore==='taipei') await initLaundry();
   }
 }
 
@@ -822,7 +826,8 @@ async function enterApp(key){
 // 從最早一筆開始逐日累積，包回後重置為3000
 async function loadPrevPool(){
   if(!db||!currentStore)return;
-  const today=new Date().toISOString().slice(0,10);
+  const now=new Date();
+  const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   try{
     const {data,error}=await db.from('daily_records')
       .select('date,cash_total,total_expense,status')
@@ -831,7 +836,6 @@ async function loadPrevPool(){
       .lt('date',today)
       .order('date',{ascending:true});
     if(error)throw error;
-    console.log('[prevPool] records found:', data?.length, 'today:', today, 'store:', currentStore);
     if(data&&data.length>0){
       let pool=FUND;
       data.forEach(r=>{
@@ -839,8 +843,7 @@ async function loadPrevPool(){
         const expT=Number(r.total_expense||0);
         const ret=Math.max(0,cashT-pool-expT);
         const nextPool=ret>0?FUND:cashT-expT;
-        console.log('[prevPool]', r.date, 'cashT=', cashT, 'expT=', expT, 'pool=', pool, 'ret=', ret, 'nextPool=', nextPool);
-        pool=nextPool;
+            pool=nextPool;
       });
       prevPool=pool;
     }else{
