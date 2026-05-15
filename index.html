@@ -330,6 +330,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
 .user-mode .manager-only{display:none!important;}
 
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 </head>
 <body>
 
@@ -390,13 +391,57 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   </div>
 
   <div class="metrics">
-    <div class="metric"><div class="ml">零用金餘額</div><div class="mv" id="m-pool">$3,000</div></div>
-    <div class="metric"><div class="ml">今日支出</div><div class="mv red" id="m-exp">$0</div></div>
-    <div class="metric"><div class="ml">今日包回</div><div class="mv grn" id="m-ret">$0</div></div>
+    <div class="metric" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-wallet" aria-hidden="true"></i></div>
+      <div class="ml">零用金餘額</div><div class="mv" id="m-pool">$3,000</div>
+    </div>
+    <div class="metric" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-receipt" aria-hidden="true"></i></div>
+      <div class="ml">今日支出</div><div class="mv red" id="m-exp">$0</div>
+    </div>
+    <div class="metric" style="position:relative;overflow:hidden;">
+      <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-cash" aria-hidden="true"></i></div>
+      <div class="ml">今日包回</div><div class="mv grn" id="m-ret">$0</div>
+    </div>
   </div>
 
   <!-- 支出 -->
-  <div class="sh"><span class="st">新增支出</span><div class="sl"></div></div>
+  <!-- 快速操作圖標列 -->
+  <div class="manager-only" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;">
+    <div onclick="scrollToSection('income-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
+      <i class="ti ti-cash" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
+      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">收款</div>
+    </div>
+    <div onclick="scrollToSection('exp-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
+      <i class="ti ti-receipt" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
+      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">支出</div>
+    </div>
+    <div onclick="scrollToSection('cash-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
+      <i class="ti ti-coins" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
+      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">清點</div>
+    </div>
+    <div onclick="scrollToSection('history-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
+      <i class="ti ti-history" style="font-size:22px;color:var(--gs);" aria-hidden="true"></i>
+      <div style="font-size:10px;color:var(--t2);margin-top:5px;font-weight:500;">歷史</div>
+    </div>
+  </div>
+
+  <!-- 當日現金收款核對 -->
+  <div class="sh manager-only" id="income-sec"><span class="st">當日現金收款</span><div class="sl"></div></div>
+  <div class="card manager-only" style="margin-bottom:14px;padding:16px 18px;">
+    <div style="font-size:12px;color:var(--t3);margin-bottom:8px;">輸入今日客人現金消費總額，系統自動核對收銀機是否相符</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="flex:1;">
+        <label style="display:block;font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;">今日收款金額（元）</label>
+        <input type="number" id="today-income" placeholder="0" min="0"
+          style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 14px;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gd);background:var(--pa);outline:none;transition:border-color .2s;"
+          oninput="verifyIncome()"/>
+      </div>
+    </div>
+    <div id="verify-result" style="display:none;border-radius:8px;padding:10px 14px;font-size:13px;"></div>
+  </div>
+
+  <div class="sh" id="exp-sec"><span class="st">新增支出</span><div class="sl"></div></div>
   <div class="card">
     <div class="exp-row">
       <div class="ig" style="flex:2"><label>項目名稱</label><input type="text" id="exp-name" placeholder="文具、餐費…"/></div>
@@ -407,7 +452,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   </div>
 
   <!-- 清點 -->
-  <div class="sh manager-only"><span class="st">現金清點</span><div class="sl"></div></div>
+  <div class="sh manager-only" id="cash-sec"><span class="st">現金清點</span><div class="sl"></div></div>
   <div class="card manager-only">
     <div id="cash-rows"></div>
     <div class="cash-foot">
@@ -798,8 +843,9 @@ async function loadPrevPool(){
   const today=new Date().toISOString().slice(0,10);
   try{
     const {data,error}=await db.from('daily_records')
-      .select('date,cash_total,total_expense')
+      .select('date,cash_total,total_expense,status')
       .eq('store',currentStore)
+      .eq('status','final')
       .lt('date',today)
       .order('date',{ascending:true});
     if(error)throw error;
@@ -875,6 +921,41 @@ function updCashTotal(){
 function clearCash(){DENOMS.forEach(d=>cc[d.v]=0);renderCash();}
 
 // Calc — 公式：清點現金 − 零用金 − 支出 = 應收回
+function scrollToSection(id){
+  const el=document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function verifyIncome(){
+  const income = parseFloat($('today-income').value)||0;
+  const el = $('verify-result');
+  if(!el) return;
+  if(income <= 0){ el.style.display='none'; return; }
+  const cashT = DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v, 0);
+  const expT = expenses.reduce((s,e)=>s+e.amount, 0);
+  // 清點 - 零用金 - 支出 = 實際收款
+  const actual = cashT - FUND - expT;
+  const diff = actual - income;
+  el.style.display = 'block';
+  if(cashT === 0){
+    el.style.background = 'rgba(184,150,60,.08)';
+    el.style.color = 'var(--gold)';
+    el.textContent = '⚠ 尚未清點現金，請清點後系統自動核對';
+  } else if(Math.abs(diff) <= 0){
+    el.style.background = 'rgba(74,124,89,.08)';
+    el.style.color = 'var(--gs)';
+    el.textContent = `✓ 核對相符！收銀機現金與收款記錄一致（實收 ${fmt(actual)}）`;
+  } else if(diff > 0){
+    el.style.background = 'rgba(184,150,60,.08)';
+    el.style.color = '#a07020';
+    el.textContent = `⚠ 收銀機多了 ${fmt(diff)}｜清點扣零用金扣支出 = ${fmt(actual)}，收款記錄 = ${fmt(income)}`;
+  } else {
+    el.style.background = 'rgba(184,48,48,.07)';
+    el.style.color = 'var(--red)';
+    el.textContent = `✗ 收銀機少了 ${fmt(-diff)}｜清點扣零用金扣支出 = ${fmt(actual)}，收款記錄 = ${fmt(income)}`;
+  }
+}
+
 function calcResult(){
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
@@ -898,6 +979,9 @@ function calcResult(){
     todayIncome = cashT - prevPool; // 今日實際收款 = 清點 - 前日池
     deficit = Math.max(0, FUND - netCash);
   }
+
+  // 核對收款
+  verifyIncome();
 
   // 更新零用金餘額卡片
   const mpool=$('m-pool');
@@ -2010,9 +2094,10 @@ async function finalizeDay(){
   const today=new Date().toISOString().slice(0,10);
   showLoad('完成結帳…');
   try{
+    const todayIncomeVal=parseFloat(($('today-income')||{}).value)||0;
     const payload={
       date:today,store:currentStore,fund:FUND,
-      cash_total:cashT,income,total_expense:expT,
+      cash_total:cashT,income:todayIncomeVal||income,total_expense:expT,
       return_amount:ret,deficit,
       expenses,cash_counts:cc,status:'final'
     };
@@ -2025,6 +2110,12 @@ async function finalizeDay(){
     }
     isDraft=false;draftId=null;
     $('draft-indicator').style.display='none';
+    // Clear all inputs after finalize
+    expenses=[];renderExp();
+    DENOMS.forEach(d=>cc[d.v]=0);renderCash();
+    const ti=$('today-income');if(ti)ti.value='';
+    const vr=$('verify-result');if(vr)vr.style.display='none';
+    calcResult();
     hideLoad();toast('✅ 今日結帳完成！');
     await loadHistory();
   }catch(e){hideLoad();toast('✗ 結帳失敗：'+e.message);}
