@@ -844,15 +844,16 @@ async function enterApp(key){
   hideLoad();
   if(ok){
     await loadPrevPool();
-    await loadHistory();
-    await loadTransfers();
-    await initLaundry();
+    // 強制更新零用金顯示
     const mpool=$('m-pool');
     if(mpool){
       mpool.textContent=fmt(prevPool);
       mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
     }
     calcResult();
+    await loadHistory();
+    await loadTransfers();
+    await initLaundry();
   }else{
     toast('⚠ 資料庫連線失敗，請按下方重新連線');
   }
@@ -2101,13 +2102,11 @@ async function saveDraft(){
 
 async function finalizeDay(){
   if(!db){
-    // 嘗試重新連線
     const ok=await connectDB();
     if(!ok){toast('⚠ 資料庫連線失敗，請按重新連線後再試');return;}
   }
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  // 正確公式：包回 = 清點 - 昨日池(prevPool) - 支出
   const income=Math.max(0,cashT-prevPool);
   const ret=Math.max(0,cashT-prevPool-expT);
   const deficit=Math.max(0,prevPool+expT-cashT);
@@ -2119,23 +2118,44 @@ async function finalizeDay(){
       date:today,store:currentStore,fund:FUND,
       cash_total:cashT,income,total_expense:expT,
       return_amount:ret,deficit,
-      expenses,cash_counts:cc,status:'final'
+      expenses:JSON.parse(JSON.stringify(expenses)),
+      cash_counts:JSON.parse(JSON.stringify(cc)),
+      status:'final'
     };
+    let saveError=null;
     if(draftId){
       const {error}=await db.from('daily_records').update(payload).eq('id',draftId);
-      if(error)throw error;
+      saveError=error;
     } else {
-      const {error}=await db.from('daily_records').upsert({...payload},{onConflict:'date,store'});
-      if(error)throw error;
+      // try upsert first
+      const {error}=await db.from('daily_records').upsert(payload,{onConflict:'date,store'});
+      saveError=error;
+    }
+    hideLoad();
+    if(saveError){
+      console.error('save error:',saveError);
+      toast('✗ 結帳失敗：'+saveError.message);
+      return;
     }
     isDraft=false;draftId=null;
     $('draft-indicator').style.display='none';
     expenses=[];renderExp();
     DENOMS.forEach(d=>cc[d.v]=0);renderCash();
+    // 更新 prevPool 到包回後的狀態
+    prevPool = ret>0 ? FUND : cashT-expT;
+    const mpool=$('m-pool');
+    if(mpool){
+      mpool.textContent=fmt(prevPool);
+      mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
+    }
     calcResult();
-    hideLoad();toast('✅ 今日結帳完成！');
+    toast('✅ 今日結帳完成！');
     await loadHistory();
-  }catch(e){hideLoad();toast('✗ 結帳失敗：'+e.message);}
+  }catch(e){
+    hideLoad();
+    console.error('finalizeDay error:',e);
+    toast('✗ 結帳失敗：'+e.message);
+  }
 }
 
 // Override saveDay to use finalizeDay for backward compat
@@ -2151,8 +2171,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   if(savedStaff){
     try{
       currentUser=JSON.parse(savedStaff);
-      await connectDB();
-      await enterStaffApp();
+      await enterStaffApp(); // enterStaffApp handles its own connectDB
       return;
     }catch(e){localStorage.removeItem('uj_staff');}
   }
@@ -2161,8 +2180,8 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     await connectDB();
     isAdmin=true;selStore='__admin__';enterAdminApp();
   } else if(saved&&STORES[saved]){
-    await connectDB();
-    selStore=saved;enterApp(saved);
+    selStore=saved;
+    enterApp(saved); // enterApp handles its own connectDB
   }
 });
 </script>
