@@ -812,7 +812,7 @@ function doLogout(){
 
 async function enterApp(key){
   currentStore=key;
-  currentUser=null; // manager login, no staff user
+  currentUser=null;
   isDraft=false;draftId=null;
   const s=STORES[key];
   $('login-ov').style.display='none';
@@ -829,18 +829,18 @@ async function enterApp(key){
   updateMonthLabel();
   renderCash();calcResult();
   transfers=[];renderTransfers();
-  // set default dates for transfer input
   const now2=new Date();
   $('tr-from').value=new Date(now2.getFullYear(),now2.getMonth(),1).toISOString().slice(0,10);
   $('tr-to').value=now2.toISOString().slice(0,10);
   $('tr-preview').style.display='none';
   showLoad('連線中…');
-  let ok=await connectDB();
-  // 若第一次失敗，2秒後自動重試一次
-  if(!ok){
-    await new Promise(r=>setTimeout(r,2000));
-    ok=await connectDB();
+  // 等待 Supabase SDK 完全載入（最多等5秒）
+  let waited=0;
+  while(!window.supabase && waited<5000){
+    await new Promise(r=>setTimeout(r,200));
+    waited+=200;
   }
+  const ok=await connectDB();
   hideLoad();
   if(ok){
     await loadPrevPool();
@@ -2142,7 +2142,7 @@ async function finalizeDay(){
 async function saveDay(){ await finalizeDay(); }
 
 // Init
-window.addEventListener('load', async ()=>{
+window.addEventListener('DOMContentLoaded', async ()=>{
   $('exp-name').addEventListener('keydown',e=>{if(e.key==='Enter')$('exp-amt').focus();});
   $('exp-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addExp();});
 
