@@ -830,27 +830,22 @@ async function loadPrevPool(){
       .lt('date',today)
       .order('date',{ascending:true});
     if(error)throw error;
+    console.log('[prevPool] records found:', data?.length, 'today:', today, 'store:', currentStore);
     if(data&&data.length>0){
-      // 正確邏輯：
-      // 清點金額 = 前日池 + 當日收款（收銀機裡的錢 = 昨日剩餘零用金 + 今日營收）
-      // 包回 = MAX(0, 清點 - 支出 - $3,000)
-      // 包回後池重置為 $3,000；否則池 = 清點 - 支出
       let pool=FUND;
       data.forEach(r=>{
         const cashT=Number(r.cash_total||0);
         const expT=Number(r.total_expense||0);
-        // 包回 = 清點 - $3,000 - 支出
         const ret=Math.max(0,cashT-pool-expT);
-        if(ret>0){
-          pool=FUND; // 有包回 → 次日池重置為3000
-        }else{
-          pool=cashT-expT; // 無包回 → 次日池 = 清點-支出（可能虧空）
-        }
+        const nextPool=ret>0?FUND:cashT-expT;
+        console.log('[prevPool]', r.date, 'cashT=', cashT, 'expT=', expT, 'pool=', pool, 'ret=', ret, 'nextPool=', nextPool);
+        pool=nextPool;
       });
       prevPool=pool;
     }else{
       prevPool=FUND;
     }
+    console.log('[prevPool] final prevPool=', prevPool);
     const mpool=$('m-pool');
     if(mpool){
       mpool.textContent=fmt(prevPool);
