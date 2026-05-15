@@ -704,44 +704,51 @@ $('date-b').textContent=new Date().toLocaleDateString('zh-TW',{year:'numeric',mo
 
 // DB
 async function connectDB(){
-  // 最多重試3次，每次間隔1秒
-  for(let i=0;i<3;i++){
-    try{
-      if(!window.supabase){
-        await new Promise(r=>setTimeout(r,800));
-        continue;
-      }
-      const c=window.supabase.createClient(SB_URL,SB_KEY);
-      const {data,error}=await c.from('daily_records').select('id').limit(1);
-      if(error)throw error;
-      db=c;
-      sdot('ok');
-      return true;
-    }catch(e){
-      console.error('DB Error attempt'+(i+1),e);
-      if(i<2) await new Promise(r=>setTimeout(r,1000));
+  try{
+    // 等待 supabase SDK 載入
+    let tries=0;
+    while(!window.supabase && tries<10){
+      await new Promise(r=>setTimeout(r,300));
+      tries++;
     }
+    if(!window.supabase) throw new Error('Supabase SDK 未載入');
+    const c=window.supabase.createClient(SB_URL,SB_KEY);
+    // 測試連線
+    const {error}=await c.from('daily_records').select('id').limit(1);
+    if(error) throw error;
+    db=c;
+    sdot('ok');
+    return true;
+  }catch(e){
+    sdot('err');
+    console.error('connectDB failed:',e);
+    return false;
   }
-  sdot('err');
-  return false;
 }
 
 async function retryConnect(){
-  toast('嘗試重新連線…');
+  showLoad('重新連線中…');
   const ok = await connectDB();
+  hideLoad();
   if(ok){
     await loadPrevPool();
     await loadHistory();
     await loadTransfers();
     if(currentStore==='taipei') await initLaundry();
-    // 強制更新零用金顯示
+    // 強制更新所有顯示
     const mpool=$('m-pool');
     if(mpool){
       mpool.textContent=fmt(prevPool);
       mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
     }
+    // 確保 manager-only 元素可見（店長模式）
+    if(!isAdmin && currentUser?.role!=='user'){
+      document.getElementById('main').classList.remove('user-mode');
+    }
     calcResult();
-    toast('✓ 連線成功！零用金已更新');
+    toast('✓ 連線成功！');
+  } else {
+    toast('✗ 連線失敗，請再試一次');
   }
 }
 
@@ -828,14 +835,18 @@ async function enterApp(key){
   $('tr-to').value=now2.toISOString().slice(0,10);
   $('tr-preview').style.display='none';
   showLoad('連線中…');
-  const ok=await connectDB();
+  let ok=await connectDB();
+  // 若第一次失敗，2秒後自動重試一次
+  if(!ok){
+    await new Promise(r=>setTimeout(r,2000));
+    ok=await connectDB();
+  }
   hideLoad();
   if(ok){
     await loadPrevPool();
     await loadHistory();
     await loadTransfers();
     await initLaundry();
-    // 強制更新零用金顯示
     const mpool=$('m-pool');
     if(mpool){
       mpool.textContent=fmt(prevPool);
@@ -2059,7 +2070,10 @@ async function loadDraft(){
 }
 
 async function saveDraft(){
-  if(!db){toast('⚠ 尚未連線資料庫');return;}
+  if(!db){
+    const ok=await connectDB();
+    if(!ok){toast('⚠ 資料庫連線失敗，請按重新連線後再試');return;}
+  }
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
   const today=new Date().toISOString().slice(0,10);
@@ -2086,7 +2100,11 @@ async function saveDraft(){
 }
 
 async function finalizeDay(){
-  if(!db){toast('⚠ 尚未連線資料庫');return;}
+  if(!db){
+    // 嘗試重新連線
+    const ok=await connectDB();
+    if(!ok){toast('⚠ 資料庫連線失敗，請按重新連線後再試');return;}
+  }
   const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const expT=expenses.reduce((s,e)=>s+e.amount,0);
   // 正確公式：包回 = 清點 - 昨日池(prevPool) - 支出
@@ -2124,7 +2142,7 @@ async function finalizeDay(){
 async function saveDay(){ await finalizeDay(); }
 
 // Init
-window.addEventListener('DOMContentLoaded', async ()=>{
+window.addEventListener('load', async ()=>{
   $('exp-name').addEventListener('keydown',e=>{if(e.key==='Enter')$('exp-amt').focus();});
   $('exp-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addExp();});
 
