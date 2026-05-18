@@ -2,657 +2,269 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <title>Urban Jungle · 下班結帳 3.0</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
+*{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --gd:#1c2b1a;--gm:#2d4a28;--gs:#4a7c59;--gi:#7aab85;--gp:#c8dbc0;
-  --cr:#f5f0e8;--pa:#faf7f2;--bd:rgba(74,124,89,.2);--bd2:rgba(74,124,89,.35);
-  --t1:#1c2b1a;--t2:#4a5e46;--t3:#8a9e86;
-  --red:#b83030;--rbg:#fdf0f0;--r:10px;--rl:16px;
+  --gd:#1C2B1A;--gm:#2D4A28;--gs:#4A7C59;--gl:#7AAB85;--gp:#C8DBC0;
+  --cr:#F5F0E8;--pa:#FAFAF8;--bd:#E0D8CC;--bd2:#C8C0B0;
+  --t1:#2C2C2C;--t2:#555;--t3:#888;
+  --gold:#B8963C;--red:#B83030;--white:#FFF;
+  --r:8px;--rl:16px;
+  --FUND:3000;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);min-height:100vh;}
+body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);min-height:100vh;}
 
-.topbar{position:sticky;top:0;z-index:100;background:rgba(28,43,26,.97);backdrop-filter:blur(10px);height:58px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);}
-.logo{display:flex;align-items:center;gap:12px;}
-.logo-img{height:30px;filter:brightness(0) invert(1);opacity:.9;}
-.logo-txt{font-family:'Cormorant Garamond',serif;font-size:18px;color:#fff;letter-spacing:.1em;}
-.logo-div{width:1px;height:20px;background:rgba(255,255,255,.2);}
-.logo-sub{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(255,255,255,.45);font-style:italic;}
-.topbar-r{display:flex;align-items:center;gap:10px;}
-.store-badge{font-size:12px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;}
-.date-b{font-size:12px;color:rgba(255,255,255,.35);}
-.sdot{width:7px;height:7px;border-radius:50%;background:#555;transition:background .4s;}
-.sdot.ok{background:#5db87a;box-shadow:0 0 5px #5db87a99;}
-.sdot.err{background:#e06060;}
-
-/* LOGIN */
-.login-ov{position:fixed;inset:0;z-index:200;background:var(--gd);display:flex;align-items:center;justify-content:center;padding:20px;}
-.login-box{background:var(--cr);border-radius:var(--rl);padding:28px 28px;max-width:440px;width:100%;text-align:center;max-height:90vh;overflow-y:auto;}
-.login-logo{height:30px;margin-bottom:24px;}
-.login-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--gd);margin-bottom:5px;}
-.login-sub{font-size:13px;color:var(--t3);margin-bottom:24px;}
-.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
-.sbtn{border:1.5px solid var(--bd);border-radius:var(--r);padding:10px 8px;background:var(--pa);cursor:pointer;transition:all .2s;text-align:center;}
-.sbtn:hover{border-color:var(--gs);}
-.sbtn.sel{border-color:var(--gs);background:rgba(74,124,89,.07);}
-.sbtn .sn{font-size:14px;font-weight:500;color:var(--gd);display:block;margin-bottom:2px;}
-.sbtn .sa{font-size:11px;color:var(--t3);line-height:1.4;}
-.pw-wrap{position:relative;margin-bottom:12px;}
-.pw-wrap input{width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:11px 40px 11px 14px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
-.pw-wrap input:focus{border-color:var(--gs);}
-.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:16px;padding:4px;}
-.login-err{font-size:13px;color:var(--red);min-height:18px;margin-bottom:10px;}
-.btn-login{width:100%;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:13px;font-size:15px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;letter-spacing:.05em;transition:opacity .2s;}
+/* ── Login ── */
+.login-ov{position:fixed;inset:0;background:var(--gd);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;}
+.login-box{background:var(--cr);border-radius:var(--rl);padding:32px 28px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;}
+.login-logo{height:36px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;}
+.login-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--gd);text-align:center;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--t3);text-align:center;margin-bottom:24px;}
+.login-field{width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px 16px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;margin-bottom:12px;}
+.login-field:focus{border-color:var(--gs);}
+.pw-wrap{position:relative;margin-bottom:16px;}
+.pw-wrap .login-field{margin-bottom:0;padding-right:44px;}
+.pw-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:16px;padding:4px;}
+.login-err{font-size:13px;color:var(--red);min-height:18px;margin-bottom:10px;text-align:center;}
+.btn-login{width:100%;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:14px;font-size:16px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:opacity .2s;letter-spacing:.1em;}
 .btn-login:hover{opacity:.88;}
 
-/* MAIN */
-.main{max-width:680px;margin:0 auto;padding:22px 16px 80px;}
-
-.store-hero{background:var(--gd);border-radius:var(--rl);padding:20px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
-.hero-name{font-family:'Cormorant Garamond',serif;font-size:21px;color:#fff;font-style:italic;}
-.hero-addr{font-size:12px;color:rgba(255,255,255,.35);margin-top:3px;}
-.btn-logout{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
-.btn-logout:hover{color:#fff;background:rgba(255,255,255,.14);}
-
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
-.metric{background:var(--gd);border-radius:var(--r);padding:14px 16px;}
-.ml{font-size:11px;color:rgba(255,255,255,.38);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;}
-.mv{font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:500;color:rgba(255,255,255,.9);}
-.mv.red{color:#e08080;} .mv.grn{color:var(--gi);}
-
-.sh{display:flex;align-items:center;margin-bottom:11px;}
-.st{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--gd);}
-.sl{flex:1;height:1px;background:linear-gradient(90deg,var(--gp),transparent);margin-left:12px;}
-
-.card{background:var(--cr);border:1px solid var(--bd);border-radius:var(--rl);padding:16px;margin-bottom:16px;}
-
-.exp-row{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap;}
-.ig{flex:1;min-width:100px;}
-.ig label{display:block;font-size:11px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;}
-.ig input{width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:9px 11px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
-.ig input:focus{border-color:var(--gs);}
-.btn-add{background:var(--gd);color:#fff;border:none;border-radius:var(--r);padding:9px 16px;font-size:14px;cursor:pointer;white-space:nowrap;transition:opacity .2s;flex-shrink:0;}
-.btn-add:hover{opacity:.85;}
-
-.exp-list{margin-top:13px;}
-.exp-item{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);}
-.exp-item:last-child{border-bottom:none;}
-.exp-name{flex:1;font-size:14px;}
-.exp-amt{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--red);font-weight:500;margin-right:8px;}
-.btn-del{background:none;border:none;color:var(--t3);cursor:pointer;padding:4px 7px;border-radius:6px;font-size:14px;transition:all .2s;}
-.btn-del:hover{color:var(--red);background:var(--rbg);}
-.empty{text-align:center;padding:18px 0;font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--t3);font-style:italic;opacity:.6;}
-
-/* CASH */
-.cash-row{display:grid;grid-template-columns:60px 22px 1fr auto;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);}
-.cash-row:last-child{border-bottom:none;}
-.c-denom{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--gd);text-align:right;}
-.c-type{font-size:11px;color:var(--t3);}
-.c-ctrl{display:flex;align-items:center;gap:8px;}
-.c-pm{width:31px;height:31px;border-radius:50%;border:1px solid var(--bd2);background:var(--pa);color:var(--gd);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;user-select:none;line-height:1;}
-.c-pm:hover{background:var(--gp);border-color:var(--gs);}
-.c-input{width:54px;text-align:center;border:1px solid var(--bd2);border-radius:8px;padding:5px 3px;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--gd);background:var(--pa);outline:none;transition:border-color .2s;}
-.c-input:focus{border-color:var(--gs);}
-.c-eq{font-size:12px;color:var(--t3);white-space:nowrap;}
-.c-sub{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--gs);text-align:right;min-width:68px;}
-.c-sub.z{color:var(--t3);opacity:.35;}
-
-.cash-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:13px;padding-top:13px;border-top:1px solid var(--gp);}
-.cash-foot-l .cfl{font-size:14px;font-weight:500;color:var(--t1);}
-.cash-foot-l .cfh{font-size:11px;color:var(--t3);margin-top:3px;}
-.cash-total{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--gd);}
-.btn-clr{background:none;border:1px solid var(--bd2);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--t3);cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-top:10px;transition:all .2s;}
-.btn-clr:hover{border-color:var(--gs);color:var(--gs);}
-
-/* SUMMARY */
-.sum-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);font-size:14px;}
-.sum-row:last-child{border-bottom:none;}
-.sum-row.tot{font-weight:600;font-size:15px;padding-top:13px;border-top:1px solid var(--gp);border-bottom:none;}
-.sum-label{color:var(--t2);}
-.vg{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--gs);}
-.vr{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--red);}
-.vt{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gd);}
-
-.result{background:linear-gradient(135deg,var(--gd),var(--gm));border-radius:var(--rl);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;box-shadow:0 6px 22px rgba(28,43,26,.18);}
-.result.warn{background:linear-gradient(135deg,#3d1a1a,#5a2828);}
-.r-tit{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(255,255,255,.65);margin-bottom:3px;}
-.r-hint{font-size:12px;color:rgba(255,255,255,.32);}
-.r-num{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600;color:#fff;}
-
-.btn-save{width:100%;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--rl);padding:15px;font-size:15px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;letter-spacing:.05em;margin-bottom:22px;box-shadow:0 4px 16px rgba(28,43,26,.18);transition:all .2s;}
-.btn-save:hover{transform:translateY(-1px);box-shadow:0 7px 22px rgba(28,43,26,.25);}
-
-.his-item{background:var(--cr);border:1px solid var(--bd);border-radius:var(--r);padding:12px 15px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.his-d{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--gd);}
-.his-m{font-size:12px;color:var(--t3);margin-top:2px;}
-.his-r{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:var(--gs);}
-.his-r.neg{color:var(--red);}
-.sh-row{display:flex;align-items:center;margin-bottom:13px;}
-.btn-export{background:var(--gs);color:#fff;border:none;border-radius:20px;padding:7px 15px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;margin-left:10px;transition:opacity .2s;flex-shrink:0;}
-.btn-export:hover{opacity:.85;}
-
-.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--gd);color:rgba(255,255,255,.9);border-radius:30px;padding:10px 22px;font-size:13px;letter-spacing:.04em;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:999;white-space:nowrap;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-.load-ov{display:none;position:fixed;inset:0;background:rgba(28,43,26,.55);backdrop-filter:blur(4px);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
-.load-ov.show{display:flex;}
-.spin{width:32px;height:32px;border:2px solid rgba(255,255,255,.18);border-top-color:var(--gi);border-radius:50%;animation:sp .8s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg);}}
-.load-txt{font-family:'Cormorant Garamond',serif;font-size:16px;color:rgba(255,255,255,.65);font-style:italic;}
-
-@media(max-width:480px){
-  .metrics{grid-template-columns:repeat(2,1fr);}
-  .store-grid{grid-template-columns:1fr;}
-  .cash-row{grid-template-columns:52px 18px 1fr auto;}
-}
-
-/* Month picker */
-.month-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-.month-nav{background:none;border:1px solid var(--bd2);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--t2);cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
-.month-nav:hover{border-color:var(--gs);color:var(--gs);}
-.month-label{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--gd);min-width:100px;text-align:center;}
-.month-summary{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
-.month-sum-item{background:var(--cr);border:1px solid var(--bd);border-radius:var(--r);padding:10px 16px;flex:1;min-width:100px;}
-.ms-label{font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
-.ms-val{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gd);}
-.ms-val.grn{color:var(--gs);}
-.ms-val.red{color:var(--red);}
-
-
-/* ADMIN */
-.admin-main{max-width:860px;margin:0 auto;padding:22px 16px 80px;}
-.admin-hero{background:linear-gradient(135deg,#3d2a0a,#6b4e1a);border-radius:var(--rl);padding:20px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
-.admin-hero-name{font-family:'Cormorant Garamond',serif;font-size:21px;color:#fff;font-style:italic;}
-.admin-hero-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:3px;}
-.store-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
-.store-tab{background:var(--cr);border:1.5px solid var(--bd);border-radius:20px;padding:7px 18px;font-size:13px;cursor:pointer;color:var(--t2);font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
-.store-tab:hover{border-color:var(--gs);color:var(--gs);}
-.store-tab.active{background:var(--gd);border-color:var(--gd);color:#fff;}
-.admin-month-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-
-
-/* Transfer */
-.tr-section{background:var(--cr);border:1px solid var(--bd);border-radius:var(--rl);padding:18px;margin-bottom:16px;}
-.tr-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;}
-.tr-row:last-child{margin-bottom:0;}
-.tr-list{margin-top:4px;}
-.tr-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);}
-.tr-item:last-child{border-bottom:none;}
-.tr-dates{flex:1;}
-.tr-dates .td{font-size:14px;font-weight:500;color:var(--gd);}
-.tr-dates .tm{font-size:12px;color:var(--t3);margin-top:2px;}
-.tr-amt{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--gs);margin-right:10px;}
-.tr-diff{font-size:12px;padding:2px 8px;border-radius:10px;margin-right:8px;}
-.tr-diff.ok{background:rgba(74,124,89,.1);color:var(--gs);}
-.tr-diff.ov{background:rgba(74,124,89,.1);color:var(--gs);}
-.tr-diff.un{background:rgba(184,48,48,.08);color:var(--red);}
-.tr-summary{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--gp);margin-top:10px;font-size:14px;}
-.tr-sum-label{color:var(--t2);}
-.tr-sum-val{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--gd);}
-
-
-/* Edit panel */
-.edit-panel{
-  background:linear-gradient(135deg,rgba(74,124,89,.06),rgba(74,124,89,.02));
-  border:1.5px solid rgba(74,124,89,.3);
-  border-radius:var(--r);
-  padding:16px;
-  margin-top:10px;
-  display:none;
-}
-.edit-panel.open{display:block;}
-.edit-section-title{font-size:12px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
-.edit-exp-list{margin-bottom:12px;}
-.edit-exp-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);}
-.edit-exp-item:last-child{border-bottom:none;}
-.edit-exp-name{flex:1;font-size:13px;color:var(--t2);}
-.edit-exp-amt{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--red);margin-right:4px;}
-.edit-add-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
-.edit-input{border:1px solid var(--bd2);border-radius:8px;padding:7px 10px;font-size:13px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
-.edit-input:focus{border-color:var(--gs);}
-.edit-cash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:12px;}
-.edit-cash-row{display:flex;align-items:center;gap:8px;background:var(--pa);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;}
-.edit-cash-label{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;color:var(--gd);width:40px;text-align:right;flex-shrink:0;}
-.edit-cash-type{font-size:11px;color:var(--t3);width:16px;flex-shrink:0;}
-.edit-cash-ctrl{display:flex;align-items:center;gap:6px;flex:1;}
-.edit-pm{width:26px;height:26px;border-radius:50%;border:1px solid var(--bd2);background:#fff;color:var(--gd);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
-.edit-pm:hover{background:var(--gp);}
-.edit-cash-input{width:42px;text-align:center;border:1px solid var(--bd2);border-radius:6px;padding:4px 2px;font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gd);background:var(--pa);outline:none;}
-.edit-result-preview{background:var(--gd);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin:10px 0;}
-.edit-result-label{font-size:12px;color:rgba(255,255,255,.5);}
-.edit-result-num{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:#fff;}
-.edit-result-preview.warn{background:linear-gradient(135deg,#3d1a1a,#5a2828);}
-.edit-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;}
-.btn-edit-save{background:var(--gd);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity .2s;}
-.btn-edit-save:hover{opacity:.85;}
-.btn-edit-cancel{background:none;border:1px solid var(--bd2);color:var(--t2);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
-.his-edit-btn{background:rgba(74,124,89,.08);border:1px solid rgba(74,124,89,.2);color:var(--gs);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
-.his-edit-btn:hover{background:rgba(74,124,89,.15);}
-.his-item{flex-direction:column;align-items:stretch;}
-.his-item-top{display:flex;align-items:center;justify-content:space-between;}
-
-
-/* Laundry (台北專用) */
-.laundry-section{margin-top:8px;}
-.laundry-card-stat{
-  background:linear-gradient(135deg,var(--gd),var(--gm));
-  border-radius:var(--r);
-  padding:16px 20px;
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:14px;
-}
-.ls-left .ls-label{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
-.ls-left .ls-store{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:2px;}
-.ls-right{text-align:right;}
-.ls-right .ls-pts-label{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:3px;}
-.ls-right .ls-pts{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:#fff;}
-.ls-right .ls-pts span{font-size:13px;font-weight:400;opacity:.5;margin-left:4px;}
-.btn-topup{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
-.btn-topup:hover{background:rgba(255,255,255,.18);color:#fff;}
-
-.laundry-form{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;}
-.lg{flex:1;min-width:90px;}
-.lg label{display:block;font-size:11px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px;}
-.lg input{width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:8px 10px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
-.lg input:focus{border-color:var(--gs);}
-.btn-laundry-add{background:var(--gd);color:#fff;border:none;border-radius:var(--r);padding:9px 16px;font-size:13px;cursor:pointer;white-space:nowrap;transition:opacity .2s;flex-shrink:0;}
-.btn-laundry-add:hover{opacity:.85;}
-
-.laundry-list{margin-top:4px;}
-.laundry-item{
-  background:var(--pa);
-  border:1px solid var(--bd);
-  border-radius:var(--r);
-  padding:11px 14px;
-  display:flex;align-items:flex-start;justify-content:space-between;
-  margin-bottom:8px;
-}
-.li-left .li-date{font-size:14px;font-weight:500;color:var(--gd);}
-.li-left .li-meta{font-size:12px;color:var(--t3);margin-top:3px;line-height:1.6;}
-.li-right{display:flex;align-items:center;gap:10px;}
-.li-pts{text-align:right;}
-.li-pts .li-deduct{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--red);font-weight:500;}
-.li-pts .li-remain{font-size:11px;color:var(--t3);margin-top:2px;}
-
-/* topup modal */
-.topup-modal{display:none;position:fixed;inset:0;background:rgba(28,43,26,.7);z-index:400;align-items:center;justify-content:center;padding:20px;}
-.topup-modal.open{display:flex;}
-.topup-box{background:var(--cr);border-radius:var(--rl);padding:28px 24px;max-width:360px;width:100%;}
-.topup-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gd);margin-bottom:16px;}
-.topup-row{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-.topup-input{width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:10px 13px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
-.topup-input:focus{border-color:var(--gs);}
-.topup-actions{display:flex;gap:10px;justify-content:flex-end;}
-.btn-topup-cancel{background:none;border:1px solid var(--bd2);color:var(--t2);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
-.btn-topup-confirm{background:var(--gd);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity .2s;}
-.btn-topup-confirm:hover{opacity:.85;}
-
-
-/* Staff login tab */
-.login-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--bd);position:relative;z-index:1;}
-.login-tab{flex:1;padding:12px 10px;text-align:center;font-size:14px;color:var(--t3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Noto Sans TC',sans-serif;transition:all .2s;user-select:none;-webkit-user-select:none;}
-.login-tab:hover{color:var(--t2);}
-.login-tab.active{color:var(--gs);border-bottom-color:var(--gs);font-weight:500;}
-
-/* Change password modal */
+/* ── Change PW Modal ── */
 .chpw-modal{display:none;position:fixed;inset:0;background:rgba(28,43,26,.85);z-index:500;align-items:center;justify-content:center;padding:20px;}
 .chpw-modal.open{display:flex;}
 .chpw-box{background:var(--cr);border-radius:var(--rl);padding:32px 28px;max-width:400px;width:100%;}
-.chpw-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--gd);margin-bottom:6px;}
+.chpw-title{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gd);margin-bottom:6px;}
 .chpw-sub{font-size:13px;color:var(--t3);margin-bottom:20px;}
-.chpw-input{width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:11px 14px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;margin-bottom:10px;transition:border-color .2s;}
-.chpw-input:focus{border-color:var(--gs);}
+.chpw-input{width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:11px 14px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;margin-bottom:10px;}
 .chpw-err{font-size:13px;color:var(--red);min-height:18px;margin-bottom:10px;}
-.btn-chpw{width:100%;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:13px;font-size:15px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:opacity .2s;}
-.btn-chpw:hover{opacity:.88;}
+.btn-chpw{width:100%;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:13px;font-size:15px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;}
 
-/* User badge in topbar */
-.user-badge{font-size:12px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:5px;}
+/* ── Topbar ── */
+.topbar{position:sticky;top:0;z-index:50;background:var(--gd);display:flex;align-items:center;justify-content:space-between;padding:10px 20px;}
+.topbar-l{display:flex;align-items:center;gap:12px;}
+.logo-img{height:22px;filter:brightness(0) invert(1);opacity:.85;}
+.logo-sep{width:1px;height:18px;background:rgba(255,255,255,.2);}
+.logo-sub{font-size:13px;color:rgba(255,255,255,.6);letter-spacing:.04em;}
+.topbar-r{display:flex;align-items:center;gap:10px;}
+.store-badge{font-size:13px;color:var(--gp);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;display:none;}
+.user-badge{font-size:12px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:5px;display:none;}
 .user-role-dot{width:6px;height:6px;border-radius:50%;background:#5db87a;}
 .user-role-dot.user{background:#f0b060;}
+.date-b{font-size:12px;color:rgba(255,255,255,.45);}
+.sdot{width:8px;height:8px;border-radius:50%;background:#666;transition:background .3s;}
+.sdot.ok{background:#5db87a;}
+.sdot.err{background:#e05555;}
 
-/* Draft badge */
+/* ── Layout ── */
+#main{display:none;max-width:680px;margin:0 auto;padding:20px 16px 80px;}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,var(--gm),var(--gd));border-radius:var(--rl);padding:20px 22px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-start;}
+.hero-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:#fff;}
+.hero-addr{font-size:12px;color:rgba(255,255,255,.5);margin-top:3px;}
+.btn-switch{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s;white-space:nowrap;}
+.btn-switch:hover{background:rgba(255,255,255,.2);}
+
+/* ── Metric cards ── */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.metric{background:var(--gd);border-radius:12px;padding:14px;position:relative;overflow:hidden;}
+.ml{font-size:11px;color:rgba(255,255,255,.45);margin-bottom:6px;}
+.mv{font-size:22px;font-weight:500;color:#fff;font-family:'Cormorant Garamond',serif;}
+.mv.red{color:#f08080;}
+.mv.grn{color:var(--gp);}
+.metric-icon{position:absolute;top:8px;right:10px;opacity:.12;font-size:26px;}
+
+/* ── Quick icons ── */
+.quick-icons{display:grid;gap:8px;margin-bottom:16px;}
+.quick-icons.cols3{grid-template-columns:repeat(3,1fr);}
+.quick-icons.cols4{grid-template-columns:repeat(4,1fr);}
+.qi{background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;}
+.qi:hover{border-color:var(--gs);}
+.qi i{font-size:22px;color:var(--gs);display:block;margin-bottom:5px;}
+.qi span{font-size:11px;color:var(--t2);font-weight:500;}
+
+/* ── Section ── */
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.st{font-size:15px;font-weight:500;color:var(--gd);}
+.sl{flex:1;height:1px;background:var(--gp);}
+
+/* ── Card ── */
+.card{background:var(--pa);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px;}
+
+/* ── Income rows ── */
+.income-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);}
+.income-row:last-of-type{border-bottom:none;}
+.income-amt{font-size:16px;font-weight:500;color:var(--gs);font-family:'Cormorant Garamond',serif;}
+.income-note{font-size:13px;color:var(--t2);flex:1;}
+.income-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:2px 6px;}
+.income-del:hover{color:var(--red);}
+.income-total{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--bd);margin-top:8px;}
+.income-total-label{font-size:13px;color:var(--t3);}
+.income-total-amt{font-size:20px;font-weight:500;color:var(--gs);font-family:'Cormorant Garamond',serif;}
+.empty-hint{text-align:center;color:var(--t3);font-size:13px;padding:16px 0;}
+
+/* ── Expense rows ── */
+.exp-row-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);}
+.exp-row-item:last-of-type{border-bottom:none;}
+.exp-name{font-size:14px;color:var(--t1);}
+.exp-amt-label{font-size:14px;color:var(--red);font-family:'Cormorant Garamond',serif;}
+.exp-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;padding:2px 6px;}
+.exp-del:hover{color:var(--red);}
+
+/* ── Input row ── */
+.add-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:10px;}
+.add-row.two{grid-template-columns:1fr 1fr auto;}
+.fi{width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:9px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;}
+.fi:focus{border-color:var(--gs);}
+.btn-add{background:var(--gd);color:#fff;border:none;border-radius:var(--r);padding:9px 16px;font-size:14px;cursor:pointer;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;}
+.btn-add:hover{opacity:.88;}
+
+/* ── Result box ── */
+.result-box{background:var(--gd);border-radius:12px;padding:18px 20px;margin-bottom:14px;}
+.result-box.warn{background:#5A2020;}
+.result-label{font-size:12px;color:rgba(255,255,255,.45);margin-bottom:4px;}
+.result-amount{font-size:36px;font-weight:500;color:#fff;font-family:'Cormorant Garamond',serif;}
+.result-hint{font-size:12px;color:rgba(255,255,255,.4);margin-top:6px;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;}
+.result-sub{background:rgba(255,255,255,.06);border-radius:8px;padding:8px;}
+.result-sub-label{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:3px;}
+.result-sub-val{font-size:15px;font-weight:500;color:#fff;font-family:'Cormorant Garamond',serif;}
+
+/* ── Fund check ── */
+.fund-check{background:var(--pa);border:2px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:14px;}
+.fund-check.ok{border-color:var(--gs);}
+.fund-check.warn{border-color:var(--red);}
+.fund-status{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.fund-status-label{font-size:13px;color:var(--t2);}
+.fund-status-val{font-size:18px;font-weight:500;color:var(--t1);font-family:'Cormorant Garamond',serif;}
+
+/* ── Cash counting ── */
+.cash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);}
+.cash-row:last-child{border-bottom:none;}
+.cash-denom{font-size:13px;font-weight:500;color:var(--t1);width:44px;text-align:right;}
+.cash-type{font-size:11px;color:var(--t3);width:16px;}
+.cash-ctrl{display:flex;align-items:center;gap:8px;flex:1;}
+.c-pm{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--bd2);background:var(--pa);font-size:16px;color:var(--gs);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.c-pm:hover{border-color:var(--gs);background:var(--gp);}
+.c-num{width:36px;height:28px;border:1.5px solid var(--bd2);border-radius:6px;text-align:center;font-size:14px;font-weight:500;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;}
+.c-sub{font-size:13px;color:var(--gs);margin-left:auto;font-family:'Cormorant Garamond',serif;}
+.c-sub.z{color:var(--t3);}
+.cash-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--bd);margin-top:6px;}
+.cash-total-label{font-size:13px;color:var(--t2);}
+.cash-total-val{font-size:20px;font-weight:500;color:var(--gd);font-family:'Cormorant Garamond',serif;}
+.btn-clear{background:none;border:1px solid var(--bd2);color:var(--t3);border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-top:10px;}
+
+/* ── Draft ── */
 .draft-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(184,150,60,.12);border:1px solid rgba(184,150,60,.3);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--gold);margin-bottom:12px;}
-.draft-actions{display:flex;gap:10px;margin-bottom:18px;}
-.btn-draft{flex:1;background:none;border:1.5px solid var(--bd2);color:var(--t2);border-radius:var(--r);padding:12px;font-size:14px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s;}
+.draft-actions{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:18px;}
+.btn-draft{background:none;border:1.5px solid var(--bd2);color:var(--t2);border-radius:var(--r);padding:13px;font-size:14px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s;}
 .btn-draft:hover{border-color:var(--gold);color:var(--gold);}
-.btn-finalize{flex:2;background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:12px;font-size:15px;font-weight:500;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-finalize{background:linear-gradient(135deg,var(--gm),var(--gd));color:#fff;border:none;border-radius:var(--r);padding:13px;font-size:15px;font-weight:500;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .2s;}
 .btn-finalize:hover{opacity:.88;}
 
-/* User mode - hide manager sections */
+/* ── Transfer ── */
+.tr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.tr-preview{background:rgba(74,124,89,.08);border:1px solid rgba(74,124,89,.25);border-radius:var(--r);padding:12px;margin-bottom:10px;display:none;}
+.tr-preview-label{font-size:12px;color:var(--gs);}
+.tr-preview-amt{font-size:22px;font-weight:500;color:var(--gd);font-family:'Cormorant Garamond',serif;}
+.tr-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);}
+.tr-item:last-child{border-bottom:none;}
+.tr-date{font-size:13px;color:var(--t2);}
+.tr-amt{font-size:15px;font-weight:500;font-family:'Cormorant Garamond',serif;}
+.tr-diff{font-size:12px;border-radius:20px;padding:2px 10px;}
+.tr-diff.ok{background:rgba(74,124,89,.1);color:var(--gs);}
+.tr-diff.over{background:rgba(184,150,60,.1);color:var(--gold);}
+.tr-diff.under{background:rgba(184,48,48,.1);color:var(--red);}
+.tr-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;}
+
+/* ── History ── */
+.month-nav{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.btn-month{background:none;border:1px solid var(--bd2);color:var(--t2);border-radius:20px;padding:5px 14px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.month-label{font-size:15px;font-weight:500;color:var(--gd);}
+.btn-excel{background:var(--gs);color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-left:auto;}
+.ms-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.ms-card{background:var(--pa);border:1px solid var(--bd);border-radius:var(--r);padding:12px;}
+.ms-label{font-size:11px;color:var(--t3);margin-bottom:4px;}
+.ms-val{font-size:18px;font-weight:500;color:var(--t1);font-family:'Cormorant Garamond',serif;}
+.ms-val.red{color:var(--red);}
+.his-item{background:var(--pa);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:8px;}
+.his-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.his-date{font-size:14px;font-weight:500;color:var(--gd);}
+.his-ret{font-size:18px;font-weight:500;font-family:'Cormorant Garamond',serif;color:var(--gs);}
+.his-ret.zero{color:var(--t3);}
+.his-meta{font-size:12px;color:var(--t3);}
+.his-actions{display:flex;gap:8px;margin-top:10px;}
+.btn-edit{background:none;border:1px solid var(--bd2);color:var(--t2);border-radius:20px;padding:4px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.btn-del-rec{background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;}
+.his-edit-panel{display:none;margin-top:12px;border-top:1px solid var(--bd);padding-top:12px;}
+
+/* ── Retry btn ── */
+.retry-wrap{text-align:center;padding:20px 0;}
+.btn-retry{background:none;border:1px solid var(--bd2);color:var(--t3);border-radius:20px;padding:8px 20px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+
+/* ── Laundry ── */
+.laundry-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.pts-bar{background:var(--gd);border-radius:var(--r);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.pts-label{font-size:12px;color:rgba(255,255,255,.45);}
+.pts-val{font-size:24px;font-weight:500;color:#fff;font-family:'Cormorant Garamond',serif;}
+.btn-topup{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.laundry-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);}
+.laundry-item:last-child{border-bottom:none;}
+
+/* ── Toast ── */
+.toast-ov{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none;}
+.toast-box{background:var(--gd);color:#fff;border-radius:20px;padding:10px 20px;font-size:14px;font-family:'Noto Sans TC',sans-serif;opacity:0;transition:opacity .3s;white-space:nowrap;}
+.toast-box.show{opacity:1;}
+
+/* ── Load overlay ── */
+.load-ov{position:fixed;inset:0;background:rgba(28,43,26,.6);z-index:150;display:none;align-items:center;justify-content:center;}
+.load-ov.show{display:flex;}
+.load-spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── User mode ── */
 .manager-only{transition:opacity .3s;}
 .user-mode .manager-only{display:none!important;}
 
+/* ── Responsive ── */
+@media(max-width:480px){
+  .metrics{grid-template-columns:repeat(3,1fr);}
+  .mv{font-size:18px;}
+  .add-row.two{grid-template-columns:1fr 1fr;} 
+  .add-row.two .btn-add{grid-column:1/-1;}
+  .tr-grid{grid-template-columns:1fr;}
+}
 </style>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="logo">
-    <img class="logo-img" src="https://urbanjungle.com.tw/wp-content/uploads/2020/05/logo-H.svg" alt=""
-      onerror="this.style.display='none';document.getElementById('ltxt').style.display='block'"/>
-    <span id="ltxt" class="logo-txt" style="display:none">URBAN JUNGLE</span>
-    <div class="logo-div"></div>
-    <span class="logo-sub">下班結帳 3.0</span>
-  </div>
-  <div class="topbar-r">
-    <span class="store-badge" id="store-badge" style="display:none"></span>
-    <div class="user-badge" id="user-badge" style="display:none">
-      <div class="user-role-dot" id="user-role-dot"></div>
-      <span id="user-display-name"></span>
-    </div>
-    <span class="date-b" id="date-b"></span>
-    <div class="sdot" id="sdot"></div>
-  </div>
-</div>
-
-<!-- LOGIN -->
+<!-- Login -->
 <div class="login-ov" id="login-ov">
   <div class="login-box">
-    <img class="login-logo" src="https://urbanjungle.com.tw/wp-content/uploads/2020/05/logo-H.svg" alt=""
-      onerror="this.style.display='none'"/>
+    <img class="login-logo" src="https://urbanjungle.com.tw/wp-content/uploads/2020/05/logo-H.svg" alt="" onerror="this.style.display='none'"/>
     <div class="login-title">Urban Jungle</div>
     <div class="login-sub">下班結帳系統 3.0</div>
-
-    <div style="margin-bottom:12px;">
-      <input id="login-username" type="text" placeholder="帳號"
-        style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:13px 16px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;"
-        onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"/>
+    <input id="login-username" type="text" class="login-field" placeholder="帳號" onkeydown="if(event.key==='Enter')$('login-pw').focus()"/>
+    <div class="pw-wrap">
+      <input id="login-pw" type="password" class="login-field" placeholder="密碼" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="pw-eye" onclick="togglePw('login-pw')">👁</button>
     </div>
-    <div style="position:relative;margin-bottom:16px;">
-      <input id="login-pw" type="password" placeholder="密碼"
-        style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:13px 44px 13px 16px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;transition:border-color .2s;"
-        onkeydown="if(event.key==='Enter')doUnifiedLogin()"/>
-      <button onclick="toggleLoginPw()"
-        style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:16px;padding:4px;">👁</button>
-    </div>
-
     <div class="login-err" id="lerr"></div>
-    <button class="btn-login" onclick="doUnifiedLogin()">登　入</button>
+    <button class="btn-login" onclick="doLogin()">登　入</button>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main" id="main" style="display:none">
-
-  <div class="store-hero">
-    <div>
-      <div class="hero-name" id="hero-name"></div>
-      <div class="hero-addr" id="hero-addr"></div>
-    </div>
-    <button class="btn-logout" onclick="doLogout()">切換門市</button>
-  </div>
-
-  <div class="metrics">
-    <div class="metric" style="position:relative;overflow:hidden;">
-      <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-wallet" aria-hidden="true"></i></div>
-      <div class="ml">零用金餘額</div><div class="mv" id="m-pool">$3,000</div>
-
-    </div>
-    <div class="metric" style="position:relative;overflow:hidden;">
-      <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-receipt" aria-hidden="true"></i></div>
-      <div class="ml">今日支出</div><div class="mv red" id="m-exp">$0</div>
-    </div>
-    <div class="metric" style="position:relative;overflow:hidden;">
-      <div style="position:absolute;top:8px;right:10px;opacity:.15;font-size:28px;"><i class="ti ti-cash" aria-hidden="true"></i></div>
-      <div class="ml">今日包回</div><div class="mv grn" id="m-ret">$0</div>
-    </div>
-  </div>
-
-  <!-- 支出 -->
-  <!-- 快速操作圖標列 -->
-  <div class="manager-only" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;">
-    <div onclick="scrollToSection('exp-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
-      <i class="ti ti-receipt" style="font-size:24px;color:var(--gs);" aria-hidden="true"></i>
-      <div style="font-size:11px;color:var(--t2);margin-top:6px;font-weight:500;">支出</div>
-    </div>
-    <div onclick="scrollToSection('cash-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
-      <i class="ti ti-coins" style="font-size:24px;color:var(--gs);" aria-hidden="true"></i>
-      <div style="font-size:11px;color:var(--t2);margin-top:6px;font-weight:500;">清點</div>
-    </div>
-    <div onclick="scrollToSection('history-sec')" style="background:var(--cr);border:1px solid var(--bd);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .18s;" onmouseover="this.style.borderColor='var(--gs)'" onmouseout="this.style.borderColor='var(--bd)'">
-      <i class="ti ti-history" style="font-size:24px;color:var(--gs);" aria-hidden="true"></i>
-      <div style="font-size:11px;color:var(--t2);margin-top:6px;font-weight:500;">歷史</div>
-    </div>
-  </div>
-
-  <div class="sh" id="exp-sec"><span class="st">新增支出</span><div class="sl"></div></div>
-  <div class="card">
-    <div class="exp-row">
-      <div class="ig" style="flex:2"><label>項目名稱</label><input type="text" id="exp-name" placeholder="文具、餐費…"/></div>
-      <div class="ig" style="flex:1"><label>金額（元）</label><input type="number" id="exp-amt" placeholder="0" min="0"/></div>
-      <button class="btn-add" onclick="addExp()">＋ 新增</button>
-    </div>
-    <div class="exp-list" id="exp-list"><div class="empty">尚無支出記錄</div></div>
-  </div>
-
-  <!-- 清點 -->
-  <div class="sh manager-only" id="cash-sec"><span class="st">現金清點</span><div class="sl"></div></div>
-  <div class="card manager-only">
-    <div id="cash-rows"></div>
-    <div class="cash-foot">
-      <div class="cash-foot-l">
-        <div class="cfl">清點總金額</div>
-        <div class="cfh">含零用金 $3,000 在內</div>
-      </div>
-      <div class="cash-total" id="cash-total">$0</div>
-    </div>
-    <button class="btn-clr" onclick="clearCash()">清除重填</button>
-  </div>
-
-  <!-- 總覽 -->
-  <div class="sh manager-only"><span class="st">結帳總覽</span><div class="sl"></div></div>
-  <div class="card manager-only" style="margin-bottom:14px">
-    <div class="sum-row"><span class="sum-label">清點現金（含零用金）</span><span class="vg" id="s-cash">$0</span></div>
-    <div class="sum-row"><span class="sum-label">扣除當日支出</span><span class="vr" id="s-exp">-$0</span></div>
-    <div class="sum-row tot"><span class="sum-label">今日包回金額（超出備用金部分）</span><span class="vt" id="s-ret">$0</span></div>
-  </div>
-
-  <div class="result manager-only" id="result">
-    <div><div class="r-tit" id="r-tit">應收回金額</div><div class="r-hint" id="r-hint">清點 − 零用金 − 支出</div></div>
-    <div class="r-num" id="r-num">$0</div>
-  </div>
-
-  <!-- Draft status indicator -->
-  <div id="draft-indicator" style="display:none;">
-    <div class="draft-badge">🟡 草稿暫存中 — 尚未完成結帳</div>
-  </div>
-
-  <!-- Save buttons -->
-  <div class="draft-actions manager-only">
-    <button class="btn-draft" onclick="saveDraft()">💾 暫存草稿</button>
-    <button class="btn-finalize" onclick="finalizeDay()">✅ 完成結帳</button>
-  </div>
-
-  <!-- 洗浴巾記錄（台北旗艦店專用） -->
-  <div id="laundry-section" style="display:none;">
-    <div class="sh"><span class="st">🧺 洗浴巾記錄</span><div class="sl"></div></div>
-    <div class="card laundry-section">
-      <!-- 點數卡狀態 -->
-      <div class="laundry-card-stat">
-        <div class="ls-left">
-          <div class="ls-label">點數卡剩餘點數</div>
-          <div class="ls-store">台北旗艦店</div>
-        </div>
-        <div class="ls-right">
-          <div class="ls-pts-label">目前點數</div>
-          <div class="ls-pts"><span id="lau-pts">—</span> <span>點</span></div>
-        </div>
-        <button class="btn-topup" onclick="openTopup()" style="margin-left:16px;">＋ 充值</button>
-      </div>
-
-      <!-- 新增記錄 -->
-      <div class="laundry-form">
-        <div class="lg" style="flex:1.5;min-width:130px;">
-          <label>日期時間</label>
-          <input type="datetime-local" id="lau-datetime"/>
-        </div>
-        <div class="lg" style="min-width:70px;">
-          <label>浴巾數量</label>
-          <input type="number" id="lau-qty" placeholder="0" min="1"/>
-        </div>
-        <div class="lg" style="min-width:70px;">
-          <label>扣除點數</label>
-          <input type="number" id="lau-deduct" placeholder="0" min="1"/>
-        </div>
-        <div class="lg" style="min-width:90px;">
-          <label>負責人</label>
-          <input type="text" id="lau-who" placeholder="姓名"/>
-        </div>
-        <button class="btn-laundry-add" onclick="addLaundry()">＋ 新增</button>
-      </div>
-      <div class="laundry-list" id="lau-list"><div class="empty">尚無洗浴巾記錄</div></div>
-    </div>
-  </div>
-
-  <!-- 充值 Modal -->
-  <div class="topup-modal" id="topup-modal">
-    <div class="topup-box">
-      <div class="topup-title">點數卡充值</div>
-      <div class="topup-row">
-        <input class="topup-input" type="number" id="topup-pts" placeholder="充值點數" min="1"/>
-        <input class="topup-input" type="text" id="topup-who" placeholder="充值人姓名"/>
-        <input class="topup-input" type="datetime-local" id="topup-datetime"/>
-      </div>
-      <div class="topup-actions">
-        <button class="btn-topup-cancel" onclick="closeTopup()">取消</button>
-        <button class="btn-topup-confirm" onclick="confirmTopup()">確認充值</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 區間匯款紀錄 -->
-  <div class="sh manager-only"><span class="st">區間營收匯款</span><div class="sl"></div></div>
-  <div class="tr-section manager-only">
-    <div class="tr-row">
-      <div class="ig" style="flex:1;min-width:130px;">
-        <label>開始日期</label>
-        <input type="date" id="tr-from" onchange="autoCalcTransfer()" style="width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:9px 11px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
-      </div>
-      <div class="ig" style="flex:1;min-width:130px;">
-        <label>結束日期</label>
-        <input type="date" id="tr-to" onchange="autoCalcTransfer()" style="width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:9px 11px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
-      </div>
-      <div class="ig" style="flex:1;min-width:120px;">
-        <label>匯款金額（元）</label>
-        <input type="number" id="tr-amt" placeholder="0" min="0" style="width:100%;border:1px solid var(--bd2);border-radius:var(--r);padding:9px 11px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
-      </div>
-      <button class="btn-add" onclick="addTransfer()" style="margin-bottom:1px;">＋ 新增</button>
-    </div>
-    <!-- 區間預覽 -->
-    <div id="tr-preview" style="display:none;background:linear-gradient(135deg,rgba(74,124,89,.1),rgba(74,124,89,.04));border:1.5px solid rgba(74,124,89,.3);border-radius:var(--r);padding:14px 16px;margin-top:12px;margin-bottom:4px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-        <div>
-          <div style="font-size:12px;color:var(--t3);margin-bottom:4px;letter-spacing:.04em;">📅 區間應收回加總</div>
-          <div id="tr-preview-range" style="font-size:13px;color:var(--t2);margin-bottom:4px;font-weight:500;"></div>
-          <div id="tr-preview-days" style="font-size:12px;color:var(--t3);"></div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:12px;color:var(--t3);margin-bottom:2px;">建議匯款金額</div>
-          <div id="tr-preview-amt" style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--gd);"></div>
-        </div>
-      </div>
-    </div>
-    <div id="tr-calc-hint" style="font-size:12px;color:var(--t3);margin:6px 0;min-height:16px;"></div>
-    <div class="tr-list" id="tr-list"><div class="empty" style="padding:14px 0;">尚無匯款紀錄</div></div>
-  </div>
-
-  <div class="sh"><span class="st">歷史紀錄</span><div class="sl"></div></div>
-
-  <!-- Month navigation -->
-  <div class="month-bar">
-    <button class="month-nav" onclick="changeMonth(-1)">◀ 上個月</button>
-    <div class="month-label" id="month-label"></div>
-    <button class="month-nav" onclick="changeMonth(1)" id="btn-next-month">下個月 ▶</button>
-    <button class="btn-export" onclick="exportExcel()" style="margin-left:auto;">↓ 匯出 Excel</button>
-  </div>
-
-  <!-- Month summary -->
-  <div class="month-summary">
-    <div class="month-sum-item"><div class="ms-label">本期總收入</div><div class="ms-val grn" id="ms-income">$0</div></div>
-    <div class="month-sum-item"><div class="ms-label">本期總支出</div><div class="ms-val red" id="ms-expense">$0</div></div>
-    <div class="month-sum-item"><div class="ms-label">本期應收回</div><div class="ms-val" id="ms-return">$0</div></div>
-  </div>
-
-  <div id="his-list"><div class="empty">尚無已儲存紀錄</div></div>
-
-  <div style="text-align:center;margin-top:20px;">
-    <button onclick="retryConnect()" style="background:none;border:1px solid var(--bd2);color:var(--t3);border-radius:20px;padding:7px 18px;font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">
-      🔄 重新連線資料庫
-    </button>
-  </div>
-
-</div>
-
-<!-- ADMIN MAIN -->
-<div class="admin-main" id="admin-main" style="display:none;">
-
-  <div class="admin-hero">
-    <div>
-      <div class="admin-hero-name">👑 總覽管理</div>
-      <div class="admin-hero-sub">Urban Jungle · 所有門市紀錄</div>
-    </div>
-    <button class="btn-logout" onclick="doLogout()">登出</button>
-  </div>
-
-  <!-- Store tabs -->
-  <div class="store-tabs" id="admin-store-tabs"></div>
-
-  <!-- Month nav -->
-  <div class="admin-month-bar">
-    <button class="month-nav" onclick="adminChangeMonth(-1)">◀ 上個月</button>
-    <div class="month-label" id="admin-month-label"></div>
-    <button class="month-nav" onclick="adminChangeMonth(1)" id="admin-btn-next">下個月 ▶</button>
-    <button class="btn-export" onclick="adminExportExcel()" style="margin-left:auto;">↓ 匯出 Excel</button>
-  </div>
-
-  <!-- Month summary -->
-  <div class="month-summary">
-    <div class="month-sum-item"><div class="ms-label">本期總收入</div><div class="ms-val grn" id="adm-income">$0</div></div>
-    <div class="month-sum-item"><div class="ms-label">本期總支出</div><div class="ms-val red" id="adm-expense">$0</div></div>
-    <div class="month-sum-item"><div class="ms-label">本期應收回</div><div class="ms-val" id="adm-return">$0</div></div>
-  </div>
-
-  <div id="admin-his-list"><div class="empty">請選擇門市</div></div>
-
-  <!-- 區間匯款紀錄 -->
-  <div class="sh" style="margin-top:24px;"><span class="st">區間營收匯款紀錄</span><div class="sl"></div></div>
-  <div id="admin-tr-list"><div class="empty">請選擇門市</div></div>
-
-  <!-- 洗浴巾記錄（台北店） -->
-  <div id="admin-laundry-section" style="display:none;margin-top:24px;">
-    <div class="sh"><span class="st">🧺 洗浴巾記錄</span><div class="sl"></div></div>
-    <div class="laundry-card-stat" style="border-radius:var(--r);margin-bottom:12px;">
-      <div class="ls-left">
-        <div class="ls-label">點數卡剩餘點數</div>
-        <div class="ls-store">台北旗艦店</div>
-      </div>
-      <div class="ls-right">
-        <div class="ls-pts-label">目前點數</div>
-        <div class="ls-pts"><span id="admin-lau-pts">—</span> <span>點</span></div>
-      </div>
-    </div>
-    <div id="admin-lau-list"><div class="empty">尚無洗浴巾記錄</div></div>
-    <div style="margin-top:16px;">
-      <div class="sh"><span class="st" style="font-size:15px;">充值紀錄</span><div class="sl"></div></div>
-      <div id="admin-topup-list"><div class="empty">尚無充值記錄</div></div>
-    </div>
-  </div>
-
-</div>
-
-<!-- Change Password Modal -->
+<!-- Change PW Modal -->
 <div class="chpw-modal" id="chpw-modal">
   <div class="chpw-box">
     <div class="chpw-title">設定新密碼</div>
-    <div class="chpw-sub" id="chpw-sub">首次登入請設定專屬密碼</div>
+    <div class="chpw-sub" id="chpw-sub">首次登入請設定您的專屬密碼</div>
     <input class="chpw-input" type="password" id="chpw-new" placeholder="新密碼（至少 6 個字元）"/>
     <input class="chpw-input" type="password" id="chpw-confirm" placeholder="確認新密碼"/>
     <div class="chpw-err" id="chpw-err"></div>
@@ -660,1410 +272,563 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--pa);color:var(--t1);
   </div>
 </div>
 
-<div class="load-ov" id="load-ov"><div class="spin"></div><div class="load-txt" id="load-txt">載入中</div></div>
-<div class="toast" id="toast"></div>
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-l">
+    <img class="logo-img" src="https://urbanjungle.com.tw/wp-content/uploads/2020/05/logo-H.svg" alt="UJ" onerror="this.style.display='none'"/>
+    <div class="logo-sep"></div>
+    <span class="logo-sub">下班結帳 3.0</span>
+  </div>
+  <div class="topbar-r">
+    <span class="store-badge" id="store-badge"></span>
+    <div class="user-badge" id="user-badge"><div class="user-role-dot" id="user-role-dot"></div><span id="user-display-name"></span></div>
+    <span class="date-b" id="date-b"></span>
+    <div class="sdot" id="sdot"></div>
+  </div>
+</div>
 
+<!-- Main -->
+<div id="main">
+  <!-- Hero -->
+  <div class="hero" style="margin-top:16px;">
+    <div><div class="hero-name" id="hero-name"></div><div class="hero-addr" id="hero-addr"></div></div>
+    <button class="btn-switch" onclick="doLogout()">切換門市</button>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric"><div class="metric-icon"><i class="ti ti-wallet"></i></div><div class="ml">零用金餘額</div><div class="mv" id="m-fund">$3,000</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-receipt"></i></div><div class="ml">今日支出</div><div class="mv red" id="m-exp">$0</div></div>
+    <div class="metric"><div class="metric-icon"><i class="ti ti-cash"></i></div><div class="ml">應匯金額</div><div class="mv grn" id="m-ret">$0</div></div>
+  </div>
+
+  <!-- Quick icons -->
+  <div class="quick-icons cols3 manager-only" id="quick-icons">
+    <div class="qi" onclick="scrollTo('income-sec')"><i class="ti ti-cash"></i><span>收款</span></div>
+    <div class="qi" onclick="scrollTo('exp-sec')"><i class="ti ti-receipt"></i><span>支出</span></div>
+    <div class="qi" onclick="scrollTo('history-sec')"><i class="ti ti-history"></i><span>歷史</span></div>
+  </div>
+
+  <!-- Draft badge -->
+  <div id="draft-indicator" style="display:none;"><div class="draft-badge">🟡 草稿暫存中</div></div>
+
+  <!-- Income section -->
+  <div class="sh manager-only" id="income-sec"><span class="st">現金收款</span><div class="sl"></div></div>
+  <div class="card manager-only">
+    <div id="income-list"><div class="empty-hint">尚無收款記錄</div></div>
+    <div class="income-total" id="income-total-row" style="display:none;">
+      <span class="income-total-label">今日現金收款合計</span>
+      <span class="income-total-amt" id="income-total">$0</span>
+    </div>
+    <div class="add-row two" style="margin-top:10px;">
+      <input class="fi" id="inc-note" placeholder="備註（選填）" onkeydown="if(event.key==='Enter')$('inc-amt').focus()"/>
+      <input class="fi" id="inc-amt" type="number" placeholder="金額" min="0" onkeydown="if(event.key==='Enter')addIncome()"/>
+      <button class="btn-add" onclick="addIncome()">＋</button>
+    </div>
+  </div>
+
+  <!-- Expense section -->
+  <div class="sh" id="exp-sec"><span class="st">今日支出</span><div class="sl"></div></div>
+  <div class="card">
+    <div id="exp-list"><div class="empty-hint">尚無支出記錄</div></div>
+    <div class="add-row two" style="margin-top:10px;">
+      <input class="fi" id="exp-name" placeholder="項目名稱" onkeydown="if(event.key==='Enter')$('exp-amt').focus()"/>
+      <input class="fi" id="exp-amt" type="number" placeholder="金額" min="0" onkeydown="if(event.key==='Enter')addExp()"/>
+      <button class="btn-add" onclick="addExp()">＋</button>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="manager-only" id="result-section">
+    <div class="sh"><span class="st">結帳總覽</span><div class="sl"></div></div>
+    <div class="result-box" id="result-box">
+      <div class="result-label" id="result-label">應存匯公司金額</div>
+      <div class="result-amount" id="result-amount">$0</div>
+      <div class="result-hint" id="result-hint">收款 $0 − 支出 $0</div>
+      <div class="result-grid">
+        <div class="result-sub"><div class="result-sub-label">今日收款</div><div class="result-sub-val" id="rs-income">$0</div></div>
+        <div class="result-sub"><div class="result-sub-label">今日支出</div><div class="result-sub-val" id="rs-exp">$0</div></div>
+        <div class="result-sub"><div class="result-sub-label">零用金補回</div><div class="result-sub-val" id="rs-deficit">$0</div></div>
+      </div>
+    </div>
+
+    <!-- Fund check -->
+    <div class="sh"><span class="st">零用金清點</span><div class="sl"></div></div>
+    <div class="card">
+      <div class="fund-status">
+        <span class="fund-status-label">清點後零用金合計</span>
+        <span class="fund-status-val" id="cash-total-val">$0</span>
+      </div>
+      <div id="cash-rows"></div>
+      <div class="cash-total-row">
+        <span class="cash-total-label">合計（含備用金 $3,000）</span>
+        <span class="cash-total-val" id="cash-total">$0</span>
+      </div>
+      <div id="fund-check-msg" style="font-size:13px;margin-top:8px;padding:8px 12px;border-radius:6px;display:none;"></div>
+      <button class="btn-clear" onclick="clearCash()">清除重填</button>
+    </div>
+
+    <!-- Draft / Finalize -->
+    <div class="draft-actions">
+      <button class="btn-draft" onclick="saveDraft()">💾 暫存草稿</button>
+      <button class="btn-finalize" onclick="finalizeDay()">✅ 完成結帳</button>
+    </div>
+  </div>
+
+  <!-- Transfer section -->
+  <div class="sh manager-only"><span class="st">區間營收匯款</span><div class="sl"></div></div>
+  <div class="card manager-only">
+    <div class="tr-grid">
+      <div><label style="font-size:12px;color:var(--t3);display:block;margin-bottom:4px;">開始日期</label><input class="fi" type="date" id="tr-from"/></div>
+      <div><label style="font-size:12px;color:var(--t3);display:block;margin-bottom:4px;">結束日期</label><input class="fi" type="date" id="tr-to"/></div>
+    </div>
+    <div class="tr-preview" id="tr-preview">
+      <div class="tr-preview-label">建議匯款金額</div>
+      <div class="tr-preview-amt" id="tr-preview-amt">$0</div>
+    </div>
+    <div class="add-row" style="margin-bottom:12px;">
+      <input class="fi" type="number" id="tr-amt" placeholder="匯款金額（元）"/>
+      <button class="btn-add" onclick="addTransfer()">＋ 新增</button>
+    </div>
+    <div id="tr-list"><div class="empty-hint">尚無匯款記錄</div></div>
+  </div>
+
+  <!-- History section -->
+  <div class="sh" id="history-sec"><span class="st">歷史紀錄</span><div class="sl"></div></div>
+  <div class="month-nav">
+    <button class="btn-month" onclick="changeMonth(-1)">◀ 上個月</button>
+    <span class="month-label" id="month-label"></span>
+    <button class="btn-month" onclick="changeMonth(1)">下個月 ▶</button>
+    <button class="btn-excel" onclick="exportExcel()">↓ 匯出 Excel</button>
+  </div>
+  <div class="ms-cards">
+    <div class="ms-card"><div class="ms-label">本期總收款</div><div class="ms-val" id="ms-income">$0</div></div>
+    <div class="ms-card"><div class="ms-label">本期總支出</div><div class="ms-val red" id="ms-expense">$0</div></div>
+    <div class="ms-card"><div class="ms-label">本期應匯</div><div class="ms-val" id="ms-return">$0</div></div>
+  </div>
+  <div id="his-list"></div>
+
+  <!-- Laundry (Taipei only) -->
+  <div id="laundry-section" style="display:none;">
+    <div class="sh"><span class="st">🧺 洗浴巾記錄</span><div class="sl"></div></div>
+    <div class="pts-bar">
+      <div><div class="pts-label">點數卡剩餘點數</div><div class="pts-val" id="laundry-pts">—</div></div>
+      <button class="btn-topup" onclick="showTopup()">＋ 充值</button>
+    </div>
+    <div class="card">
+      <div id="laundry-list"><div class="empty-hint">尚無記錄</div></div>
+      <div class="laundry-grid" style="margin-top:10px;">
+        <input class="fi" type="datetime-local" id="lau-time"/>
+        <input class="fi" type="number" id="lau-qty" placeholder="浴巾數量"/>
+        <input class="fi" type="number" id="lau-deduct" placeholder="扣除點數"/>
+        <input class="fi" id="lau-who" placeholder="負責人"/>
+      </div>
+      <button class="btn-add" style="width:100%;margin-top:6px;" onclick="addLaundry()">＋ 新增洗浴巾記錄</button>
+    </div>
+  </div>
+
+  <!-- Retry -->
+  <div class="retry-wrap">
+    <button class="btn-retry" onclick="retryConnect()">🔄 重新連線資料庫</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-ov"><div class="toast-box" id="toast"></div></div>
+<!-- Load overlay -->
+<div class="load-ov" id="load-ov"><div class="load-spin"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const FUND=3000;
+// ── Config ──────────────────────────────────────────────────
 const SB_URL='https://ofsoahkcixerwawgmtwb.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mc29haGtjaXhlcndhd2dtdHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NzM3MjIsImV4cCI6MjA5NDA0OTcyMn0.CR1sSq93aM_-9th8ErhKB5Wv6nvDv46XXyo4JX4v_QQ';
+const FUND=3000;
 
 const STORES={
-  taipei:   {name:'台北旗艦店',addr:'台北市萬華區中華路一段 160 號 2 樓',pw:'uj-tpe'},
-  hsinchu:  {name:'新竹形象店',addr:'新竹市北區經國路一段 830 號',        pw:'uj-hsz'},
-  taichung: {name:'台中主題店',addr:'台中市南屯區文心南路 227 號 8 樓',   pw:'uj-txg'},
-  kaohsiung:{name:'高雄概念店',addr:'高雄市前金區中華三路 66 號 4 樓',    pw:'uj-khh'},
-  test:     {name:'🧪 測試店',  addr:'系統測試專用',                       pw:'uj-test'},
+  taipei:   {name:'台北旗艦店',addr:'台北市萬華區中華路一段 160 號 2 樓'},
+  hsinchu:  {name:'新竹形象店',addr:'新竹市北區經國路一段 830 號'},
+  taichung: {name:'台中主題店',addr:'台中市南屯區文心南路 227 號 8 樓'},
+  kaohsiung:{name:'高雄概念店',addr:'高雄市前金區中華三路 66 號 4 樓'},
+  test:     {name:'🧪 測試店', addr:'系統測試專用'},
 };
-const ADMIN_PW='uj-admin';
-let isAdmin=false;
-let currentUser=null; // {id, username, display_name, role, store, must_change_pw}
-// role: 'manager' = 店長（完整功能）, 'user' = 員工（僅支出+洗浴巾）
+
+const BUILTIN={
+  'uj-tpe':   {store:'taipei',    display:'台北旗艦店', pw:'uj-tpe'},
+  'uj-hsz':   {store:'hsinchu',   display:'新竹形象店', pw:'uj-hsz'},
+  'uj-txg':   {store:'taichung',  display:'台中主題店', pw:'uj-txg'},
+  'uj-khh':   {store:'kaohsiung', display:'高雄概念店', pw:'uj-khh'},
+  'uj-admin': {store:null,        display:'總覽管理',   pw:'uj-admin', admin:true},
+  'uj-test':  {store:'test',      display:'🧪 測試店',  pw:'uj_123123'},
+};
 
 const DENOMS=[
   {v:1000,t:'鈔'},{v:500,t:'鈔'},{v:100,t:'硬'},
   {v:50,t:'硬'},{v:10,t:'硬'},{v:5,t:'硬'},{v:1,t:'硬'}
 ];
 
-let db=null, currentStore=null, selStore=null;
-let expenses=[];
-let cc={};
-let prevPool=FUND; // 前一日零用金池餘額，預設3000
-DENOMS.forEach(d=>cc[d.v]=0);
+// ── State ────────────────────────────────────────────────────
+let db=null, currentStore=null, isAdmin=false;
+let currentUser=null;
+let incomes=[], expenses=[], cc={};
+let prevPool=FUND; // 昨日零用金池
+let isDraft=false, draftId=null;
+let viewYear=new Date().getFullYear(), viewMonth=new Date().getMonth()+1;
+let historyRecords=[], transfers=[];
 
+// ── Utils ────────────────────────────────────────────────────
 const $=id=>document.getElementById(id);
-const fmt=n=>'$'+Math.round(n).toLocaleString();
+const fmt=n=>'$'+(Math.round(n)||0).toLocaleString();
+const localDate=()=>{const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;};
 
-function showLoad(m='載入中…'){$('load-txt').textContent=m;$('load-ov').classList.add('show');}
+function toast(msg,dur=2500){
+  const el=$('toast');el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+function showLoad(msg=''){$('load-ov').classList.add('show');}
 function hideLoad(){$('load-ov').classList.remove('show');}
-function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800);}
-function sdot(s){const d=$('sdot');d.className='sdot'+(s?' '+s:'');}
+function sdot(s){const d=$('sdot');d.className='sdot'+(s==='ok'?' ok':s==='err'?' err':'');}
+function scrollTo(id){const el=$(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+function togglePw(id){const i=$(id);i.type=i.type==='password'?'text':'password';}
 
-// date
-$('date-b').textContent=new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+function setDate(){
+  const d=new Date();
+  $('date-b').textContent=d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric',weekday:'short'});
+}
 
-// DB
+// ── DB ───────────────────────────────────────────────────────
 async function connectDB(){
   try{
-    // 等待 supabase SDK 載入
-    let tries=0;
-    while(!window.supabase && tries<10){
-      await new Promise(r=>setTimeout(r,300));
-      tries++;
-    }
-    if(!window.supabase) throw new Error('Supabase SDK 未載入');
+    let w=0;
+    while(!window.supabase&&w<5000){await new Promise(r=>setTimeout(r,200));w+=200;}
+    if(!window.supabase)throw new Error('SDK未載入');
     const c=window.supabase.createClient(SB_URL,SB_KEY);
-    // 測試連線
     const {error}=await c.from('daily_records').select('id').limit(1);
-    if(error) throw error;
-    db=c;
-    sdot('ok');
-    return true;
-  }catch(e){
-    sdot('err');
-    console.error('connectDB failed:',e);
-    return false;
-  }
+    if(error)throw error;
+    db=c;sdot('ok');return true;
+  }catch(e){sdot('err');console.error('DB:',e);return false;}
 }
 
 async function retryConnect(){
-  showLoad('重新連線中…');
-  const ok = await connectDB();
+  showLoad();
+  const ok=await connectDB();
   hideLoad();
   if(ok){
     await loadPrevPool();
+    updateMetrics();
     await loadHistory();
     await loadTransfers();
-    if(currentStore==='taipei') await initLaundry();
-    // 強制更新所有顯示
-    const mpool=$('m-pool');
-    if(mpool){
-      mpool.textContent=fmt(prevPool);
-      mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
-    }
-    // 確保 manager-only 元素可見（店長模式）
-    if(!isAdmin && currentUser?.role!=='user'){
-      document.getElementById('main').classList.remove('user-mode');
-    }
-    calcResult();
+    if(currentStore==='taipei')await initLaundry();
     toast('✓ 連線成功！');
-  } else {
-    toast('✗ 連線失敗，請再試一次');
-  }
+  }else{toast('✗ 連線失敗，請再試');}
 }
 
-// Login
-function buildGrid(){
-  $('store-grid').innerHTML=Object.entries(STORES).map(([k,s])=>`
-    <button class="sbtn" data-k="${k}" onclick="selStoreBtn('${k}')">
-      <span class="sn">${s.name}</span>
-      <span class="sa">${s.addr}</span>
-    </button>`).join('')
-    + `<button class="sbtn" data-k="__admin__" onclick="selStoreBtn('__admin__')" style="grid-column:1/-1;border-color:rgba(160,120,60,.4);background:rgba(160,120,60,.05);">
-      <span class="sn" style="color:#6b4e1a;">👑 總覽帳號</span>
-      <span class="sa">可查看所有門市紀錄</span>
-    </button>`;
-}
-
-function selStoreBtn(k){
-  selStore=k;
-  document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('sel',b.dataset.k===k));
-  $('pw').focus();$('lerr').textContent='';
-}
-
-function togglePw(){const i=$('pw');i.type=i.type==='password'?'text':'password';}
-
-function doLogin(){
-  if(!selStore){$('lerr').textContent='請先選擇門市';return;}
-  const pw=$('pw').value;
-
-  if(selStore==='__admin__'){
-    if(pw!==ADMIN_PW){$('lerr').textContent='密碼錯誤，請再試一次';$('pw').value='';return;}
-    isAdmin=true;
-    localStorage.setItem('uj_store','__admin__');
-    enterAdminApp();
-    return;
-  }
-
-  if(pw!==STORES[selStore].pw){
-    $('lerr').textContent='密碼錯誤，請再試一次';$('pw').value='';return;
-  }
-  isAdmin=false;
-  localStorage.setItem('uj_store',selStore);
-  enterApp(selStore);
-}
-
-function doLogout(){
-  localStorage.removeItem('uj_store');
-  localStorage.removeItem('uj_staff');
-  currentStore=null;currentUser=null;isAdmin=false;
-  isDraft=false;draftId=null;
-  expenses=[];DENOMS.forEach(d=>cc[d.v]=0);
-  document.getElementById('main').classList.remove('user-mode');
-  $('user-badge').style.display='none';
-  $('draft-indicator').style.display='none';
-  showLaundrySection(false);
-  $('main').style.display='none';
-  $('admin-main').style.display='none';
-  $('login-ov').style.display='flex';
-  $('login-username').value='';$('login-pw').value='';
-  $('lerr').textContent='';selStore=null;
-}
-
-async function enterApp(key){
-  currentStore=key;
-  currentUser=null;
-  isDraft=false;draftId=null;
-  const s=STORES[key];
-  $('login-ov').style.display='none';
-  $('main').style.display='block';
-  $('hero-name').textContent=s.name;
-  $('hero-addr').textContent=s.addr;
-  $('store-badge').textContent=s.name;
-  $('store-badge').style.display='block';
-  $('user-badge').style.display='none';
-  document.getElementById('main').classList.remove('user-mode');
-  $('draft-indicator').style.display='none';
-  viewYear=new Date().getFullYear();
-  viewMonth=new Date().getMonth()+1;
-  updateMonthLabel();
-  renderCash();calcResult();
-  transfers=[];renderTransfers();
-  const now2=new Date();
-  $('tr-from').value=new Date(now2.getFullYear(),now2.getMonth(),1).toISOString().slice(0,10);
-  $('tr-to').value=now2.toISOString().slice(0,10);
-  $('tr-preview').style.display='none';
-  showLoad('連線中…');
-  // 等待 Supabase SDK 完全載入（最多等5秒）
-  let waited=0;
-  while(!window.supabase && waited<5000){
-    await new Promise(r=>setTimeout(r,200));
-    waited+=200;
-  }
-  const ok=await connectDB();
-  hideLoad();
-  if(ok){
-    await loadPrevPool();
-    // 強制更新零用金顯示
-    const mpool=$('m-pool');
-    if(mpool){
-      mpool.textContent=fmt(prevPool);
-      mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
-    }
-    calcResult();
-    await loadHistory();
-    await loadTransfers();
-    await initLaundry();
-  }else{
-    toast('⚠ 資料庫連線失敗，請按下方重新連線');
-  }
-}
-
-// 載入前一日零用金池餘額
-// 從最早一筆開始逐日累積，包回後重置為3000
-async function loadPrevPool(){
-  if(!db||!currentStore)return;
-  const now=new Date();
-  const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  try{
-    const {data,error}=await db.from('daily_records')
-      .select('date,cash_total,total_expense,status')
-      .eq('store',currentStore)
-      .eq('status','final')
-      .lt('date',today)
-      .order('date',{ascending:true});
-    if(error)throw error;
-    if(data&&data.length>0){
-      let pool=FUND;
-      data.forEach(r=>{
-        const cashT=Number(r.cash_total||0);
-        const expT=Number(r.total_expense||0);
-        const ret=Math.max(0,cashT-pool-expT);
-        const nextPool=ret>0?FUND:cashT-expT;
-            pool=nextPool;
-      });
-      prevPool=pool;
-    }else{
-      prevPool=FUND;
-    }
-    const mpool=$('m-pool');
-    if(mpool){
-      mpool.textContent=fmt(prevPool);
-      mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
-    }
-  }catch(e){
-    console.error('loadPrevPool error:',e);
-    prevPool=FUND;
-  }
-}
-
-// Cash
-function renderCash(){
-  $('cash-rows').innerHTML=DENOMS.map(d=>{
-    const c=cc[d.v]||0,sub=c*d.v;
-    return`<div class="cash-row">
-      <span class="c-denom">$${d.v>=1000?d.v/1000+'k':d.v}</span>
-      <span class="c-type">${d.t}</span>
-      <div class="c-ctrl">
-        <button class="c-pm" onclick="adjC(${d.v},-1)">−</button>
-        <input class="c-input" type="number" min="0" value="${c}"
-          oninput="setC(${d.v},this.value)" onchange="setC(${d.v},this.value)"/>
-        <button class="c-pm" onclick="adjC(${d.v},1)">＋</button>
-        <span class="c-eq">× $${d.v.toLocaleString()} =</span>
-      </div>
-      <span class="c-sub${sub===0?' z':''}" id="csub-${d.v}">${fmt(sub)}</span>
-    </div>`;
-  }).join('');
-  updCashTotal();
-}
-
-function adjC(v,delta){cc[v]=Math.max(0,(cc[v]||0)+delta);renderCash();}
-
-function setC(v,val){
-  cc[v]=Math.max(0,parseInt(val)||0);
-  const sub=cc[v]*v;
-  const el=$('csub-'+v);
-  if(el){el.textContent=fmt(sub);el.className='c-sub'+(sub===0?' z':'');}
-  updCashTotal();
-}
-
-function updCashTotal(){
-  const t=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
-  $('cash-total').textContent=fmt(t);
-  calcResult();
-}
-
-function clearCash(){DENOMS.forEach(d=>cc[d.v]=0);renderCash();}
-
-// Calc — 公式：清點現金 − 零用金 − 支出 = 應收回
-function scrollToSection(id){
-  const el=document.getElementById(id);
-  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function verifyIncome(){
-  const income = parseFloat($('today-income').value)||0;
-  const el = $('verify-result');
-  if(!el) return;
-  if(income <= 0){ el.style.display='none'; return; }
-  const cashT = DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v, 0);
-  const expT = expenses.reduce((s,e)=>s+e.amount, 0);
-  // 清點 - 零用金 - 支出 = 實際收款
-  const actual = cashT - FUND - expT;
-  const diff = actual - income;
-  el.style.display = 'block';
-  if(cashT === 0){
-    el.style.background = 'rgba(184,150,60,.08)';
-    el.style.color = 'var(--gold)';
-    el.textContent = '⚠ 尚未清點現金，請清點後系統自動核對';
-  } else if(Math.abs(diff) <= 0){
-    el.style.background = 'rgba(74,124,89,.08)';
-    el.style.color = 'var(--gs)';
-    el.textContent = `✓ 核對相符！收銀機現金與收款記錄一致（實收 ${fmt(actual)}）`;
-  } else if(diff > 0){
-    el.style.background = 'rgba(184,150,60,.08)';
-    el.style.color = '#a07020';
-    el.textContent = `⚠ 收銀機多了 ${fmt(diff)}｜清點扣零用金扣支出 = ${fmt(actual)}，收款記錄 = ${fmt(income)}`;
-  } else {
-    el.style.background = 'rgba(184,48,48,.07)';
-    el.style.color = 'var(--red)';
-    el.textContent = `✗ 收銀機少了 ${fmt(-diff)}｜清點扣零用金扣支出 = ${fmt(actual)}，收款記錄 = ${fmt(income)}`;
-  }
-}
-
-function calcResult(){
-  const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
-  const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const hasCounted = cashT > 0; // 是否已清點
-
-  let pool, todayIncome, ret, deficit;
-
-  if(!hasCounted){
-    // 尚未清點：顯示前日餘額，支出先從零用金扣
-    pool = prevPool - expT;
-    todayIncome = 0;
-    ret = 0;
-    deficit = Math.max(0, FUND - pool);
-  } else {
-    // 已清點：
-    // cashT = 前日池 + 今日收款（收銀機實際金額）
-    // 包回 = MAX(0, cashT - 支出 - $3,000)
-    const netCash = cashT - expT;
-    ret = Math.max(0, netCash - FUND);
-    pool = ret > 0 ? FUND : netCash; // 包回後重置，否則帶入剩餘
-    todayIncome = cashT - prevPool; // 今日實際收款 = 清點 - 前日池
-    deficit = Math.max(0, FUND - netCash);
-  }
-
-  // 核對收款
-  verifyIncome();
-
-  // 更新零用金餘額卡片
-  const mpool=$('m-pool');
-  if(mpool){
-    const displayPool = Math.min(pool, FUND);
-    mpool.textContent = fmt(displayPool);
-    mpool.style.color = pool < FUND ? '#e08080' : 'rgba(255,255,255,.9)';
-  }
-  $('m-exp').textContent=fmt(expT);
-  $('m-ret').textContent=fmt(ret);
-
-  // 更新結帳總覽
-  $('s-cash').textContent=fmt(cashT);
-  $('s-exp').textContent='-'+fmt(expT);
-  $('s-ret').textContent=fmt(ret);
-  $('r-num').textContent=fmt(ret);
-
-  // 更新結果框
-  const box=$('result');
-  if(!hasCounted){
-    box.className = deficit > 0 ? 'result warn' : 'result';
-    $('r-tit').textContent = '尚未清點現金';
-    $('r-hint').textContent = deficit > 0
-      ? `前日虧空 ${fmt(deficit)}，請清點後結帳`
-      : `前日餘額 ${fmt(prevPool)}，請清點後結帳`;
-  } else if(deficit > 0){
-    box.className='result warn';
-    $('r-tit').textContent='今日包回 $0';
-    $('r-hint').textContent=`零用金餘額 ${fmt(pool)}，虧空 ${fmt(deficit)} 待次日補回`;
-  } else if(ret===0){
-    box.className='result';
-    $('r-tit').textContent='今日包回金額';
-    $('r-hint').textContent=`零用金剛好 ${fmt(FUND)}，收支平衡`;
-  } else {
-    box.className='result';
-    $('r-tit').textContent='今日包回金額';
-    $('r-hint').textContent=`前日餘額 ${fmt(prevPool)} + 收入 ${fmt(todayIncome)} − 支出 ${fmt(expT)}`;
-  }
-}
-
-// Expenses
-function renderExp(){
-  const el=$('exp-list');
-  if(!expenses.length){el.innerHTML='<div class="empty">尚無支出記錄</div>';return;}
-  el.innerHTML=expenses.map((e,i)=>`
-    <div class="exp-item">
-      <span class="exp-name">${e.name}</span>
-      <span class="exp-amt">-${fmt(e.amount)}</span>
-      <button class="btn-del" onclick="delExp(${i})">✕</button>
-    </div>`).join('');
-}
-
-function addExp(){
-  const name=$('exp-name').value.trim();
-  const amt=parseFloat($('exp-amt').value);
-  if(!name||isNaN(amt)||amt<=0){toast('請填寫項目與金額');return;}
-  expenses.push({name,amount:amt});
-  $('exp-name').value='';$('exp-amt').value='';
-  renderExp();calcResult();
-}
-
-function delExp(i){expenses.splice(i,1);renderExp();calcResult();}
-
-// Transfer records (stored locally per store per month)
-let transfers=[];
-
-async function loadTransfers(){
-  transfers=[];
-  renderTransfers();
-  if(!db||!currentStore)return;
-  // Load all transfers for this store, filter by date_to overlapping with current view month
-  const mm=String(viewMonth).padStart(2,'0');
-  const firstDay=`${viewYear}-${mm}-01`;
-  const lastDay2=new Date(viewYear,viewMonth,0).getDate();
-  const lastDay=`${viewYear}-${mm}-${String(lastDay2).padStart(2,'0')}`;
-  try{
-    // Get records where date_to >= first day of month AND date_from <= last day of month
-    const {data,error}=await db.from('transfer_records').select('*')
-      .eq('store',currentStore)
-      .lte('date_from',lastDay)
-      .gte('date_to',firstDay)
-      .order('date_from',{ascending:true});
-    if(error)throw error;
-    transfers=(data||[]).map(r=>({
-      id:r.id,from:r.date_from,to:r.date_to,
-      amt:Number(r.transfer_amt),rangeIncome:Number(r.range_income),diff:Number(r.diff)
-    }));
-    renderTransfers();
-  }catch(e){toast('⚠ 匯款載入失敗：'+e.message);}
-}
-
-async function autoCalcTransfer(){
-  const from=$('tr-from').value;
-  const to=$('tr-to').value;
-  const preview=$('tr-preview');
-  const hint=$('tr-calc-hint');
-
-  if(!from||!to||from>to){
-    preview.style.display='none';
-    hint.textContent='';
-    $('tr-amt').value='';
-    return;
-  }
-  if(!db||!currentStore){
-    preview.style.display='none';
-    hint.textContent='尚未連線，無法自動計算';
-    return;
-  }
-
-  hint.textContent='計算中…';
-  preview.style.display='none';
-
-  try{
-    const {data}=await db.from('daily_records').select('return_amount,date')
-      .eq('store',currentStore).gte('date',from).lte('date',to);
-    const records=data||[];
-    const total=records.reduce((s,r)=>s+Number(r.return_amount||0),0);
-    const days=records.length;
-    const fd=new Date(from+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
-    const td=new Date(to+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
-
-    if(days>0){
-      preview.style.display='block';
-      $('tr-preview-range').textContent=`${fd} ～ ${td}`;
-      $('tr-preview-days').textContent=`共 ${days} 天有結帳紀錄`;
-      $('tr-preview-amt').textContent=fmt(total);
-      $('tr-amt').value=total>0?total:'';
-      hint.textContent='';
-    } else {
-      preview.style.display='none';
-      hint.textContent=`${fd}～${td} 尚無結帳紀錄，請手動輸入金額`;
-      $('tr-amt').value='';
-    }
-  }catch{
-    preview.style.display='none';
-    hint.textContent='計算失敗，請手動輸入';
-  }
-}
-
-async function addTransfer(){
-  const from=$('tr-from').value;
-  const to=$('tr-to').value;
-  const amt=parseFloat($('tr-amt').value)||0;
-  if(!from||!to){toast('請選擇開始和結束日期');return;}
-  if(from>to){toast('開始日期不能晚於結束日期');return;}
-  if(amt<=0){toast('請填寫匯款金額');return;}
-  if(!db){toast('⚠ 尚未連線資料庫');return;}
-
-  showLoad('儲存匯款紀錄…');
-  let rangeIncome=0;
-  try{
-    const {data}=await db.from('daily_records').select('return_amount')
-      .eq('store',currentStore).gte('date',from).lte('date',to);
-    rangeIncome=(data||[]).reduce((s,r)=>s+Number(r.return_amount||0),0);
-  }catch{}
-
-  const diff=amt-rangeIncome;
-  try{
-    const {error}=await db.from('transfer_records').insert({
-      store:currentStore,date_from:from,date_to:to,
-      range_income:rangeIncome,transfer_amt:amt,diff
-    });
-    if(error)throw error;
-    hideLoad();
-    $('tr-amt').value='';
-    $('tr-preview').style.display='none';
-    $('tr-calc-hint').textContent='';
-    toast('✓ 匯款紀錄已儲存！');
-    await loadTransfers();
-  }catch(e){hideLoad();toast('✗ 儲存失敗：'+e.message);}
-}
-
-function renderTransfers(){
-  const el=$('tr-list');
-  if(!transfers.length){el.innerHTML='<div class="empty" style="padding:14px 0;">尚無匯款紀錄</div>';return;}
-  const totalAmt=transfers.reduce((s,t)=>s+t.amt,0);
-  const totalIncome=transfers.reduce((s,t)=>s+t.rangeIncome,0);
-  el.innerHTML=transfers.map(t=>{
-    const fd=new Date(t.from+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
-    const td=new Date(t.to+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
-    const diff=t.diff;
-    let diffTag='';
-    if(diff===0) diffTag=`<span class="tr-diff ok">✓ 相符</span>`;
-    else if(diff>0) diffTag=`<span class="tr-diff ov">多 ${fmt(diff)}</span>`;
-    else diffTag=`<span class="tr-diff un">少 ${fmt(-diff)}</span>`;
-    return`<div class="tr-item">
-      <div class="tr-dates">
-        <div class="td">💳 ${fd} ～ ${td}</div>
-        <div class="tm">區間應收回 ${fmt(t.rangeIncome)}</div>
-      </div>
-      ${diffTag}
-      <span class="tr-amt">${fmt(t.amt)}</span>
-      <button class="btn-del" onclick="delTransfer(${t.id})">✕</button>
-    </div>`;
-  }).join('')
-  +`<div class="tr-summary">
-    <span class="tr-sum-label">總匯款 / 總區間應收回</span>
-    <span class="tr-sum-val">${fmt(totalAmt)} / ${fmt(totalIncome)}</span>
-  </div>`;
-}
-
-async function delTransfer(id){
-  if(!confirm('確定刪除此筆匯款紀錄？'))return;
-  showLoad('刪除中…');
-  try{
-    const {error}=await db.from('transfer_records').delete().eq('id',id);
-    if(error)throw error;
-    hideLoad();toast('✓ 已刪除');
-    await loadTransfers();
-  }catch(e){hideLoad();toast('✗ 刪除失敗');}
-}
-
-// Save
-async function saveDay(){
-  if(!currentStore){toast('請先登入');return;}
-  if(!db){toast('⚠ 尚未連線資料庫');return;}
-  const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
-  const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const income=Math.max(0,cashT-prevPool); // 今日收入 = 清點 - 昨日池
-  const ret=Math.max(0,cashT-prevPool-expT);  // 包回 = 清點 - 昨日池 - 支出
-  const deficit=Math.max(0,prevPool+expT-cashT); // 虧空
-  const today=new Date().toISOString().slice(0,10);
-  showLoad('儲存中…');
-  try{
-    const {error}=await db.from('daily_records').upsert({
-      date:today,store:currentStore,fund:FUND,
-      cash_total:cashT,income,total_expense:expT,
-      return_amount:ret,deficit,
-      expenses,cash_counts:cc
-    },{onConflict:'date,store'});
-    if(error)throw error;
-    hideLoad();toast('✓ 今日紀錄已儲存！');
-    await loadHistory();
-  }catch(e){hideLoad();toast('✗ 儲存失敗：'+e.message);}
-}
-
-// History - with month navigation
-let viewYear=new Date().getFullYear();
-let viewMonth=new Date().getMonth()+1;
-
-function changeMonth(delta){
-  viewMonth+=delta;
-  if(viewMonth>12){viewMonth=1;viewYear++;}
-  if(viewMonth<1){viewMonth=12;viewYear--;}
-  updateMonthLabel();
-  loadHistory();
-}
-
-function updateMonthLabel(){
-  const now=new Date();
-  const isThisMonth=(viewYear===now.getFullYear()&&viewMonth===now.getMonth()+1);
-  const lbl=new Date(viewYear,viewMonth-1,1).toLocaleDateString('zh-TW',{year:'numeric',month:'long'});
-  $('month-label').textContent=lbl;
-  // disable next month if current
-  const nextBtn=$('btn-next-month');
-  const isNextFuture=(viewYear>now.getFullYear())||(viewYear===now.getFullYear()&&viewMonth>=now.getMonth()+1);
-  nextBtn.style.opacity=isNextFuture?'.35':'1';
-  nextBtn.style.pointerEvents=isNextFuture?'none':'auto';
-}
-
-async function loadHistory(){
-  if(!db||!currentStore)return;
-  loadTransfers();
-  const mm=String(viewMonth).padStart(2,'0');
-  const lastDay=new Date(viewYear,viewMonth,0).getDate();
-  const from=`${viewYear}-${mm}-01`;
-  const to=`${viewYear}-${mm}-${lastDay}`;
-  try{
-    const {data,error}=await db.from('daily_records').select('*')
-      .eq('store',currentStore).gte('date',from).lte('date',to)
-      .order('date',{ascending:true});
-    if(error)throw error;
-    renderHistory(data||[]);
-  }catch{toast('⚠ 載入紀錄失敗');}
-}
-
-// Store records for editing
-let historyRecords=[];
-
-function renderHistory(rs){
-  historyRecords=rs;
-  const el=$('his-list');
-  const totIncome=rs.reduce((s,r)=>s+Number(r.income||0),0);
-  const totExp=rs.reduce((s,r)=>s+Number(r.total_expense||0),0);
-  const totRet=rs.reduce((s,r)=>s+Number(r.return_amount||0),0);
-  $('ms-income').textContent=fmt(totIncome);
-  $('ms-expense').textContent=fmt(totExp);
-  $('ms-return').textContent=fmt(totRet);
-
-  if(!rs.length){el.innerHTML='<div class="empty">該月份尚無紀錄</div>';return;}
-  el.innerHTML=rs.map((r,idx)=>{
-    const d=new Date(r.date+'T00:00:00');
-    const lbl=d.toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'});
-    const items=(r.expenses||[]).map(e=>e.name).join('、')||'無支出';
-    const neg=r.return_amount<0;
-    return`<div class="his-item" id="his-item-${idx}">
-      <div class="his-item-top">
-        <div>
-          <div class="his-d">${lbl}</div>
-          <div class="his-m">清點 ${fmt(r.cash_total||0)} · 支出 ${fmt(r.total_expense)} · 包回 ${fmt(r.return_amount)} · ${items}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="his-r${neg?' neg':''}">${fmt(r.return_amount)}</div>
-          <button class="his-edit-btn" onclick="toggleEdit(${idx})">✏ 編輯</button>
-          <button class="btn-del" onclick="delRec('${r.date}')">✕</button>
-        </div>
-      </div>
-      <div class="edit-panel" id="edit-panel-${idx}"></div>
-    </div>`;
-  }).join('');
-}
-
-// Edit state per record
-let editState={};
-
-function toggleEdit(idx){
-  const panel=$(`edit-panel-${idx}`);
-  if(panel.classList.contains('open')){
-    panel.classList.remove('open');
-    panel.innerHTML='';
-    return;
-  }
-  // Close other panels
-  document.querySelectorAll('.edit-panel.open').forEach(p=>{p.classList.remove('open');p.innerHTML='';});
-  panel.classList.add('open');
-  buildEditPanel(idx);
-}
-
-function buildEditPanel(idx){
-  const r=historyRecords[idx];
-  // Init edit state
-  editState[idx]={
-    expenses:[...(r.expenses||[]).map(e=>({...e}))],
-    cashCounts:{...(r.cash_counts||{})}
-  };
-  renderEditPanel(idx, r);
-}
-
-function renderEditPanel(idx, r){
-  const panel=$(`edit-panel-${idx}`);
-  const es=editState[idx];
-  const cashT=DENOMS.reduce((s,d)=>s+(Number(es.cashCounts[d.v])||0)*d.v,0);
-  const expT=es.expenses.reduce((s,e)=>s+Number(e.amount),0);
-  const pool=cashT-expT;
-  const ret=Math.max(0,pool-FUND);
-  const deficit=Math.max(0,FUND-pool);
-
-  panel.innerHTML=`
-    <div style="height:1px;background:var(--bd);margin-bottom:14px;"></div>
-
-    <div class="edit-section-title">💸 支出明細</div>
-    <div class="edit-exp-list" id="edit-exp-${idx}">
-      ${es.expenses.map((e,ei)=>`
-        <div class="edit-exp-item">
-          <span class="edit-exp-name">${e.name}</span>
-          <span class="edit-exp-amt">-${fmt(e.amount)}</span>
-          <button class="btn-del" onclick="editDelExp(${idx},${ei})">✕</button>
-        </div>`).join('') || '<div style="font-size:13px;color:var(--t3);padding:6px 0;">無支出項目</div>'}
-    </div>
-    <div class="edit-add-row">
-      <input class="edit-input" style="flex:2;min-width:100px;" type="text" id="edit-exp-name-${idx}" placeholder="新增支出項目"/>
-      <input class="edit-input" style="width:90px;" type="number" id="edit-exp-amt-${idx}" placeholder="金額" min="0"/>
-      <button class="btn-edit-save" onclick="editAddExp(${idx})" style="padding:7px 14px;">＋</button>
-    </div>
-
-    <div style="height:1px;background:var(--bd);margin:14px 0;"></div>
-    <div class="edit-section-title">💵 現金清點</div>
-    <div class="edit-cash-grid">
-      ${DENOMS.map(d=>{
-        const c=Number(es.cashCounts[d.v])||0;
-        return`<div class="edit-cash-row">
-          <span class="edit-cash-label">$${d.v>=1000?d.v/1000+'k':d.v}</span>
-          <span class="edit-cash-type">${d.t}</span>
-          <div class="edit-cash-ctrl">
-            <button class="edit-pm" onclick="editAdjCash(${idx},${d.v},-1)">−</button>
-            <input class="edit-cash-input" type="number" min="0" value="${c}"
-              oninput="editSetCash(${idx},${d.v},this.value)"/>
-            <button class="edit-pm" onclick="editAdjCash(${idx},${d.v},1)">＋</button>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <div class="edit-result-preview ${deficit>0?'warn':''}">
-      <div>
-        <div class="edit-result-label">${deficit>0?'⚠ 虧空 '+fmt(deficit):'清點 '+fmt(cashT)+' − 備用金 − 支出'}</div>
-      </div>
-      <div>
-        <div class="edit-result-label">今日包回</div>
-        <div class="edit-result-num">${fmt(ret)}</div>
-      </div>
-    </div>
-
-    <div class="edit-actions">
-      <button class="btn-edit-cancel" onclick="toggleEdit(${idx})">取消</button>
-      <button class="btn-edit-save" onclick="saveEdit(${idx},'${r.date}')">儲存修改</button>
-    </div>
-  `;
-}
-
-function editDelExp(idx,ei){
-  editState[idx].expenses.splice(ei,1);
-  const r=historyRecords[idx];
-  renderEditPanel(idx,r);
-}
-
-function editAddExp(idx){
-  const name=$(`edit-exp-name-${idx}`).value.trim();
-  const amt=parseFloat($(`edit-exp-amt-${idx}`).value)||0;
-  if(!name||amt<=0){toast('請填寫項目與金額');return;}
-  editState[idx].expenses.push({name,amount:amt});
-  const r=historyRecords[idx];
-  renderEditPanel(idx,r);
-}
-
-function editAdjCash(idx,denom,delta){
-  const cur=Number(editState[idx].cashCounts[denom])||0;
-  editState[idx].cashCounts[denom]=Math.max(0,cur+delta);
-  const r=historyRecords[idx];
-  renderEditPanel(idx,r);
-}
-
-function editSetCash(idx,denom,val){
-  editState[idx].cashCounts[denom]=Math.max(0,parseInt(val)||0);
-  // update preview only
-  const es=editState[idx];
-  const cashT=DENOMS.reduce((s,d)=>s+(Number(es.cashCounts[d.v])||0)*d.v,0);
-  const expT=es.expenses.reduce((s,e)=>s+Number(e.amount),0);
-  const pool=cashT-expT;
-  const ret=Math.max(0,pool-FUND);
-  const deficit=Math.max(0,FUND-pool);
-  const preview=document.querySelector(`#edit-panel-${idx} .edit-result-preview`);
-  if(preview){
-    preview.className='edit-result-preview'+(deficit>0?' warn':'');
-    preview.innerHTML=`
-      <div><div class="edit-result-label">${deficit>0?'⚠ 虧空 '+fmt(deficit):'清點 '+fmt(cashT)+' − 備用金 − 支出'}</div></div>
-      <div><div class="edit-result-label">今日包回</div><div class="edit-result-num">${fmt(ret)}</div></div>`;
-  }
-}
-
-async function saveEdit(idx, date){
-  const es=editState[idx];
-  const cashT=DENOMS.reduce((s,d)=>s+(Number(es.cashCounts[d.v])||0)*d.v,0);
-  const expT=es.expenses.reduce((s,e)=>s+Number(e.amount),0);
-  const pool=cashT-expT;
-  const income=cashT-FUND;
-  const ret=Math.max(0,pool-FUND);
-  const deficit=Math.max(0,FUND-pool);
-  showLoad('儲存中…');
-  try{
-    const {error}=await db.from('daily_records').update({
-      cash_total:cashT,income,total_expense:expT,
-      return_amount:ret,deficit,
-      expenses:es.expenses,cash_counts:es.cashCounts
-    }).eq('date',date).eq('store',currentStore);
-    if(error)throw error;
-    hideLoad();toast('✓ 修改已儲存！');
-    await loadHistory();
-  }catch(e){hideLoad();toast('✗ 儲存失敗：'+e.message);}
-}
-
-async function delRec(date){
-  if(!confirm('確定刪除 '+date+' 的紀錄？'))return;
-  showLoad('刪除中…');
-  try{
-    const {error}=await db.from('daily_records').delete().eq('date',date).eq('store',currentStore);
-    if(error)throw error;
-    hideLoad();toast('✓ 已刪除');await loadHistory();
-  }catch(e){hideLoad();toast('✗ 刪除失敗');}
-}
-
-// Export
-async function exportExcel(){
-  if(!db||!currentStore){toast('請先連線');return;}
-  const mm=String(viewMonth).padStart(2,'0');
-  const lastDay=new Date(viewYear,viewMonth,0).getDate();
-  const from=`${viewYear}-${mm}-01`;
-  const to=`${viewYear}-${mm}-${lastDay}`;
-  showLoad('準備匯出…');
-  try{
-    const {data,error}=await db.from('daily_records').select('*')
-      .eq('store',currentStore).gte('date',from).lte('date',to)
-      .order('date',{ascending:true});
-    if(error)throw error;
-    if(!data||!data.length){hideLoad();toast('本月尚無紀錄');return;}
-    const wb=XLSX.utils.book_new();
-    const sn=STORES[currentStore]?.name||currentStore;
-    const lbl=new Date(viewYear,viewMonth-1,1).toLocaleDateString('zh-TW',{year:'numeric',month:'long'}).replace(/\s/g,'');
-
-    // Sheet 1 每日彙總
-    const s1=[['門市','日期','星期','零用金','清點現金','當日收入','當日支出','應收回']];
-    let tc=0,ti=0,te=0,tr=0;
-    data.forEach(r=>{
-      const wk=new Date(r.date+'T00:00:00').toLocaleDateString('zh-TW',{weekday:'short'});
-      s1.push([sn,r.date,wk,r.fund,r.cash_total||0,r.income,r.total_expense,r.return_amount]);
-      tc+=r.cash_total||0;ti+=r.income;te+=r.total_expense;tr+=r.return_amount;
-    });
-    s1.push(['','','合計','',tc,ti,te,tr]);
-    const ws1=XLSX.utils.aoa_to_sheet(s1);
-    ws1['!cols']=[{wch:12},{wch:12},{wch:8},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12}];
-    XLSX.utils.book_append_sheet(wb,ws1,'每日彙總');
-
-    // Sheet 2 支出明細
-    const s2=[['門市','日期','支出項目','金額']];
-    data.forEach(r=>{
-      const ex=r.expenses||[];
-      if(!ex.length)s2.push([sn,r.date,'（無支出）',0]);
-      else ex.forEach(e=>s2.push([sn,r.date,e.name,e.amount]));
-    });
-    const ws2=XLSX.utils.aoa_to_sheet(s2);
-    ws2['!cols']=[{wch:12},{wch:12},{wch:24},{wch:12}];
-    XLSX.utils.book_append_sheet(wb,ws2,'支出明細');
-
-    // Sheet 3 區間匯款紀錄 - 完整每筆紀錄
-    const {data:trData}=await db.from('transfer_records').select('*')
-      .eq('store',currentStore)
-      .lte('date_from',to).gte('date_to',from)
-      .order('date_from',{ascending:true});
-    const s3=[['#','門市','開始日期','結束日期','區間應收回','實際匯款金額','差額','狀態','新增時間']];
-    let totalTrAmt=0,totalTrReturn=0;
-    if(trData&&trData.length){
-      trData.forEach((t,idx)=>{
-        const diff=Number(t.diff);
-        const status=diff===0?'✓ 相符':diff>0?`多匯 $${Math.abs(diff).toLocaleString()}`:`少匯 $${Math.abs(diff).toLocaleString()}`;
-        const createdAt=t.created_at?new Date(t.created_at).toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-        s3.push([idx+1,sn,t.date_from,t.date_to,Number(t.range_income),Number(t.transfer_amt),diff,status,createdAt]);
-        totalTrAmt+=Number(t.transfer_amt);totalTrReturn+=Number(t.range_income);
-      });
-      s3.push(['','','','合計',totalTrReturn,totalTrAmt,totalTrAmt-totalTrReturn,'','']);
-    } else {
-      s3.push(['','sn','—','—',0,0,0,'本月無匯款紀錄','']);
-    }
-    const ws3=XLSX.utils.aoa_to_sheet(s3);
-    ws3['!cols']=[{wch:6},{wch:12},{wch:12},{wch:12},{wch:14},{wch:14},{wch:10},{wch:18},{wch:22}];
-    XLSX.utils.book_append_sheet(wb,ws3,'區間匯款紀錄');
-
-    XLSX.writeFile(wb,`UJ_${sn}_${lbl}.xlsx`);
-    hideLoad();toast('✓ Excel 已匯出！');
-  }catch(e){hideLoad();toast('✗ 匯出失敗：'+e.message);}
-}
-
-// ── Admin ────────────────────────────────────────────────
-let adminStore=null;
-let adminYear=new Date().getFullYear();
-let adminMonth=new Date().getMonth()+1;
-
-async function enterAdminApp(){
-  $('login-ov').style.display='none';
-  $('main').style.display='none';
-  $('admin-main').style.display='block';
-  $('store-badge').textContent='總覽帳號';
-  $('store-badge').style.display='block';
-
-  // build store tabs
-  $('admin-store-tabs').innerHTML=Object.entries(STORES).map(([k,s])=>
-    `<button class="store-tab" data-k="${k}" onclick="adminSelectStore('${k}')">${s.name}</button>`
-  ).join('');
-
-  adminYear=new Date().getFullYear();
-  adminMonth=new Date().getMonth()+1;
-  adminUpdateMonthLabel();
-
-  showLoad('連線中…');
-  const ok=await connectDB();
-  hideLoad();
-  if(!ok){toast('⚠ 資料庫連線失敗');return;}
-  // default select first store
-  adminSelectStore('taipei');
-}
-
-function adminSelectStore(key){
-  adminStore=key;
-  document.querySelectorAll('.store-tab').forEach(b=>b.classList.toggle('active',b.dataset.k===key));
-  $('admin-tr-list').innerHTML='<div class="empty">載入中…</div>';
-  const lauSec=$('admin-laundry-section');
-  if(lauSec) lauSec.style.display=key==='taipei'?'block':'none';
-  adminLoadHistory();
-  if(key==='taipei') adminLoadLaundry();
-}
-
-async function adminLoadLaundry(){
-  if(!db)return;
-  try{
-    const [{data:topups},{data:uses}]=await Promise.all([
-      db.from('laundry_topups').select('*').eq('store','taipei').order('topup_at',{ascending:false}),
-      db.from('laundry_records').select('*').eq('store','taipei').order('done_at',{ascending:false}).limit(30)
-    ]);
-    // 計算剩餘點數
-    const totalIn=(topups||[]).reduce((s,r)=>s+Number(r.pts||0),0);
-    const totalOut=(uses||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
-    const remain=totalIn-totalOut;
-    const ptsEl=$('admin-lau-pts');
-    if(ptsEl) ptsEl.textContent=remain;
-
-    // 洗浴巾列表
-    const lauEl=$('admin-lau-list');
-    if(lauEl){
-      if(!uses||!uses.length){lauEl.innerHTML='<div class="empty">尚無洗浴巾記錄</div>';}
-      else{
-        lauEl.innerHTML=(uses||[]).map(r=>{
-          const dt=new Date(r.done_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
-          return`<div class="laundry-item">
-            <div class="li-left">
-              <div class="li-date">${dt}</div>
-              <div class="li-meta">浴巾 ${r.qty} 條・負責人：${r.who}</div>
-            </div>
-            <div class="li-right">
-              <div class="li-pts">
-                <div class="li-deduct">−${r.deduct} 點</div>
-                <div class="li-remain">使用後剩 ${r.remain_pts} 點</div>
-              </div>
-            </div>
-          </div>`;
-        }).join('');
-      }
-    }
-
-    // 充值列表
-    const topupEl=$('admin-topup-list');
-    if(topupEl){
-      if(!topups||!topups.length){topupEl.innerHTML='<div class="empty">尚無充值記錄</div>';}
-      else{
-        topupEl.innerHTML=(topups||[]).map(r=>{
-          const dt=new Date(r.topup_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
-          return`<div class="his-item" style="margin-bottom:8px;">
-            <div>
-              <div class="his-d">${dt}</div>
-              <div class="his-m">充值人：${r.who}</div>
-            </div>
-            <div class="his-r">+${r.pts} 點</div>
-          </div>`;
-        }).join('');
-      }
-    }
-  }catch(e){toast('⚠ 洗浴巾記錄載入失敗：'+e.message);}
-}
-
-function adminChangeMonth(delta){
-  adminMonth+=delta;
-  if(adminMonth>12){adminMonth=1;adminYear++;}
-  if(adminMonth<1){adminMonth=12;adminYear--;}
-  adminUpdateMonthLabel();
-  adminLoadHistory();
-}
-
-function adminUpdateMonthLabel(){
-  const now=new Date();
-  const lbl=new Date(adminYear,adminMonth-1,1).toLocaleDateString('zh-TW',{year:'numeric',month:'long'});
-  $('admin-month-label').textContent=lbl;
-  const isFuture=(adminYear>now.getFullYear())||(adminYear===now.getFullYear()&&adminMonth>=now.getMonth()+1);
-  $('admin-btn-next').style.opacity=isFuture?'.35':'1';
-  $('admin-btn-next').style.pointerEvents=isFuture?'none':'auto';
-}
-
-async function adminLoadHistory(){
-  if(!db||!adminStore)return;
-  if(adminStore==='test'){toast('⚠ 測試店不顯示於總覽');return;}
-  const mm=String(adminMonth).padStart(2,'0');
-  const lastDay=new Date(adminYear,adminMonth,0).getDate();
-  const from=`${adminYear}-${mm}-01`;
-  const to=`${adminYear}-${mm}-${String(lastDay).padStart(2,'0')}`;
-  showLoad('載入中…');
-  try{
-    const [{data,error},{data:trData}]=await Promise.all([
-      db.from('daily_records').select('*')
-        .eq('store',adminStore).gte('date',from).lte('date',to)
-        .order('date',{ascending:true}),
-      db.from('transfer_records').select('*')
-        .eq('store',adminStore)
-        .lte('date_from',to).gte('date_to',from)
-        .order('date_from',{ascending:true})
-    ]);
-    if(error)throw error;
-    hideLoad();
-    adminRenderHistory(data||[]);
-    adminRenderTransfers(trData||[]);
-  }catch(e){hideLoad();toast('⚠ 載入失敗：'+e.message);}
-}
-
-function adminRenderTransfers(rs){
-  const el=$('admin-tr-list');
-  if(!rs.length){el.innerHTML='<div class="empty">該月份尚無匯款紀錄</div>';return;}
-  const totalAmt=rs.reduce((s,r)=>s+Number(r.transfer_amt||0),0);
-  const totalIncome=rs.reduce((s,r)=>s+Number(r.range_income||0),0);
-  el.innerHTML=rs.map(r=>{
-    const fd=new Date(r.date_from+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
-    const td=new Date(r.date_to+'T00:00:00').toLocaleDateString('zh-TW',{month:'long',day:'numeric'});
-    const diff=Number(r.diff||0);
-    let diffTag='';
-    if(diff===0) diffTag=`<span class="tr-diff ok">✓ 相符</span>`;
-    else if(diff>0) diffTag=`<span class="tr-diff ov">多 ${fmt(diff)}</span>`;
-    else diffTag=`<span class="tr-diff un">少 ${fmt(-diff)}</span>`;
-    const createdDate=r.created_at
-      ? new Date(r.created_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})
-      : '';
-    return`<div class="tr-item">
-      <div class="tr-dates">
-        <div class="td">💳 ${fd} ～ ${td}</div>
-        <div class="tm">區間應收回 ${fmt(r.range_income||0)}${createdDate?' · 匯款時間 '+createdDate:''}</div>
-      </div>
-      ${diffTag}
-      <span class="tr-amt">${fmt(r.transfer_amt||0)}</span>
-    </div>`;
-  }).join('')
-  +`<div class="tr-summary">
-    <span class="tr-sum-label">總匯款 / 總區間應收回</span>
-    <span class="tr-sum-val">${fmt(totalAmt)} / ${fmt(totalIncome)}</span>
-  </div>`;
-}
-
-function adminRenderHistory(rs){
-  const totIncome=rs.reduce((s,r)=>s+Number(r.income||0),0);
-  const totExp=rs.reduce((s,r)=>s+Number(r.total_expense||0),0);
-  const totRet=rs.reduce((s,r)=>s+Number(r.return_amount||0),0);
-  $('adm-income').textContent=fmt(totIncome);
-  $('adm-expense').textContent=fmt(totExp);
-  $('adm-return').textContent=fmt(totRet);
-
-  const el=$('admin-his-list');
-  if(!rs.length){el.innerHTML='<div class="empty">該月份尚無紀錄</div>';return;}
-  const sn=STORES[adminStore]?.name||adminStore;
-  el.innerHTML=rs.map(r=>{
-    const d=new Date(r.date+'T00:00:00');
-    const lbl=d.toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'});
-    const items=(r.expenses||[]).map(e=>e.name).join('、')||'無支出';
-    const neg=r.return_amount<0;
-    return`<div class="his-item">
-      <div>
-        <div class="his-d">${lbl}</div>
-        <div class="his-m">清點 ${fmt(r.cash_total||0)} · 支出 ${fmt(r.total_expense)} · 包回 ${fmt(r.return_amount)} · ${items}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="his-r${neg?' neg':''}">${fmt(r.return_amount)}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function adminExportExcel(){
-  if(!db||!adminStore){toast('請先選擇門市');return;}
-  const mm=String(adminMonth).padStart(2,'0');
-  const lastDay=new Date(adminYear,adminMonth,0).getDate();
-  const from=`${adminYear}-${mm}-01`;
-  const to=`${adminYear}-${mm}-${lastDay}`;
-  showLoad('準備匯出…');
-  try{
-    const {data,error}=await db.from('daily_records').select('*')
-      .eq('store',adminStore).gte('date',from).lte('date',to)
-      .order('date',{ascending:true});
-    if(error)throw error;
-    if(!data||!data.length){hideLoad();toast('該月份尚無紀錄');return;}
-    const wb=XLSX.utils.book_new();
-    const sn=STORES[adminStore]?.name||adminStore;
-    const s1=[['門市','日期','星期','零用金','清點現金','當日收入','當日支出','應收回','匯款金額']];
-    let tc=0,ti=0,te=0,tr=0;
-    data.forEach(r=>{
-      const wk=new Date(r.date+'T00:00:00').toLocaleDateString('zh-TW',{weekday:'short'});
-      s1.push([sn,r.date,wk,r.fund,r.cash_total||0,r.income,r.total_expense,r.return_amount,r.transfer_amount||0]);
-      tc+=r.cash_total||0;ti+=r.income;te+=r.total_expense;tr+=r.return_amount;
-    });
-    s1.push(['','','合計','',tc,ti,te,tr]);
-    const ws1=XLSX.utils.aoa_to_sheet(s1);
-    ws1['!cols']=[{wch:12},{wch:12},{wch:8},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12}];
-    XLSX.utils.book_append_sheet(wb,ws1,'每日彙總');
-    const s2=[['門市','日期','支出項目','金額']];
-    data.forEach(r=>{
-      const ex=r.expenses||[];
-      if(!ex.length)s2.push([sn,r.date,'（無支出）',0]);
-      else ex.forEach(e=>s2.push([sn,r.date,e.name,e.amount]));
-    });
-    const ws2=XLSX.utils.aoa_to_sheet(s2);
-    ws2['!cols']=[{wch:12},{wch:12},{wch:24},{wch:12}];
-    XLSX.utils.book_append_sheet(wb,ws2,'支出明細');
-    const lbl=new Date(adminYear,adminMonth-1,1).toLocaleDateString('zh-TW',{year:'numeric',month:'long'}).replace(/\s/g,'');
-    XLSX.writeFile(wb,`UJ_總覽_${sn}_${lbl}.xlsx`);
-    hideLoad();toast('✓ Excel 已匯出！');
-  }catch(e){hideLoad();toast('✗ 匯出失敗');}
-}
-
-// ── Laundry (台北旗艦店專用) ──────────────────────────────
-const LAUNDRY_STORE = 'taipei';
-let laundryPts = null; // 目前剩餘點數（null=尚未載入）
-
-function showLaundrySection(show){
-  const el = $('laundry-section');
-  if(el) el.style.display = show ? 'block' : 'none';
-}
-
-async function initLaundry(){
-  if(currentStore !== LAUNDRY_STORE) return;
-  showLaundrySection(true);
-  // 設定預設日期時間為現在
-  const now = new Date();
-  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  $('lau-datetime').value = local;
-  $('topup-datetime').value = local;
-  await loadLaundryPts();
-  await loadLaundryList();
-}
-
-async function loadLaundryPts(){
-  if(!db) return;
-  try{
-    // 從充值記錄和洗浴記錄計算目前點數
-    const [{data:topups},{data:uses}] = await Promise.all([
-      db.from('laundry_topups').select('pts').eq('store', LAUNDRY_STORE),
-      db.from('laundry_records').select('deduct').eq('store', LAUNDRY_STORE)
-    ]);
-    const totalIn  = (topups||[]).reduce((s,r)=>s+Number(r.pts||0),0);
-    const totalOut = (uses||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
-    laundryPts = totalIn - totalOut;
-    $('lau-pts').textContent = laundryPts;
-  }catch(e){ console.error('loadLaundryPts:',e); }
-}
-
-async function loadLaundryList(){
-  if(!db) return;
-  try{
-    const {data,error} = await db.from('laundry_records').select('*')
-      .eq('store', LAUNDRY_STORE)
-      .order('done_at',{ascending:false})
-      .limit(30);
-    if(error) throw error;
-    renderLaundryList(data||[]);
-  }catch(e){ toast('⚠ 洗浴巾記錄載入失敗'); }
-}
-
-function renderLaundryList(rs){
-  const el = $('lau-list');
-  if(!rs.length){ el.innerHTML='<div class="empty">尚無洗浴巾記錄</div>'; return; }
-  el.innerHTML = rs.map(r=>{
-    const dt = new Date(r.done_at).toLocaleDateString('zh-TW',{month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    return `<div class="laundry-item">
-      <div class="li-left">
-        <div class="li-date">${dt}</div>
-        <div class="li-meta">浴巾 ${r.qty} 條・負責人：${r.who}</div>
-      </div>
-      <div class="li-right">
-        <div class="li-pts">
-          <div class="li-deduct">−${r.deduct} 點</div>
-          <div class="li-remain">使用後剩 ${r.remain_pts} 點</div>
-        </div>
-        <button class="btn-del" onclick="delLaundry(${r.id})">✕</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function addLaundry(){
-  const dt     = $('lau-datetime').value;
-  const qty    = parseInt($('lau-qty').value)||0;
-  const deduct = parseInt($('lau-deduct').value)||0;
-  const who    = $('lau-who').value.trim();
-  if(!dt||!qty||!deduct||!who){ toast('請填寫所有欄位'); return; }
-  if(laundryPts !== null && deduct > laundryPts){
-    toast(`⚠ 點數不足！目前剩 ${laundryPts} 點`); return;
-  }
-  if(!db){ toast('⚠ 尚未連線資料庫'); return; }
-  const remain = (laundryPts||0) - deduct;
-  showLoad('儲存中…');
-  try{
-    const {error} = await db.from('laundry_records').insert({
-      store: LAUNDRY_STORE,
-      done_at: new Date(dt).toISOString(),
-      qty, deduct, who, remain_pts: remain
-    });
-    if(error) throw error;
-    hideLoad();
-    $('lau-qty').value=''; $('lau-deduct').value=''; $('lau-who').value='';
-    toast('✓ 洗浴巾記錄已儲存！');
-    await loadLaundryPts();
-    await loadLaundryList();
-  }catch(e){ hideLoad(); toast('✗ 儲存失敗：'+e.message); }
-}
-
-async function delLaundry(id){
-  if(!confirm('確定刪除此筆洗浴巾記錄？')) return;
-  showLoad('刪除中…');
-  try{
-    const {error} = await db.from('laundry_records').delete().eq('id',id);
-    if(error) throw error;
-    hideLoad(); toast('✓ 已刪除');
-    await loadLaundryPts();
-    await loadLaundryList();
-  }catch(e){ hideLoad(); toast('✗ 刪除失敗'); }
-}
-
-function openTopup(){
-  const now = new Date();
-  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  $('topup-datetime').value = local;
-  $('topup-modal').classList.add('open');
-}
-function closeTopup(){ $('topup-modal').classList.remove('open'); }
-
-async function confirmTopup(){
-  const pts  = parseInt($('topup-pts').value)||0;
-  const who  = $('topup-who').value.trim();
-  const dt   = $('topup-datetime').value;
-  if(!pts||!who||!dt){ toast('請填寫所有充值資訊'); return; }
-  if(!db){ toast('⚠ 尚未連線資料庫'); return; }
-  showLoad('儲存充值記錄…');
-  try{
-    const {error} = await db.from('laundry_topups').insert({
-      store: LAUNDRY_STORE,
-      topup_at: new Date(dt).toISOString(),
-      pts, who
-    });
-    if(error) throw error;
-    hideLoad();
-    closeTopup();
-    $('topup-pts').value=''; $('topup-who').value='';
-    toast(`✓ 充值 ${pts} 點完成！`);
-    await loadLaundryPts();
-  }catch(e){ hideLoad(); toast('✗ 充值失敗：'+e.message); }
-}
-
-// ── Unified Login ──────────────────────────────────────────
-function toggleLoginPw(){
-  const i=$('login-pw');
-  i.type=i.type==='password'?'text':'password';
-}
-// keep old toggles for compat
-function togglePw(){}
-function toggleStaffPw(){}
-function switchTab(){}
-
-// ── Unified Login ──────────────────────────────────────────
-// Built-in manager accounts (store + admin)
-const BUILTIN_ACCOUNTS = {
-  'uj-tpe':   {type:'manager', store:'taipei',    display:'台北旗艦店'},
-  'uj-hsz':   {type:'manager', store:'hsinchu',   display:'新竹形象店'},
-  'uj-txg':   {type:'manager', store:'taichung',  display:'台中主題店'},
-  'uj-khh':   {type:'manager', store:'kaohsiung', display:'高雄概念店'},
-  'uj-admin': {type:'admin',   store:null,        display:'總覽管理'},
-  'uj-test':  {type:'manager', store:'test',      display:'🧪 測試店', pw:'uj_123123'},
-};
-
-async function doUnifiedLogin(){
+// ── Login ────────────────────────────────────────────────────
+async function doLogin(){
   const username=$('login-username').value.trim().toLowerCase();
   const pw=$('login-pw').value;
   if(!username||!pw){$('lerr').textContent='請填寫帳號和密碼';return;}
   $('lerr').textContent='';
 
-  // Check built-in accounts first (no DB needed)
-  if(BUILTIN_ACCOUNTS[username]){
-    const expectedPw = BUILTIN_ACCOUNTS[username].pw || username;
-    if(pw!==expectedPw){$('lerr').textContent='密碼錯誤，請再試一次';$('login-pw').value='';return;}
-    const acct=BUILTIN_ACCOUNTS[username];
-    showLoad('連線中…');
-    await connectDB();
-    hideLoad();
-    if(acct.type==='admin'){
-      isAdmin=true;selStore='__admin__';
-      localStorage.setItem('uj_store','__admin__');
-      enterAdminApp();
-    } else {
-      selStore=acct.store;
-      localStorage.setItem('uj_store',acct.store);
-      enterApp(acct.store);
-    }
-    return;
+  // Built-in accounts
+  if(BUILTIN[username]){
+    const b=BUILTIN[username];
+    if(pw!==(b.pw||username)){$('lerr').textContent='密碼錯誤';$('login-pw').value='';return;}
+    if(b.admin){localStorage.setItem('uj_store','__admin__');showLoad();await connectDB();hideLoad();enterAdminApp();return;}
+    localStorage.setItem('uj_store',b.store);
+    enterApp(b.store);return;
   }
 
-  // Check staff accounts in DB
-  showLoad('登入中…');
+  // Staff accounts
+  showLoad();
   try{
-    if(!db){
-      const ok=await connectDB();
-      if(!ok){hideLoad();$('lerr').textContent='資料庫連線失敗，請稍後再試';return;}
-    }
-    const {data,error}=await db.from('staff_accounts').select('*')
-      .eq('username',username).eq('active',true).limit(1);
+    if(!db){const ok=await connectDB();if(!ok){hideLoad();$('lerr').textContent='資料庫連線失敗';return;}}
+    const {data,error}=await db.from('staff_accounts').select('*').eq('username',username).eq('active',true).limit(1);
     if(error)throw error;
     if(!data||!data.length){hideLoad();$('lerr').textContent='帳號不存在或已停用';return;}
     const staff=data[0];
-    if(staff.password!==pw){hideLoad();$('lerr').textContent='密碼錯誤，請再試一次';$('login-pw').value='';return;}
-    hideLoad();
+    if(staff.password!==pw){hideLoad();$('lerr').textContent='密碼錯誤';$('login-pw').value='';return;}
     currentUser={id:staff.id,username:staff.username,display_name:staff.display_name,role:staff.role,store:staff.store,must_change_pw:staff.password===staff.username};
     localStorage.setItem('uj_staff',JSON.stringify(currentUser));
-    if(currentUser.must_change_pw){openChangePw(true);}
-    else{enterStaffApp();}
+    hideLoad();
+    if(currentUser.must_change_pw)openChangePw(true);
+    else enterStaffApp();
   }catch(e){hideLoad();$('lerr').textContent='登入失敗：'+e.message;}
 }
 
-// keep doStaffLogin alias
-async function doStaffLogin(){ await doUnifiedLogin(); }
-
-// ── Change Password ───────────────────────────────────────
 function openChangePw(forced=false){
   $('chpw-sub').textContent=forced?'首次登入請設定您的專屬密碼（至少 6 個字元）':'請設定新密碼';
   $('chpw-new').value='';$('chpw-confirm').value='';$('chpw-err').textContent='';
   $('chpw-modal').classList.add('open');
 }
-
 async function confirmChangePw(){
-  const newPw=$('chpw-new').value;
-  const confirm=$('chpw-confirm').value;
-  if(newPw.length<6){$('chpw-err').textContent='密碼至少需要 6 個字元';return;}
-  if(newPw!==confirm){$('chpw-err').textContent='兩次輸入的密碼不一致';return;}
-  if(!currentUser){$('chpw-err').textContent='請先登入';return;}
-  showLoad('更新密碼…');
+  const nw=$('chpw-new').value,cf=$('chpw-confirm').value;
+  if(nw.length<6){$('chpw-err').textContent='至少 6 個字元';return;}
+  if(nw!==cf){$('chpw-err').textContent='兩次輸入不一致';return;}
+  showLoad();
   try{
-    const {error}=await db.from('staff_accounts').update({password:newPw}).eq('id',currentUser.id);
-    if(error)throw error;
+    await db.from('staff_accounts').update({password:nw}).eq('id',currentUser.id);
     currentUser.must_change_pw=false;
     localStorage.setItem('uj_staff',JSON.stringify(currentUser));
-    hideLoad();
-    $('chpw-modal').classList.remove('open');
-    toast('✓ 密碼已更新！');
-    enterStaffApp();
+    hideLoad();$('chpw-modal').classList.remove('open');
+    toast('✓ 密碼已更新！');enterStaffApp();
   }catch(e){hideLoad();$('chpw-err').textContent='更新失敗：'+e.message;}
 }
 
-// ── Staff App ─────────────────────────────────────────────
-async function enterStaffApp(){
-  $('login-ov').style.display='none';
-  $('main').style.display='block';
-  selStore=currentUser.store;
-  currentStore=currentUser.store;
-  const s=STORES[currentStore];
-  $('hero-name').textContent=s.name;
-  $('hero-addr').textContent=s.addr;
-  $('store-badge').textContent=s.name;
-  $('store-badge').style.display='block';
-  // Show user badge
-  $('user-badge').style.display='flex';
-  $('user-display-name').textContent=currentUser.display_name;
-  const dot=$('user-role-dot');
-  if(currentUser.role==='user'){dot.classList.add('user');}
-  // Apply user mode restrictions
-  if(currentUser.role==='user'){
-    document.getElementById('main').classList.add('user-mode');
-  } else {
-    document.getElementById('main').classList.remove('user-mode');
-  }
-  renderCash();calcResult();
-  showLoad('連線中…');
-  const ok=await connectDB();
-  hideLoad();
-  if(ok){
-    await loadPrevPool();
-    await loadHistory();
-    await loadDraft();
-    if(currentStore==='taipei') await initLaundry();
-  } else toast('⚠ 離線模式');
+function doLogout(){
+  localStorage.removeItem('uj_store');localStorage.removeItem('uj_staff');
+  currentStore=null;currentUser=null;isAdmin=false;
+  isDraft=false;draftId=null;incomes=[];expenses=[];DENOMS.forEach(d=>cc[d.v]=0);
+  document.getElementById('main').classList.remove('user-mode');
+  $('user-badge').style.display='none';$('store-badge').style.display='none';
+  $('draft-indicator').style.display='none';
+  $('laundry-section').style.display='none';
+  $('login-ov').style.display='flex';
+  $('login-username').value='';$('login-pw').value='';$('lerr').textContent='';
 }
 
-// ── Draft system ──────────────────────────────────────────
-let isDraft=false;
-let draftId=null;
+// ── Enter app ────────────────────────────────────────────────
+async function enterApp(key){
+  currentStore=key;currentUser=null;isDraft=false;draftId=null;
+  incomes=[];expenses=[];DENOMS.forEach(d=>cc[d.v]=0);prevPool=FUND;
+  const s=STORES[key];
+  $('login-ov').style.display='none';
+  $('main').style.display='block';
+  $('hero-name').textContent=s.name;
+  $('hero-addr').textContent=s.addr;
+  $('store-badge').textContent=s.name;$('store-badge').style.display='block';
+  $('user-badge').style.display='none';
+  document.getElementById('main').classList.remove('user-mode');
+  $('draft-indicator').style.display='none';
+  viewYear=new Date().getFullYear();viewMonth=new Date().getMonth()+1;
+  updateMonthLabel();
+  renderIncome();renderExp();renderCash();updateMetrics();
+  transfers=[];renderTransfers();
+  const now2=new Date();
+  $('tr-from').value=new Date(now2.getFullYear(),now2.getMonth(),1).toISOString().slice(0,10);
+  $('tr-to').value=localDate();
+  showLoad();
+  let w=0;while(!window.supabase&&w<5000){await new Promise(r=>setTimeout(r,200));w+=200;}
+  const ok=await connectDB();
+  if(ok){
+    await loadPrevPool();
+    updateMetrics();
+    await loadHistory();
+    await loadTransfers();
+    await loadDraft();
+    if(key==='taipei')await initLaundry();
+  }
+  hideLoad();
+  if(!ok)toast('⚠ 連線失敗，請按重新連線');
+}
 
+async function enterStaffApp(){
+  currentStore=currentUser.store;
+  isDraft=false;draftId=null;incomes=[];expenses=[];DENOMS.forEach(d=>cc[d.v]=0);prevPool=FUND;
+  const s=STORES[currentStore];
+  $('login-ov').style.display='none';
+  $('main').style.display='block';
+  $('hero-name').textContent=s.name;$('hero-addr').textContent=s.addr;
+  $('store-badge').textContent=s.name;$('store-badge').style.display='block';
+  $('user-badge').style.display='flex';
+  $('user-display-name').textContent=currentUser.display_name;
+  if(currentUser.role==='user')document.getElementById('main').classList.add('user-mode');
+  $('draft-indicator').style.display='none';
+  viewYear=new Date().getFullYear();viewMonth=new Date().getMonth()+1;
+  updateMonthLabel();
+  renderIncome();renderExp();renderCash();updateMetrics();
+  showLoad();
+  let w=0;while(!window.supabase&&w<5000){await new Promise(r=>setTimeout(r,200));w+=200;}
+  const ok=await connectDB();
+  if(ok){
+    await loadPrevPool();updateMetrics();
+    await loadHistory();
+    if(currentStore==='taipei')await initLaundry();
+  }
+  hideLoad();
+  if(!ok)toast('⚠ 連線失敗，請按重新連線');
+}
+
+// ── Prev pool ────────────────────────────────────────────────
+async function loadPrevPool(){
+  if(!db||!currentStore)return;
+  const today=localDate();
+  try{
+    const {data,error}=await db.from('daily_records')
+      .select('date,income,total_expense,return_amount,status')
+      .eq('store',currentStore).eq('status','final')
+      .lt('date',today).order('date',{ascending:true});
+    if(error)throw error;
+    if(data&&data.length){
+      let pool=FUND;
+      data.forEach(r=>{
+        const inc=Number(r.income||0);
+        const exp=Number(r.total_expense||0);
+        const deficit=Math.max(0,pool-inc+exp); // 虧空需補回
+        const ret=Math.max(0,inc-exp-deficit);
+        pool=ret>0?FUND:pool-exp+inc;
+        if(pool>FUND)pool=FUND;
+      });
+      prevPool=Math.max(0,pool);
+    }else{prevPool=FUND;}
+  }catch(e){console.error('loadPrevPool:',e);prevPool=FUND;}
+}
+
+// ── Income ───────────────────────────────────────────────────
+function addIncome(){
+  const note=$('inc-note').value.trim()||'現金收款';
+  const amt=parseFloat($('inc-amt').value)||0;
+  if(amt<=0){toast('請輸入收款金額');return;}
+  incomes.push({note,amount:amt});
+  $('inc-note').value='';$('inc-amt').value='';
+  renderIncome();updateMetrics();
+}
+function delIncome(i){incomes.splice(i,1);renderIncome();updateMetrics();}
+function renderIncome(){
+  const el=$('income-list');
+  if(!incomes.length){el.innerHTML='<div class="empty-hint">尚無收款記錄</div>';$('income-total-row').style.display='none';return;}
+  el.innerHTML=incomes.map((r,i)=>`
+    <div class="income-row">
+      <span class="income-note">${r.note}</span>
+      <span class="income-amt">${fmt(r.amount)}</span>
+      <button class="income-del" onclick="delIncome(${i})">×</button>
+    </div>`).join('');
+  const total=incomes.reduce((s,r)=>s+r.amount,0);
+  $('income-total').textContent=fmt(total);
+  $('income-total-row').style.display='flex';
+}
+
+// ── Expense ──────────────────────────────────────────────────
+function addExp(){
+  const name=$('exp-name').value.trim();
+  const amt=parseFloat($('exp-amt').value)||0;
+  if(!name){toast('請輸入支出項目');return;}
+  if(amt<=0){toast('請輸入金額');return;}
+  expenses.push({name,amount:amt});
+  $('exp-name').value='';$('exp-amt').value='';
+  renderExp();updateMetrics();
+}
+function delExp(i){expenses.splice(i,1);renderExp();updateMetrics();}
+function renderExp(){
+  const el=$('exp-list');
+  if(!expenses.length){el.innerHTML='<div class="empty-hint">尚無支出記錄</div>';return;}
+  el.innerHTML=expenses.map((r,i)=>`
+    <div class="exp-row-item">
+      <span class="exp-name">${r.name}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="exp-amt-label">-${fmt(r.amount)}</span>
+        <button class="exp-del" onclick="delExp(${i})">×</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── Metrics & Result ─────────────────────────────────────────
+function updateMetrics(){
+  const totalIncome=incomes.reduce((s,r)=>s+r.amount,0);
+  const totalExp=expenses.reduce((s,r)=>s+r.amount,0);
+  const deficit=Math.max(0,FUND-prevPool); // 零用金虧空需補回
+  // 應匯 = 收款 - 支出 - 補回虧空
+  const toRemit=Math.max(0,totalIncome-totalExp-deficit);
+  const actualDeficit=Math.max(0,deficit-(totalIncome-totalExp>0?totalIncome-totalExp:0));
+
+  // Metrics
+  $('m-fund').textContent=fmt(prevPool);
+  $('m-fund').style.color=prevPool<FUND?'#f08080':'rgba(255,255,255,.9)';
+  $('m-exp').textContent=fmt(totalExp);
+  $('m-ret').textContent=fmt(toRemit);
+
+  // Result box
+  $('rs-income').textContent=fmt(totalIncome);
+  $('rs-exp').textContent=fmt(totalExp);
+  $('rs-deficit').textContent=deficit>0?fmt(deficit):'$0';
+
+  const box=$('result-box');
+  if(totalIncome===0){
+    box.className='result-box';
+    $('result-label').textContent='應存匯公司金額';
+    $('result-amount').textContent='$0';
+    $('result-hint').textContent='請輸入今日現金收款';
+  } else if(toRemit===0&&totalIncome>0){
+    box.className='result-box warn';
+    $('result-label').textContent='今日應匯 $0';
+    $('result-amount').textContent='$0';
+    $('result-hint').textContent=deficit>0?`收款不足以補回虧空 ${fmt(deficit)}`:`收款 ${fmt(totalIncome)} 剛好抵支出`;
+  } else {
+    box.className='result-box';
+    $('result-label').textContent='應存匯公司金額';
+    $('result-amount').textContent=fmt(toRemit);
+    $('result-hint').textContent=deficit>0
+      ?`收款 ${fmt(totalIncome)} − 支出 ${fmt(totalExp)} − 補虧空 ${fmt(deficit)}`
+      :`收款 ${fmt(totalIncome)} − 支出 ${fmt(totalExp)}`;
+  }
+
+  // Cash check
+  checkFund();
+}
+
+// ── Cash counting ────────────────────────────────────────────
+function renderCash(){
+  const el=$('cash-rows');
+  el.innerHTML=DENOMS.map(d=>`
+    <div class="cash-row">
+      <span class="cash-denom">${d.v>=1000?'$'+(d.v/1000)+'k':'$'+d.v}</span>
+      <span class="cash-type">${d.t}</span>
+      <div class="cash-ctrl">
+        <button class="c-pm" onclick="adjC(${d.v},-1)">−</button>
+        <input class="c-num" type="number" min="0" value="${cc[d.v]||0}"
+          oninput="setC(${d.v},this.value)" onchange="setC(${d.v},this.value)"/>
+        <button class="c-pm" onclick="adjC(${d.v},1)">＋</button>
+      </div>
+      <span class="c-sub${(cc[d.v]||0)===0?' z':''}" id="csub-${d.v}">${fmt((cc[d.v]||0)*d.v)}</span>
+    </div>`).join('');
+  updCashTotal();
+}
+function adjC(v,d){cc[v]=Math.max(0,(cc[v]||0)+d);renderCash();}
+function setC(v,val){
+  cc[v]=Math.max(0,parseInt(val)||0);
+  const el=$('csub-'+v);
+  if(el){const s=cc[v]*v;el.textContent=fmt(s);el.className='c-sub'+(s===0?' z':'');}
+  updCashTotal();
+}
+function updCashTotal(){
+  const t=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
+  $('cash-total').textContent=fmt(t);
+  checkFund();
+}
+function clearCash(){DENOMS.forEach(d=>cc[d.v]=0);renderCash();}
+function checkFund(){
+  const t=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
+  const msg=$('fund-check-msg');
+  if(t===0){msg.style.display='none';return;}
+  msg.style.display='block';
+  if(t===FUND){
+    msg.style.background='rgba(74,124,89,.1)';msg.style.color='#4A7C59';
+    msg.textContent='✓ 零用金相符，維持 $3,000';
+  } else if(t>FUND){
+    msg.style.background='rgba(184,150,60,.1)';msg.style.color='#8a6800';
+    msg.textContent=`⚠ 零用金多了 ${fmt(t-FUND)}，請再確認`;
+  } else {
+    msg.style.background='rgba(184,48,48,.08)';msg.style.color='#B83030';
+    msg.textContent=`✗ 零用金少了 ${fmt(FUND-t)}，與預期不符`;
+  }
+}
+
+// ── Draft ────────────────────────────────────────────────────
 async function loadDraft(){
   if(!db||!currentStore)return;
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDate();
   try{
     const {data}=await db.from('daily_records').select('*')
       .eq('store',currentStore).eq('date',today).eq('status','draft').limit(1);
     if(data&&data.length){
-      const r=data[0];
-      draftId=r.id;
-      isDraft=true;
-      // Restore draft data
-      expenses=(r.expenses||[]);
-      const savedCc=r.cash_counts||{};
-      DENOMS.forEach(d=>cc[d.v]=Number(savedCc[d.v]||0));
-      renderExp();renderCash();calcResult();
+      const r=data[0];draftId=r.id;isDraft=true;
+      incomes=(r.incomes||r.expenses?.filter?.(e=>e._income)||[]);
+      // backward compat: if old format
+      if(!r.incomes)incomes=[];
+      expenses=(r.expenses||[]).filter(e=>!e._income);
+      const sc=r.cash_counts||{};
+      DENOMS.forEach(d=>cc[d.v]=Number(sc[d.v]||0));
+      renderIncome();renderExp();renderCash();updateMetrics();
       $('draft-indicator').style.display='block';
       toast('🟡 載入今日草稿');
     }
@@ -2071,31 +836,28 @@ async function loadDraft(){
 }
 
 async function saveDraft(){
-  if(!db){
-    const ok=await connectDB();
-    if(!ok){toast('⚠ 資料庫連線失敗，請按重新連線後再試');return;}
-  }
-  const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
-  const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const today=new Date().toISOString().slice(0,10);
-  showLoad('暫存中…');
+  if(!db){toast('⚠ 未連線');return;}
+  const today=localDate();
+  const totalIncome=incomes.reduce((s,r)=>s+r.amount,0);
+  const totalExp=expenses.reduce((s,r)=>s+r.amount,0);
+  showLoad();
   try{
     const payload={
       date:today,store:currentStore,fund:FUND,
-      cash_total:cashT,income:0,total_expense:expT,
+      cash_total:DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0),
+      income:totalIncome,total_expense:totalExp,
       return_amount:0,deficit:0,
-      expenses,cash_counts:cc,status:'draft'
+      expenses,cash_counts:cc,
+      incomes, // store income separately
+      status:'draft'
     };
     if(draftId){
-      const {error}=await db.from('daily_records').update(payload).eq('id',draftId);
-      if(error)throw error;
-    } else {
-      const {data,error}=await db.from('daily_records').insert(payload).select();
-      if(error)throw error;
-      draftId=data[0].id;
+      await db.from('daily_records').update(payload).eq('id',draftId);
+    }else{
+      const {data}=await db.from('daily_records').insert(payload).select();
+      if(data&&data[0])draftId=data[0].id;
     }
-    isDraft=true;
-    $('draft-indicator').style.display='block';
+    isDraft=true;$('draft-indicator').style.display='block';
     hideLoad();toast('🟡 草稿已暫存！');
   }catch(e){hideLoad();toast('✗ 暫存失敗：'+e.message);}
 }
@@ -2103,86 +865,335 @@ async function saveDraft(){
 async function finalizeDay(){
   if(!db){
     const ok=await connectDB();
-    if(!ok){toast('⚠ 資料庫連線失敗，請按重新連線後再試');return;}
+    if(!ok){toast('⚠ 資料庫連線失敗');return;}
   }
-  const cashT=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
-  const expT=expenses.reduce((s,e)=>s+e.amount,0);
-  const income=Math.max(0,cashT-prevPool);
-  const ret=Math.max(0,cashT-prevPool-expT);
-  const deficit=Math.max(0,prevPool+expT-cashT);
-  const now=new Date();
-  const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  showLoad('完成結帳…');
+  const totalIncome=incomes.reduce((s,r)=>s+r.amount,0);
+  const totalExp=expenses.reduce((s,r)=>s+r.amount,0);
+  const deficit=Math.max(0,FUND-prevPool);
+  const ret=Math.max(0,totalIncome-totalExp-deficit);
+  const today=localDate();
+  showLoad();
   try{
     const payload={
       date:today,store:currentStore,fund:FUND,
-      cash_total:cashT,income,total_expense:expT,
+      cash_total:DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0),
+      income:totalIncome,total_expense:totalExp,
       return_amount:ret,deficit,
-      expenses:JSON.parse(JSON.stringify(expenses)),
-      cash_counts:JSON.parse(JSON.stringify(cc)),
+      expenses,cash_counts:cc,incomes,
       status:'final'
     };
-    let saveError=null;
     if(draftId){
       const {error}=await db.from('daily_records').update(payload).eq('id',draftId);
-      saveError=error;
-    } else {
-      // try upsert first
+      if(error)throw error;
+    }else{
       const {error}=await db.from('daily_records').upsert(payload,{onConflict:'date,store'});
-      saveError=error;
+      if(error)throw error;
     }
-    hideLoad();
-    if(saveError){
-      console.error('save error:',saveError);
-      toast('✗ 結帳失敗：'+saveError.message);
-      return;
-    }
-    isDraft=false;draftId=null;
-    $('draft-indicator').style.display='none';
-    expenses=[];renderExp();
-    DENOMS.forEach(d=>cc[d.v]=0);renderCash();
-    // 更新 prevPool 到包回後的狀態
-    prevPool = ret>0 ? FUND : cashT-expT;
-    const mpool=$('m-pool');
-    if(mpool){
-      mpool.textContent=fmt(prevPool);
-      mpool.style.color=prevPool<FUND?'#e08080':'rgba(255,255,255,.9)';
-    }
-    calcResult();
-    toast('✅ 今日結帳完成！');
+    isDraft=false;draftId=null;$('draft-indicator').style.display='none';
+    // Update prevPool
+    prevPool=ret>0?FUND:Math.max(0,prevPool-totalExp+totalIncome);
+    if(prevPool>FUND)prevPool=FUND;
+    incomes=[];expenses=[];DENOMS.forEach(d=>cc[d.v]=0);
+    renderIncome();renderExp();renderCash();updateMetrics();
+    hideLoad();toast('✅ 今日結帳完成！');
     await loadHistory();
-  }catch(e){
-    hideLoad();
-    console.error('finalizeDay error:',e);
-    toast('✗ 結帳失敗：'+e.message);
-  }
+  }catch(e){hideLoad();toast('✗ 結帳失敗：'+e.message);console.error(e);}
 }
 
-// Override saveDay to use finalizeDay for backward compat
-async function saveDay(){ await finalizeDay(); }
+// ── History ──────────────────────────────────────────────────
+function updateMonthLabel(){$('month-label').textContent=`${viewYear}年${viewMonth}月`;}
+function changeMonth(d){
+  viewMonth+=d;
+  if(viewMonth>12){viewMonth=1;viewYear++;}
+  if(viewMonth<1){viewMonth=12;viewYear--;}
+  updateMonthLabel();loadHistory();
+}
 
-// Init
+async function loadHistory(){
+  if(!db||!currentStore)return;
+  loadTransfers();
+  const mm=String(viewMonth).padStart(2,'0');
+  const lastDay=new Date(viewYear,viewMonth,0).getDate();
+  const from=`${viewYear}-${mm}-01`,to=`${viewYear}-${mm}-${String(lastDay).padStart(2,'0')}`;
+  try{
+    const {data,error}=await db.from('daily_records').select('*')
+      .eq('store',currentStore).gte('date',from).lte('date',to)
+      .order('date',{ascending:true});
+    if(error)throw error;
+    renderHistory(data||[]);
+  }catch(e){console.error('loadHistory:',e);}
+}
+
+function renderHistory(rs){
+  historyRecords=rs;
+  const totInc=rs.filter(r=>r.status==='final').reduce((s,r)=>s+Number(r.income||0),0);
+  const totExp=rs.filter(r=>r.status==='final').reduce((s,r)=>s+Number(r.total_expense||0),0);
+  const totRet=rs.filter(r=>r.status==='final').reduce((s,r)=>s+Number(r.return_amount||0),0);
+  $('ms-income').textContent=fmt(totInc);
+  $('ms-expense').textContent=fmt(totExp);
+  $('ms-return').textContent=fmt(totRet);
+  const el=$('his-list');
+  if(!rs.length){el.innerHTML='<div class="empty-hint">該月份尚無紀錄</div>';return;}
+  el.innerHTML=rs.map((r,idx)=>{
+    const d=new Date(r.date+'T00:00:00');
+    const lbl=d.toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'});
+    const items=(r.expenses||[]).map(e=>e.name).join('、')||'無支出';
+    const isDraft=r.status==='draft';
+    return`<div class="his-item">
+      <div class="his-top">
+        <div>
+          <div class="his-date">${lbl}${isDraft?' <span style="font-size:11px;background:rgba(184,150,60,.15);color:#b8963c;border-radius:10px;padding:1px 8px;">草稿</span>':''}</div>
+          <div class="his-meta">收款 ${fmt(r.income||0)} · 支出 ${fmt(r.total_expense)} · 應匯 ${fmt(r.return_amount)} · ${items}</div>
+        </div>
+        <div class="his-ret${r.return_amount>0?'':' zero'}">${fmt(r.return_amount)}</div>
+      </div>
+      <div class="his-actions">
+        <button class="btn-edit" onclick="toggleEdit(${idx})">✏ 編輯</button>
+        <button class="btn-del-rec" onclick="delRecord(${idx})">×</button>
+      </div>
+      <div class="his-edit-panel" id="edit-${idx}">
+        <div style="font-size:13px;color:var(--t3);margin-bottom:8px;">支出記錄</div>
+        <div id="edit-exp-${idx}">${renderEditExp(r.expenses||[],idx)}</div>
+        <div class="add-row two" style="margin-bottom:12px;">
+          <input class="fi" id="edit-ename-${idx}" placeholder="項目名稱"/>
+          <input class="fi" type="number" id="edit-eamt-${idx}" placeholder="金額"/>
+          <button class="btn-add" onclick="addEditExp(${idx})">＋</button>
+        </div>
+        <button class="btn-finalize" style="width:100%;" onclick="saveEdit(${idx})">儲存修改</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderEditExp(exps,idx){
+  if(!exps.length)return'<div class="empty-hint" style="font-size:12px;">無支出</div>';
+  return exps.map((e,i)=>`
+    <div class="exp-row-item">
+      <span class="exp-name">${e.name}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="exp-amt-label">-${fmt(e.amount)}</span>
+        <button class="exp-del" onclick="delEditExp(${idx},${i})">×</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleEdit(idx){
+  const panel=$(`edit-${idx}`);
+  panel.style.display=panel.style.display==='block'?'none':'block';
+}
+
+function delEditExp(idx,ei){
+  historyRecords[idx].expenses=historyRecords[idx].expenses||[];
+  historyRecords[idx].expenses.splice(ei,1);
+  $(`edit-exp-${idx}`).innerHTML=renderEditExp(historyRecords[idx].expenses,idx);
+}
+
+function addEditExp(idx){
+  const name=$(`edit-ename-${idx}`).value.trim();
+  const amt=parseFloat($(`edit-eamt-${idx}`).value)||0;
+  if(!name||!amt)return;
+  historyRecords[idx].expenses=historyRecords[idx].expenses||[];
+  historyRecords[idx].expenses.push({name,amount:amt});
+  $(`edit-exp-${idx}`).innerHTML=renderEditExp(historyRecords[idx].expenses,idx);
+  $(`edit-ename-${idx}`).value='';$(`edit-eamt-${idx}`).value='';
+}
+
+async function saveEdit(idx){
+  const r=historyRecords[idx];
+  const exp=r.expenses||[];
+  const totExp=exp.reduce((s,e)=>s+e.amount,0);
+  showLoad();
+  try{
+    await db.from('daily_records').update({expenses:exp,total_expense:totExp}).eq('id',r.id);
+    hideLoad();toast('✓ 已儲存');await loadHistory();
+  }catch(e){hideLoad();toast('✗ 失敗：'+e.message);}
+}
+
+async function delRecord(idx){
+  const r=historyRecords[idx];
+  if(!confirm(`確定刪除 ${r.date} 的紀錄？`))return;
+  showLoad();
+  try{
+    await db.from('daily_records').delete().eq('id',r.id);
+    hideLoad();toast('✓ 已刪除');await loadHistory();
+  }catch(e){hideLoad();toast('✗ 失敗：'+e.message);}
+}
+
+// ── Transfer ─────────────────────────────────────────────────
+async function loadTransfers(){
+  if(!db||!currentStore)return;
+  try{
+    const {data}=await db.from('transfer_records').select('*')
+      .eq('store',currentStore).order('created_at',{ascending:false}).limit(20);
+    transfers=data||[];renderTransfers();
+    calcTransferPreview();
+  }catch(e){}
+}
+
+function calcTransferPreview(){
+  if(!historyRecords.length)return;
+  const from=$('tr-from').value,to=$('tr-to').value;
+  if(!from||!to)return;
+  const total=historyRecords
+    .filter(r=>r.status==='final'&&r.date>=from&&r.date<=to)
+    .reduce((s,r)=>s+Number(r.return_amount||0),0);
+  $('tr-preview-amt').textContent=fmt(total);
+  $('tr-preview').style.display='block';
+  $('tr-amt').value=total||'';
+}
+
+async function addTransfer(){
+  const from=$('tr-from').value,to=$('tr-to').value;
+  const amt=parseFloat($('tr-amt').value)||0;
+  if(!from||!to||!amt){toast('請填寫完整匯款資訊');return;}
+  const rangeIncome=historyRecords
+    .filter(r=>r.status==='final'&&r.date>=from&&r.date<=to)
+    .reduce((s,r)=>s+Number(r.return_amount||0),0);
+  const diff=amt-rangeIncome;
+  showLoad();
+  try{
+    await db.from('transfer_records').insert({store:currentStore,date_from:from,date_to:to,range_income:rangeIncome,transfer_amt:amt,diff});
+    hideLoad();toast('✓ 匯款記錄已新增');await loadTransfers();
+  }catch(e){hideLoad();toast('✗ 失敗：'+e.message);}
+}
+
+function renderTransfers(){
+  const el=$('tr-list');
+  if(!transfers.length){el.innerHTML='<div class="empty-hint">尚無匯款記錄</div>';return;}
+  el.innerHTML=transfers.map(r=>{
+    const diff=Number(r.diff||0);
+    const diffClass=Math.abs(diff)<1?'ok':diff>0?'over':'under';
+    const diffLabel=Math.abs(diff)<1?'相符':diff>0?`多匯 ${fmt(diff)}`:`少匯 ${fmt(-diff)}`;
+    return`<div class="tr-item">
+      <div>
+        <div class="tr-date">${r.date_from} ~ ${r.date_to}</div>
+        <div style="font-size:12px;color:var(--t3)">應收 ${fmt(r.range_income)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="tr-amt">${fmt(r.transfer_amt)}</span>
+        <span class="tr-diff ${diffClass}">${diffLabel}</span>
+        <button class="tr-del" onclick="delTransfer('${r.id}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function delTransfer(id){
+  if(!confirm('確定刪除此匯款記錄？'))return;
+  showLoad();
+  try{await db.from('transfer_records').delete().eq('id',id);hideLoad();toast('✓ 已刪除');await loadTransfers();}
+  catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+// ── Export Excel ─────────────────────────────────────────────
+function exportExcel(){
+  if(!historyRecords.length){toast('沒有資料可匯出');return;}
+  const s=STORES[currentStore]||{name:currentStore};
+  const wb=XLSX.utils.book_new();
+  // Sheet 1
+  const ws1Data=[['日期','星期','今日收款','今日支出','應匯金額','零用金清點','備用金狀態']];
+  historyRecords.filter(r=>r.status==='final').forEach(r=>{
+    const d=new Date(r.date+'T00:00:00');
+    const wk=['日','一','二','三','四','五','六'][d.getDay()];
+    const cashT=Number(r.cash_total||0);
+    ws1Data.push([r.date,'週'+wk,r.income||0,r.total_expense||0,r.return_amount||0,cashT,cashT===FUND?'正常':cashT>FUND?'多':'不足']);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws1Data),'每日彙總');
+  // Sheet 2
+  const ws2Data=[['日期','支出項目','金額']];
+  historyRecords.filter(r=>r.status==='final').forEach(r=>{
+    (r.expenses||[]).forEach(e=>ws2Data.push([r.date,e.name,e.amount]));
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws2Data),'支出明細');
+  // Sheet 3
+  const ws3Data=[['匯款區間','應收回','實際匯款','差額']];
+  transfers.forEach(r=>ws3Data.push([`${r.date_from}~${r.date_to}`,r.range_income,r.transfer_amt,r.diff]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws3Data),'匯款紀錄');
+  XLSX.writeFile(wb,`UJ_${s.name}_${viewYear}${String(viewMonth).padStart(2,'0')}.xlsx`);
+}
+
+// ── Admin ────────────────────────────────────────────────────
+function enterAdminApp(){
+  $('login-ov').style.display='none';
+  $('main').style.display='none';
+  toast('總覽帳號功能開發中，請使用各門市帳號登入');
+  // TODO: admin view
+}
+
+// ── Laundry ──────────────────────────────────────────────────
+async function initLaundry(){
+  if(!db||currentStore!=='taipei')return;
+  $('laundry-section').style.display='block';
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  $('lau-time').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  await loadLaundry();
+}
+
+async function loadLaundry(){
+  try{
+    const [topups,records]=await Promise.all([
+      db.from('laundry_topups').select('pts').eq('store','taipei'),
+      db.from('laundry_records').select('deduct').eq('store','taipei'),
+    ]);
+    const totalPts=(topups.data||[]).reduce((s,r)=>s+Number(r.pts||0),0);
+    const usedPts=(records.data||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    $('laundry-pts').textContent=fmt(totalPts-usedPts)+'pts';
+    const {data}=await db.from('laundry_records').select('*').eq('store','taipei').order('done_at',{ascending:false}).limit(10);
+    const el=$('laundry-list');
+    if(!data||!data.length){el.innerHTML='<div class="empty-hint">尚無記錄</div>';return;}
+    el.innerHTML=data.map(r=>`
+      <div class="laundry-item">
+        <div><div style="font-size:13px;">${r.who}</div><div style="font-size:11px;color:var(--t3);">${new Date(r.done_at).toLocaleString('zh-TW')}</div></div>
+        <div style="text-align:right;"><div style="font-size:13px;">浴巾 ${r.qty} 條</div><div style="font-size:11px;color:var(--t3);">扣 ${r.deduct}pts · 餘 ${r.remain_pts}pts</div></div>
+      </div>`).join('');
+  }catch(e){console.error('laundry:',e);}
+}
+
+async function addLaundry(){
+  const time=$('lau-time').value,qty=parseInt($('lau-qty').value)||0;
+  const deduct=parseInt($('lau-deduct').value)||0,who=$('lau-who').value.trim();
+  if(!time||!qty||!who){toast('請填寫完整記錄');return;}
+  showLoad();
+  try{
+    const {data:topups}=await db.from('laundry_topups').select('pts').eq('store','taipei');
+    const {data:recs}=await db.from('laundry_records').select('deduct').eq('store','taipei');
+    const remain=(topups||[]).reduce((s,r)=>s+Number(r.pts||0),0)-(recs||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    await db.from('laundry_records').insert({store:'taipei',done_at:new Date(time).toISOString(),qty,deduct,who,remain_pts:remain-deduct});
+    $('lau-qty').value='';$('lau-deduct').value='';$('lau-who').value='';
+    hideLoad();toast('✓ 已新增');await loadLaundry();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+async function showTopup(){
+  const pts=parseInt(prompt('充值點數：'))||0;
+  const who=prompt('充值人：')||'';
+  if(!pts||!who)return;
+  showLoad();
+  try{
+    await db.from('laundry_topups').insert({store:'taipei',topup_at:new Date().toISOString(),pts,who});
+    hideLoad();toast('✓ 已充值 '+pts+'pts');await loadLaundry();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+// ── Init ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async ()=>{
-  $('exp-name').addEventListener('keydown',e=>{if(e.key==='Enter')$('exp-amt').focus();});
-  $('exp-amt').addEventListener('keydown',e=>{if(e.key==='Enter')addExp();});
+  setDate();setInterval(setDate,60000);
 
-  // Check saved sessions
+  // Auto login
   const savedStaff=localStorage.getItem('uj_staff');
   if(savedStaff){
-    try{
-      currentUser=JSON.parse(savedStaff);
-      await enterStaffApp(); // enterStaffApp handles its own connectDB
-      return;
-    }catch(e){localStorage.removeItem('uj_staff');}
+    try{currentUser=JSON.parse(savedStaff);await enterStaffApp();return;}
+    catch(e){localStorage.removeItem('uj_staff');}
   }
   const saved=localStorage.getItem('uj_store');
-  if(saved==='__admin__'){
-    await connectDB();
-    isAdmin=true;selStore='__admin__';enterAdminApp();
-  } else if(saved&&STORES[saved]){
-    selStore=saved;
-    enterApp(saved); // enterApp handles its own connectDB
-  }
+  if(saved==='__admin__'){showLoad();await connectDB();hideLoad();isAdmin=true;enterAdminApp();}
+  else if(saved&&STORES[saved]){enterApp(saved);}
+
+  // Transfer date listeners
+  ['tr-from','tr-to'].forEach(id=>{
+    const el=$(id);if(el)el.addEventListener('change',calcTransferPreview);
+  });
 });
 </script>
 </body>
