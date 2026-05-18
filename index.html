@@ -296,8 +296,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   </div>
 
   <!-- Metrics -->
-  <div class="metrics">
-    <div class="metric"><div class="metric-icon"><i class="ti ti-wallet"></i></div><div class="ml">零用金餘額</div><div class="mv" id="m-fund">$3,000</div></div>
+  <div class="metrics" style="grid-template-columns:repeat(2,1fr);">
     <div class="metric"><div class="metric-icon"><i class="ti ti-receipt"></i></div><div class="ml">今日支出</div><div class="mv red" id="m-exp">$0</div></div>
     <div class="metric"><div class="metric-icon"><i class="ti ti-cash"></i></div><div class="ml">應匯金額</div><div class="mv grn" id="m-ret">$0</div></div>
   </div>
@@ -361,7 +360,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       </div>
       <div id="cash-rows"></div>
       <div class="cash-total-row">
-        <span class="cash-total-label">合計（含備用金 $3,000）</span>
+        <span class="cash-total-label" id="cash-total-label">合計（預期 $3,000）</span>
         <span class="cash-total-val" id="cash-total">$0</span>
       </div>
       <div id="fund-check-msg" style="font-size:13px;margin-top:8px;padding:8px 12px;border-radius:6px;display:none;"></div>
@@ -732,8 +731,6 @@ function updateMetrics(){
   const actualDeficit=Math.max(0,deficit-(totalIncome-totalExp>0?totalIncome-totalExp:0));
 
   // Metrics
-  $('m-fund').textContent=fmt(prevPool);
-  $('m-fund').style.color=prevPool<FUND?'#f08080':'rgba(255,255,255,.9)';
   $('m-exp').textContent=fmt(totalExp);
   $('m-ret').textContent=fmt(toRemit);
 
@@ -793,6 +790,15 @@ function setC(v,val){
 function updCashTotal(){
   const t=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   $('cash-total').textContent=fmt(t);
+  // 動態更新標籤：預期 = 備用金 + 應匯金額
+  const totalIncome=incomes.reduce((s,r)=>s+r.amount,0);
+  const totalExp=expenses.reduce((s,r)=>s+r.amount,0);
+  const deficit=Math.max(0,FUND-prevPool);
+  const toRemit=Math.max(0,totalIncome-totalExp-deficit);
+  const expected=FUND+toRemit;
+  const lbl=$('cash-total-label');
+  if(lbl)lbl.textContent=toRemit>0?`合計（預期備用金 ${fmt(FUND)} ＋ 應匯 ${fmt(toRemit)} = ${fmt(expected)}）`:`合計（預期備用金 ${fmt(FUND)}）`;
+  const cv=$('cash-total-val');if(cv)cv.textContent=fmt(t);
   checkFund();
 }
 function clearCash(){DENOMS.forEach(d=>cc[d.v]=0);renderCash();}
@@ -800,16 +806,22 @@ function checkFund(){
   const t=DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0);
   const msg=$('fund-check-msg');
   if(t===0){msg.style.display='none';return;}
+  // 預期清點金額 = 備用金 $3,000 + 應匯金額（應匯款尚未匯出，暫放在零用金格）
+  const totalIncome=incomes.reduce((s,r)=>s+r.amount,0);
+  const totalExp=expenses.reduce((s,r)=>s+r.amount,0);
+  const deficit=Math.max(0,FUND-prevPool);
+  const toRemit=Math.max(0,totalIncome-totalExp-deficit);
+  const expected=FUND+toRemit;
   msg.style.display='block';
-  if(t===FUND){
+  if(t===expected){
     msg.style.background='rgba(74,124,89,.1)';msg.style.color='#4A7C59';
-    msg.textContent='✓ 零用金相符，維持 $3,000';
-  } else if(t>FUND){
-    msg.style.background='rgba(184,150,60,.1)';msg.style.color='#8a6800';
-    msg.textContent=`⚠ 零用金多了 ${fmt(t-FUND)}，請再確認`;
+    msg.textContent=toRemit>0?`✓ 零用金相符（備用金 $3,000 ＋ 應匯 ${fmt(toRemit)}）`:'✓ 零用金相符，維持 $3,000';
+  } else if(t>expected){
+    msg.style.background='rgba(184,48,48,.08)';msg.style.color='#B83030';
+    msg.textContent=`✗ 零用金多了 ${fmt(t-expected)}，請再確認`;
   } else {
     msg.style.background='rgba(184,48,48,.08)';msg.style.color='#B83030';
-    msg.textContent=`✗ 零用金少了 ${fmt(FUND-t)}，與預期不符`;
+    msg.textContent=`✗ 零用金少了 ${fmt(expected-t)}，與預期不符`;
   }
 }
 
@@ -822,10 +834,8 @@ async function loadDraft(){
       .eq('store',currentStore).eq('date',today).eq('status','draft').limit(1);
     if(data&&data.length){
       const r=data[0];draftId=r.id;isDraft=true;
-      incomes=(r.incomes||r.expenses?.filter?.(e=>e._income)||[]);
-      // backward compat: if old format
-      if(!r.incomes)incomes=[];
-      expenses=(r.expenses||[]).filter(e=>!e._income);
+      incomes=r.incomes||[];
+      expenses=(r.expenses||[]);
       const sc=r.cash_counts||{};
       DENOMS.forEach(d=>cc[d.v]=Number(sc[d.v]||0));
       renderIncome();renderExp();renderCash();updateMetrics();
