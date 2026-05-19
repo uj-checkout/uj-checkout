@@ -834,8 +834,9 @@ async function loadDraft(){
       .eq('store',currentStore).eq('date',today).eq('status','draft').limit(1);
     if(data&&data.length){
       const r=data[0];draftId=r.id;isDraft=true;
-      incomes=r.incomes||[];
-      expenses=(r.expenses||[]);
+      const allExp=r.expenses||[];
+      incomes=allExp.filter(e=>e._income).map(({_income,...rest})=>rest);
+      expenses=allExp.filter(e=>!e._income);
       const sc=r.cash_counts||{};
       DENOMS.forEach(d=>cc[d.v]=Number(sc[d.v]||0));
       renderIncome();renderExp();renderCash();updateMetrics();
@@ -857,8 +858,7 @@ async function saveDraft(){
       cash_total:DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0),
       income:totalIncome,total_expense:totalExp,
       return_amount:0,deficit:0,
-      expenses,cash_counts:cc,
-      incomes, // store income separately
+      expenses:[...incomes.map(r=>({...r,_income:true})),...expenses],cash_counts:cc,
       status:'draft'
     };
     if(draftId){
@@ -889,7 +889,7 @@ async function finalizeDay(){
       cash_total:DENOMS.reduce((s,d)=>s+(cc[d.v]||0)*d.v,0),
       income:totalIncome,total_expense:totalExp,
       return_amount:ret,deficit,
-      expenses,cash_counts:cc,incomes,
+      expenses:[...incomes.map(r=>({...r,_income:true})),...expenses],cash_counts:cc,
       status:'final'
     };
     if(draftId){
@@ -947,7 +947,7 @@ function renderHistory(rs){
   el.innerHTML=rs.map((r,idx)=>{
     const d=new Date(r.date+'T00:00:00');
     const lbl=d.toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'});
-    const items=(r.expenses||[]).map(e=>e.name).join('、')||'無支出';
+    const items=(r.expenses||[]).filter(e=>!e._income).map(e=>e.name).join('、')||'無支出';
     const isDraft=r.status==='draft';
     return`<div class="his-item">
       <div class="his-top">
@@ -963,7 +963,7 @@ function renderHistory(rs){
       </div>
       <div class="his-edit-panel" id="edit-${idx}">
         <div style="font-size:13px;color:var(--t3);margin-bottom:8px;">支出記錄</div>
-        <div id="edit-exp-${idx}">${renderEditExp(r.expenses||[],idx)}</div>
+        <div id="edit-exp-${idx}">${renderEditExp((r.expenses||[]).filter(e=>!e._income),idx)}</div>
         <div class="add-row two" style="margin-bottom:12px;">
           <input class="fi" id="edit-ename-${idx}" placeholder="項目名稱"/>
           <input class="fi" type="number" id="edit-eamt-${idx}" placeholder="金額"/>
