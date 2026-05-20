@@ -242,44 +242,61 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 }
 
 /* ── Admin ── */
-#admin-app{display:none;min-height:100vh;background:var(--cr);padding:0 0 80px;}
-.admin-header{background:var(--gd);color:#fff;padding:16px;display:flex;align-items:center;justify-content:space-between;}
-.admin-header h1{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;margin:0;}
-.admin-header .ah-right{display:flex;align-items:center;gap:12px;font-size:13px;opacity:.8;}
-.admin-body{max-width:700px;margin:0 auto;padding:16px;}
-.admin-month-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px;}
-.admin-month-nav button{background:none;border:1px solid var(--bd);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;}
+#admin-app{display:none;min-height:100vh;background:var(--cr);padding:0 0 60px;}
+.admin-header{background:var(--gd);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.admin-header h1{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;margin:0;}
+.admin-body{max-width:700px;margin:0 auto;padding:14px 16px;}
+.admin-month-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;}
+.admin-month-nav button{background:none;border:1px solid var(--bd2);border-radius:8px;padding:5px 14px;cursor:pointer;font-size:13px;}
 .admin-month-nav span{font-size:16px;font-weight:500;min-width:90px;text-align:center;}
-.admin-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
-.admin-sum-card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center;}
-.admin-sum-card .asc-label{font-size:11px;color:var(--t3);margin-bottom:4px;}
-.admin-sum-card .asc-val{font-size:18px;font-weight:600;}
-.admin-sum-card .asc-val.red{color:#c0392b;}
-.admin-sum-card .asc-val.grn{color:var(--gs);}
-.store-section{background:#fff;border:1px solid var(--bd);border-radius:14px;margin-bottom:16px;overflow:hidden;}
-.store-section-header{background:var(--gm);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
-.store-section-header .ssh-name{font-size:15px;font-weight:500;}
-.store-section-header .ssh-stats{font-size:12px;opacity:.85;display:flex;gap:12px;}
-.store-day-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:13px;}
-.store-day-row:last-child{border-bottom:none;}
-.store-day-row .sdr-date{color:var(--t3);width:90px;}
-.store-day-row .sdr-income{width:70px;text-align:right;}
-.store-day-row .sdr-exp{width:70px;text-align:right;color:#c0392b;}
-.store-day-row .sdr-ret{width:70px;text-align:right;color:var(--gs);font-weight:500;}
-.store-day-row .sdr-note{flex:1;color:var(--t3);font-size:11px;text-align:right;padding-left:8px;}
-.store-empty{padding:20px;text-align:center;color:var(--t3);font-size:13px;}
-.admin-transfer-section{background:#fff;border:1px solid var(--bd);border-radius:14px;margin-bottom:16px;overflow:hidden;}
-.admin-transfer-section .ats-header{padding:14px 16px;border-bottom:1px solid var(--bd);font-weight:500;font-size:14px;display:flex;justify-content:space-between;align-items:center;}
-.transfer-store-block{padding:12px 16px;border-bottom:1px solid var(--bd);}
-.transfer-store-block:last-child{border-bottom:none;}
-.tsb-name{font-size:13px;font-weight:500;margin-bottom:6px;color:var(--gs);}
-.tsb-row{display:flex;justify-content:space-between;font-size:12px;color:var(--t3);padding:2px 0;}
-.tsb-row span:last-child{font-weight:500;color:var(--t1);}
-.tsb-pending{font-size:12px;color:#c0392b;margin-top:4px;}
-.admin-range{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd);flex-wrap:wrap;row-gap:8px;}
-.admin-range input{border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px;width:110px;}
-.admin-range button{background:var(--gm);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;}
-.admin-logout{display:block;width:100%;text-align:center;padding:12px;background:none;border:1px solid var(--bd);border-radius:12px;cursor:pointer;font-size:13px;color:var(--t3);margin-top:8px;}
+.admin-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.adm-sum-card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px;text-align:center;}
+.adm-sum-card .asl{font-size:11px;color:var(--t3);margin-bottom:3px;}
+.adm-sum-card .asv{font-size:17px;font-weight:600;color:var(--t1);}
+.adm-sum-card .asv.red{color:var(--red);}
+.adm-sum-card .asv.grn{color:var(--gs);}
+/* 店鋪 tab */
+.adm-tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;}
+.adm-tab{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--bd2);background:#fff;font-size:13px;cursor:pointer;color:var(--t2);transition:.15s;}
+.adm-tab.active{background:var(--gd);color:#fff;border-color:var(--gd);}
+/* 店鋪內容 */
+.adm-store-panel{display:none;}
+.adm-store-panel.active{display:block;}
+.adm-card{background:#fff;border:1px solid var(--bd);border-radius:14px;margin-bottom:14px;overflow:hidden;}
+.adm-card-header{padding:12px 16px;border-bottom:1px solid var(--bd);font-size:14px;font-weight:500;display:flex;justify-content:space-between;align-items:center;background:var(--pa);}
+.adm-card-header .ach-sub{font-size:12px;color:var(--t3);font-weight:400;}
+/* 每日列 */
+.adm-day{border-bottom:1px solid var(--bd);cursor:pointer;}
+.adm-day:last-child{border-bottom:none;}
+.adm-day-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;font-size:13px;}
+.adm-day-header .adh-date{color:var(--t2);width:85px;flex-shrink:0;}
+.adm-day-header .adh-nums{display:flex;gap:10px;flex:1;justify-content:flex-end;font-size:12px;}
+.adm-day-header .adh-nums span{min-width:56px;text-align:right;}
+.adm-day-header .adh-nums .neg{color:var(--red);}
+.adm-day-header .adh-nums .pos{color:var(--gs);font-weight:500;}
+.adm-day-header .adh-arrow{color:var(--t3);font-size:11px;margin-left:8px;transition:.2s;}
+.adm-day-detail{display:none;padding:0 16px 12px;background:var(--pa);border-top:1px solid var(--bd);}
+.adm-day-detail.open{display:block;}
+.adm-detail-section{margin-top:8px;}
+.adm-detail-title{font-size:11px;color:var(--t3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+.adm-detail-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--bd);color:var(--t2);}
+.adm-detail-row:last-child{border-bottom:none;}
+.adm-detail-row .dr-amt{font-weight:500;color:var(--t1);}
+.adm-detail-row .dr-amt.neg{color:var(--red);}
+/* 匯款紀錄 */
+.adm-transfer-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:13px;}
+.adm-transfer-row:last-child{border-bottom:none;}
+.adm-transfer-row .atr-range{color:var(--t2);font-size:12px;}
+.adm-transfer-row .atr-amt{font-weight:600;color:var(--gs);}
+.adm-transfer-row .atr-sub{font-size:11px;color:var(--t3);margin-top:1px;}
+/* 區間計算 */
+.adm-range-row{display:flex;gap:8px;align-items:center;padding:12px 16px;flex-wrap:wrap;row-gap:8px;}
+.adm-range-row input[type=date]{border:1px solid var(--bd2);border-radius:8px;padding:6px 10px;font-size:13px;flex:1;min-width:100px;}
+.adm-range-row button{background:var(--gm);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;white-space:nowrap;}
+.adm-range-result{padding:0 16px 14px;}
+.adm-range-result .arr-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--bd);}
+.adm-range-result .arr-row:last-child{border-bottom:none;font-weight:600;font-size:14px;}
+.adm-logout{display:block;width:100%;text-align:center;padding:12px;background:none;border:1px solid var(--bd);border-radius:12px;cursor:pointer;font-size:13px;color:var(--t3);margin-top:4px;}
 </style>
 </head>
 <body>
@@ -331,40 +348,35 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 <div id="admin-app">
   <div class="admin-header">
     <h1>🌿 Urban Jungle · 總覽</h1>
-    <div class="ah-right">
+    <div style="display:flex;align-items:center;gap:10px;font-size:13px;opacity:.8;">
       <span id="adm-today"></span>
-      <button onclick="adminLogout()" style="background:rgba(255,255,255,.2);border:none;border-radius:8px;padding:4px 10px;color:#fff;cursor:pointer;font-size:12px;">登出</button>
+      <button onclick="adminLogout()" style="background:rgba(255,255,255,.15);border:none;border-radius:8px;padding:4px 10px;color:#fff;cursor:pointer;font-size:12px;">登出</button>
     </div>
   </div>
   <div class="admin-body">
-    <!-- 月份導航 -->
     <div class="admin-month-nav">
       <button onclick="admPrevMonth()">◀</button>
       <span id="adm-month-label"></span>
       <button onclick="admNextMonth()">▶</button>
     </div>
-    <!-- 全店彙總 -->
     <div class="admin-summary">
-      <div class="admin-sum-card"><div class="asc-label">本月總收款</div><div class="asc-val grn" id="adm-total-income">—</div></div>
-      <div class="admin-sum-card"><div class="asc-label">本月總支出</div><div class="asc-val red" id="adm-total-exp">—</div></div>
-      <div class="admin-sum-card"><div class="asc-label">本月應匯合計</div><div class="asc-val grn" id="adm-total-ret">—</div></div>
+      <div class="adm-sum-card"><div class="asl">本月總收款</div><div class="asv grn" id="adm-ti">—</div></div>
+      <div class="adm-sum-card"><div class="asl">本月總支出</div><div class="asv red" id="adm-te">—</div></div>
+      <div class="adm-sum-card"><div class="asl">本月應匯合計</div><div class="asv grn" id="adm-tr">—</div></div>
     </div>
-    <!-- 區間匯款查詢 -->
-    <div class="admin-transfer-section">
-      <div class="ats-header">
-        <span>區間匯款總覽</span>
-      </div>
-      <div class="admin-range">
-        <input type="date" id="adm-from"/>
-        <span style="color:var(--t3);font-size:12px;">～</span>
-        <input type="date" id="adm-to"/>
-        <button onclick="calcAdminTransfer()">計算</button>
-      </div>
-      <div id="adm-transfer-result"></div>
+    <!-- 店鋪 tabs -->
+    <div class="adm-tabs">
+      <div class="adm-tab active" onclick="switchAdmTab('taipei',this)">台北</div>
+      <div class="adm-tab" onclick="switchAdmTab('hsinchu',this)">新竹</div>
+      <div class="adm-tab" onclick="switchAdmTab('taichung',this)">台中</div>
+      <div class="adm-tab" onclick="switchAdmTab('kaohsiung',this)">高雄</div>
     </div>
-    <!-- 各店明細 -->
-    <div id="adm-stores"></div>
-    <button class="admin-logout" onclick="adminLogout()">登出總覽</button>
+    <!-- 各店 panel -->
+    <div id="adm-panel-taipei" class="adm-store-panel active"></div>
+    <div id="adm-panel-hsinchu" class="adm-store-panel"></div>
+    <div id="adm-panel-taichung" class="adm-store-panel"></div>
+    <div id="adm-panel-kaohsiung" class="adm-store-panel"></div>
+    <button class="adm-logout" onclick="adminLogout()">登出總覽</button>
   </div>
 </div>
 
@@ -1218,148 +1230,190 @@ function exportExcel(){
 // ── Admin ────────────────────────────────────────────────────
 // ── Admin globals ────────────────────────────────────────────
 let admYear=new Date().getFullYear(), admMonth=new Date().getMonth()+1;
-let admData={}; // {store: [records]}
+let admData={}, admTransfers={}, admCurStore='taipei';
 
 function enterAdminApp(){
   $('login-ov').style.display='none';
   $('main').style.display='none';
   $('admin-app').style.display='block';
   const today=new Date();
-  admYear=today.getFullYear();admMonth=today.getMonth()+1;
+  admYear=today.getFullYear(); admMonth=today.getMonth()+1;
   $('adm-today').textContent=`${today.getMonth()+1}/${today.getDate()}`;
-  // 預設區間：本月1號到今天
-  const y=today.getFullYear(),m=String(today.getMonth()+1).padStart(2,'0'),d=String(today.getDate()).padStart(2,'0');
-  const firstDay=`${y}-${m}-01`;
-  $('adm-from').value=firstDay;
-  $('adm-to').value=`${y}-${m}-${d}`;
   loadAdminData();
 }
 
 function adminLogout(){
   $('admin-app').style.display='none';
   $('login-ov').style.display='flex';
-  admData={};
+  admData={}; admTransfers={};
   localStorage.removeItem('uj_store');
 }
 
-function admPrevMonth(){
-  admMonth--;if(admMonth<1){admMonth=12;admYear--;}
-  loadAdminData();
-}
-function admNextMonth(){
-  admMonth++;if(admMonth>12){admMonth=1;admYear++;}
-  loadAdminData();
+function admPrevMonth(){ admMonth--; if(admMonth<1){admMonth=12;admYear--;} loadAdminData(); }
+function admNextMonth(){ admMonth++; if(admMonth>12){admMonth=1;admYear++;} loadAdminData(); }
+
+function switchAdmTab(store, el){
+  admCurStore=store;
+  document.querySelectorAll('.adm-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.adm-store-panel').forEach(p=>p.classList.remove('active'));
+  $('adm-panel-'+store).classList.add('active');
 }
 
 async function loadAdminData(){
-  if(!db)return;
-  const y=admYear,m=String(admMonth).padStart(2,'0');
+  if(!db) return;
+  const y=admYear, m=String(admMonth).padStart(2,'0');
   const from=`${y}-${m}-01`;
   const lastDay=new Date(y,admMonth,0).getDate();
   const to=`${y}-${m}-${String(lastDay).padStart(2,'0')}`;
   $('adm-month-label').textContent=`${y}年${admMonth}月`;
   showLoad();
   try{
-    const {data}=await db.from('daily_records').select('*')
-      .gte('date',from).lte('date',to).eq('status','final').order('date');
+    const [{data:recs},{data:trs}]=await Promise.all([
+      db.from('daily_records').select('*').gte('date',from).lte('date',to).eq('status','final').order('date',{ascending:false}),
+      db.from('transfer_records').select('*').gte('created_at',from+'T00:00:00').lte('created_at',to+'T23:59:59').order('created_at',{ascending:false})
+    ]);
     hideLoad();
-    // 按 store 分組
-    admData={};
-    (data||[]).forEach(r=>{
-      if(!admData[r.store])admData[r.store]=[];
-      admData[r.store].push(r);
-    });
-    renderAdminSummary();
-    renderAdminStores();
+    admData={}; admTransfers={};
+    const stores=['taipei','hsinchu','taichung','kaohsiung'];
+    stores.forEach(s=>{admData[s]=[];admTransfers[s]=[];});
+    (recs||[]).forEach(r=>{ if(admData[r.store])admData[r.store].push(r); });
+    (trs||[]).forEach(r=>{ if(admTransfers[r.store])admTransfers[r.store].push(r); });
+    // 全店彙總
+    let ti=0,te=0,tr=0;
+    stores.forEach(s=>admData[s].forEach(r=>{ti+=Number(r.income||0);te+=Number(r.total_expense||0);tr+=Number(r.return_amount||0);}));
+    $('adm-ti').textContent=fmt(ti);
+    $('adm-te').textContent=fmt(te);
+    $('adm-tr').textContent=fmt(tr);
+    // 渲染各店
+    stores.forEach(s=>renderAdmStorePanel(s));
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
-function renderAdminSummary(){
-  let totIncome=0,totExp=0,totRet=0;
-  Object.values(admData).forEach(recs=>recs.forEach(r=>{
-    totIncome+=Number(r.income||0);
-    totExp+=Number(r.total_expense||0);
-    totRet+=Number(r.return_amount||0);
-  }));
-  $('adm-total-income').textContent=fmt(totIncome);
-  $('adm-total-exp').textContent=fmt(totExp);
-  $('adm-total-ret').textContent=fmt(totRet);
-}
-
-function renderAdminStores(){
-  const storeOrder=['taipei','hsinchu','taichung','kaohsiung'];
-  const el=$('adm-stores');
+function renderAdmStorePanel(store){
+  const recs=admData[store]||[];
+  const trs=admTransfers[store]||[];
+  const s=STORES[store];
   const days=['日','一','二','三','四','五','六'];
-  el.innerHTML=storeOrder.map(sk=>{
-    const s=STORES[sk];
-    const recs=admData[sk]||[];
-    const totI=recs.reduce((s,r)=>s+Number(r.income||0),0);
-    const totE=recs.reduce((s,r)=>s+Number(r.total_expense||0),0);
-    const totR=recs.reduce((s,r)=>s+Number(r.return_amount||0),0);
-    const rows=recs.length?recs.map(r=>{
-      const d=new Date(r.date+'T00:00:00');
-      const wk=days[d.getDay()];
-      const exps=(r.expenses||[]).filter(e=>!e._income).map(e=>e.name).join('、');
-      return `<div class="store-day-row">
-        <span class="sdr-date">${r.date.slice(5)} 週${wk}</span>
-        <span class="sdr-income">${fmt(r.income||0)}</span>
-        <span class="sdr-exp">${r.total_expense?fmt(r.total_expense):'-'}</span>
-        <span class="sdr-ret">${r.return_amount?fmt(r.return_amount):'-'}</span>
-        <span class="sdr-note">${exps}</span>
-      </div>`;
-    }).join(''):`<div class="store-empty">本月尚無紀錄</div>`;
-    return `<div class="store-section">
-      <div class="store-section-header">
-        <span class="ssh-name">${s.name}</span>
-        <div class="ssh-stats">
-          <span>收 ${fmt(totI)}</span>
-          <span>支 ${fmt(totE)}</span>
-          <span>匯 ${fmt(totR)}</span>
+  const totI=recs.reduce((a,r)=>a+Number(r.income||0),0);
+  const totE=recs.reduce((a,r)=>a+Number(r.total_expense||0),0);
+  const totR=recs.reduce((a,r)=>a+Number(r.return_amount||0),0);
+  const totTr=trs.reduce((a,r)=>a+Number(r.transfer_amt||0),0);
+  const pending=totR-totTr;
+
+  // 每日明細
+  const dayRows=recs.length ? recs.map((r,i)=>{
+    const d=new Date(r.date+'T00:00:00');
+    const wk=days[d.getDay()];
+    const incList=(r.expenses||[]).filter(e=>e._income);
+    const expList=(r.expenses||[]).filter(e=>!e._income);
+    const hasDetail=incList.length||expList.length;
+    return `<div class="adm-day">
+      <div class="adm-day-header" onclick="toggleAdmDay('${store}-${i}',this)">
+        <span class="adh-date">${r.date.slice(5)} 週${wk}</span>
+        <div class="adh-nums">
+          <span>${r.income?fmt(r.income):'-'}</span>
+          <span class="${r.total_expense?'neg':''}">${r.total_expense?fmt(r.total_expense):'-'}</span>
+          <span class="${r.return_amount?'pos':''}">${r.return_amount?fmt(r.return_amount):'-'}</span>
         </div>
+        <span class="adh-arrow">${hasDetail?'▼':''}</span>
       </div>
-      <div style="display:grid;grid-template-columns:90px 70px 70px 70px 1fr;padding:6px 16px;font-size:11px;color:var(--t3);border-bottom:1px solid var(--bd);">
-        <span>日期</span><span style="text-align:right">收款</span><span style="text-align:right">支出</span><span style="text-align:right">應匯</span><span style="text-align:right">支出項目</span>
-      </div>
-      ${rows}
+      ${hasDetail?`<div class="adm-day-detail" id="admd-${store}-${i}">
+        ${incList.length?`<div class="adm-detail-section">
+          <div class="adm-detail-title">收款明細</div>
+          ${incList.map(e=>`<div class="adm-detail-row"><span>${e.note||e.name||'收款'}</span><span class="dr-amt">${fmt(e.amount)}</span></div>`).join('')}
+        </div>`:''}
+        ${expList.length?`<div class="adm-detail-section">
+          <div class="adm-detail-title">支出明細</div>
+          ${expList.map(e=>`<div class="adm-detail-row"><span>${e.name}</span><span class="dr-amt neg">${fmt(e.amount)}</span></div>`).join('')}
+        </div>`:''}
+      </div>`:''}
     </div>`;
-  }).join('');
+  }).join('') : '<div style="padding:16px;text-align:center;font-size:13px;color:var(--t3);">本月尚無紀錄</div>';
+
+  // 匯款紀錄
+  const trRows=trs.length ? trs.map(r=>`
+    <div class="adm-transfer-row">
+      <div>
+        <div class="atr-range">${r.date_from} ～ ${r.date_to}</div>
+        <div class="atr-sub">應收 ${fmt(r.range_income)}　差額 ${r.diff>=0?'+':''}${fmt(r.diff)}</div>
+      </div>
+      <div class="atr-amt">${fmt(r.transfer_amt)}</div>
+    </div>`).join('') : '<div style="padding:14px 16px;font-size:13px;color:var(--t3);">本月尚無匯款記錄</div>';
+
+  // 區間計算
+  const today=new Date();
+  const y=admYear,m=String(admMonth).padStart(2,'0');
+  const defaultFrom=`${y}-${m}-01`;
+  const defaultTo=admMonth===today.getMonth()+1&&admYear===today.getFullYear()?
+    `${y}-${m}-${String(today.getDate()).padStart(2,'0')}`:
+    `${y}-${m}-${String(new Date(y,admMonth,0).getDate()).padStart(2,'0')}`;
+
+  $('adm-panel-'+store).innerHTML=`
+    <!-- 月彙總 -->
+    <div class="adm-card">
+      <div class="adm-card-header">
+        <span>${s.name}</span>
+        <span class="ach-sub">收 ${fmt(totI)}　支 ${fmt(totE)}　匯 ${fmt(totR)}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:85px 1fr 1fr 1fr;padding:6px 16px;font-size:11px;color:var(--t3);border-bottom:1px solid var(--bd);">
+        <span>日期</span><span style="text-align:right">收款</span><span style="text-align:right">支出</span><span style="text-align:right">應匯</span>
+      </div>
+      ${dayRows}
+    </div>
+    <!-- 匯款紀錄 -->
+    <div class="adm-card">
+      <div class="adm-card-header">
+        <span>匯款紀錄</span>
+        <span class="ach-sub" style="${pending>0?'color:var(--red)':''}">${pending>0?'待匯 '+fmt(pending):'已結清'}</span>
+      </div>
+      ${trRows}
+      <!-- 區間計算 -->
+      <div style="border-top:1px solid var(--bd);padding:10px 16px 4px;font-size:12px;color:var(--t3);">計算區間應匯</div>
+      <div class="adm-range-row">
+        <input type="date" id="adm-from-${store}" value="${defaultFrom}"/>
+        <span style="color:var(--t3);font-size:12px;">～</span>
+        <input type="date" id="adm-to-${store}" value="${defaultTo}"/>
+        <button onclick="calcAdmRange('${store}')">計算</button>
+      </div>
+      <div class="adm-range-result" id="adm-range-result-${store}"></div>
+    </div>
+  `;
 }
 
-async function calcAdminTransfer(){
-  const from=$('adm-from').value, to=$('adm-to').value;
+function toggleAdmDay(id, headerEl){
+  const panel=$('admd-'+id);
+  if(!panel)return;
+  const isOpen=panel.classList.contains('open');
+  panel.classList.toggle('open');
+  const arrow=headerEl.querySelector('.adh-arrow');
+  if(arrow)arrow.textContent=isOpen?'▼':'▲';
+}
+
+async function calcAdmRange(store){
+  const from=$(`adm-from-${store}`).value, to=$(`adm-to-${store}`).value;
   if(!from||!to){toast('請選擇區間');return;}
   showLoad();
   try{
-    const {data}=await db.from('daily_records').select('store,income,total_expense,return_amount')
-      .gte('date',from).lte('date',to).eq('status','final');
+    const [{data:recs},{data:trs}]=await Promise.all([
+      db.from('daily_records').select('income,total_expense,return_amount').gte('date',from).lte('date',to).eq('store',store).eq('status','final'),
+      db.from('transfer_records').select('transfer_amt').gte('date_from',from).lte('date_to',to).eq('store',store)
+    ]);
     hideLoad();
-    const storeOrder=['taipei','hsinchu','taichung','kaohsiung'];
-    const byStore={};
-    (data||[]).forEach(r=>{
-      if(!byStore[r.store])byStore[r.store]={income:0,exp:0,ret:0};
-      byStore[r.store].income+=Number(r.income||0);
-      byStore[r.store].exp+=Number(r.total_expense||0);
-      byStore[r.store].ret+=Number(r.return_amount||0);
-    });
-    let totalRet=0;
-    const blocks=storeOrder.map(sk=>{
-      const s=STORES[sk];
-      const b=byStore[sk]||{income:0,exp:0,ret:0};
-      totalRet+=b.ret;
-      return `<div class="transfer-store-block">
-        <div class="tsb-name">${s.name}</div>
-        <div class="tsb-row"><span>區間收款</span><span>${fmt(b.income)}</span></div>
-        <div class="tsb-row"><span>區間支出</span><span>-${fmt(b.exp)}</span></div>
-        <div class="tsb-row"><span>應匯金額</span><span style="color:var(--gs);font-weight:600;">${fmt(b.ret)}</span></div>
-      </div>`;
-    }).join('');
-    $('adm-transfer-result').innerHTML=blocks+
-      `<div style="padding:12px 16px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;border-top:2px solid var(--bd);">
-        <span>全店應匯合計</span><span style="color:var(--gs);">${fmt(totalRet)}</span>
-      </div>`;
+    const totI=(recs||[]).reduce((a,r)=>a+Number(r.income||0),0);
+    const totE=(recs||[]).reduce((a,r)=>a+Number(r.total_expense||0),0);
+    const totR=(recs||[]).reduce((a,r)=>a+Number(r.return_amount||0),0);
+    const totTr=(trs||[]).reduce((a,r)=>a+Number(r.transfer_amt||0),0);
+    const pending=totR-totTr;
+    $(`adm-range-result-${store}`).innerHTML=`
+      <div class="arr-row"><span>區間收款</span><span>${fmt(totI)}</span></div>
+      <div class="arr-row"><span>區間支出</span><span>-${fmt(totE)}</span></div>
+      <div class="arr-row"><span>區間應匯</span><span style="color:var(--gs)">${fmt(totR)}</span></div>
+      <div class="arr-row"><span>已匯款</span><span>-${fmt(totTr)}</span></div>
+      <div class="arr-row"><span>待匯金額</span><span style="color:${pending>0?'var(--red)':'var(--gs)'}">${fmt(pending)}</span></div>
+    `;
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
-
 // ── Laundry ──────────────────────────────────────────────────
 async function initLaundry(){
   if(!db||currentStore!=='taipei')return;
