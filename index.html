@@ -1309,14 +1309,12 @@ function renderAdmStorePanel(store){
     const expList=(r.expenses||[]).filter(e=>!e._income);
     const hasDetail=incList.length||expList.length;
     return `<div class="adm-day">
-      <div class="adm-day-header" onclick="toggleAdmDay('${store}-${i}',this)">
+      <div class="adm-day-header" onclick="toggleAdmDay('${store}-${i}',this)" style="display:grid;grid-template-columns:100px 1fr 1fr 1fr 16px;align-items:center;">
         <span class="adh-date">${r.date.slice(5)} 週${wk}</span>
-        <div class="adh-nums">
-          <span>${r.income?fmt(r.income):'-'}</span>
-          <span class="${r.total_expense?'neg':''}">${r.total_expense?fmt(r.total_expense):'-'}</span>
-          <span class="${r.return_amount?'pos':''}">${r.return_amount?fmt(r.return_amount):'-'}</span>
-        </div>
-        <span class="adh-arrow">${hasDetail?'▼':''}</span>
+        <span style="text-align:right;font-size:13px;">${r.income?fmt(r.income):'-'}</span>
+        <span style="text-align:right;font-size:13px;${r.total_expense?'color:var(--red)':''}">${r.total_expense?fmt(r.total_expense):'-'}</span>
+        <span style="text-align:right;font-size:13px;${r.return_amount?'color:var(--gs);font-weight:500':''}">${r.return_amount?fmt(r.return_amount):'-'}</span>
+        <span class="adh-arrow" style="text-align:right;font-size:10px;color:var(--t3);">${hasDetail?'▼':''}</span>
       </div>
       ${hasDetail?`<div class="adm-day-detail" id="admd-${store}-${i}">
         ${incList.length?`<div class="adm-detail-section">
@@ -1356,8 +1354,8 @@ function renderAdmStorePanel(store){
         <span>${s.name}</span>
         <span class="ach-sub">收 ${fmt(totI)}　支 ${fmt(totE)}　匯 ${fmt(totR)}</span>
       </div>
-      <div style="display:grid;grid-template-columns:85px 1fr 1fr 1fr;padding:6px 16px;font-size:11px;color:var(--t3);border-bottom:1px solid var(--bd);">
-        <span>日期</span><span style="text-align:right">收款</span><span style="text-align:right">支出</span><span style="text-align:right">應匯</span>
+      <div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr 16px;padding:6px 16px;font-size:11px;color:var(--t3);border-bottom:1px solid var(--bd);">
+        <span>日期</span><span style="text-align:right">收款</span><span style="text-align:right">支出</span><span style="text-align:right">應匯</span><span></span>
       </div>
       ${dayRows}
     </div>
