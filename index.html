@@ -687,7 +687,7 @@ function doLogout(){
 
 // ── Enter app ────────────────────────────────────────────────
 async function enterApp(key){
-  currentStore=STORES[key].store;currentUser=null;isDraft=false;draftId=null;
+  currentStore=key;currentUser=null;isDraft=false;draftId=null;
   incomes=[];expenses=[];DENOMS.forEach(d=>cc[d.v]=0);prevPool=FUND;
   const s=STORES[key];
   $('login-ov').style.display='none';
