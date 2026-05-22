@@ -492,19 +492,19 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   </div>
 
   <!-- History section -->
-  <div class="sh" id="history-sec"><span class="st">歷史紀錄</span><div class="sl"></div></div>
-  <div class="month-nav">
+  <div class="sh manager-only" id="history-sec"><span class="st">歷史紀錄</span><div class="sl"></div></div>
+  <div class="month-nav manager-only">
     <button class="btn-month" onclick="changeMonth(-1)">◀ 上個月</button>
     <span class="month-label" id="month-label"></span>
     <button class="btn-month" onclick="changeMonth(1)">下個月 ▶</button>
     <button class="btn-excel" onclick="exportExcel()">↓ 匯出 Excel</button>
   </div>
-  <div class="ms-cards">
+  <div class="ms-cards manager-only">
     <div class="ms-card"><div class="ms-label">本期總收款</div><div class="ms-val" id="ms-income">$0</div></div>
     <div class="ms-card"><div class="ms-label">本期總支出</div><div class="ms-val red" id="ms-expense">$0</div></div>
     <div class="ms-card"><div class="ms-label">本期應匯</div><div class="ms-val" id="ms-return">$0</div></div>
   </div>
-  <div id="his-list"></div>
+  <div id="his-list" class="manager-only"></div>
 
   <!-- Laundry (Taipei only) -->
   <div id="laundry-section" style="display:none;">
