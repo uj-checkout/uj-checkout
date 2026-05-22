@@ -231,6 +231,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 /* ── User mode ── */
 .manager-only{transition:opacity .3s;}
 .user-mode .manager-only{display:none!important;}
+.user-mode .staff-only{display:block!important;}
 
 /* ── Responsive ── */
 @media(max-width:480px){
@@ -405,8 +406,8 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   <div id="draft-indicator" style="display:none;"><div class="draft-badge">🟡 草稿暫存中</div></div>
 
   <!-- Income section -->
-  <div class="sh manager-only" id="income-sec"><span class="st">現金收款</span><div class="sl"></div></div>
-  <div class="card manager-only">
+  <div class="sh" id="income-sec"><span class="st">現金收款</span><div class="sl"></div></div>
+  <div class="card">
     <div id="income-list"><div class="empty-hint">尚無收款記錄</div></div>
     <div class="income-total" id="income-total-row" style="display:none;">
       <span class="income-total-label">今日現金收款合計</span>
@@ -428,6 +429,11 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       <input class="fi" id="exp-amt" type="number" placeholder="金額" min="0" onkeydown="if(event.key==='Enter')addExp()"/>
       <button class="btn-add" onclick="addExp()">＋</button>
     </div>
+  </div>
+
+  <!-- Staff save btn（manager-only 隱藏，user 才看到）-->
+  <div class="staff-only" id="staff-save-section" style="margin-bottom:16px;display:none;">
+    <button class="btn-draft" style="width:100%;" onclick="saveDraft()">💾 儲存今日記錄</button>
   </div>
 
   <!-- Result -->
@@ -754,12 +760,13 @@ async function loadPrevPool(){
     if(data&&data.length){
       let pool=FUND;
       data.forEach(r=>{
-        const inc=Number(r.income||0);
+        const inc=Math.max(0,Number(r.income||0)); // 防止負值污染
         const exp=Number(r.total_expense||0);
-        const deficit=Math.max(0,pool-inc+exp); // 虧空需補回
-        const ret=Math.max(0,inc-exp-deficit);
-        pool=ret>0?FUND:pool-exp+inc;
-        if(pool>FUND)pool=FUND;
+        const deficit=Math.max(0,FUND-pool);       // 昨日虧空
+        const toRemit=Math.max(0,inc-exp-deficit); // 今日應匯
+        // 匯出後 pool 回到 FUND；否則 pool 加收入減支出（可能仍低於 FUND）
+        pool=toRemit>0?FUND:Math.min(FUND,pool+inc-exp);
+        pool=Math.max(0,pool);
       });
       prevPool=Math.max(0,pool);
     }else{prevPool=FUND;}
@@ -890,7 +897,14 @@ function updCashTotal(){
   const toRemit=Math.max(0,totalIncome-totalExp-deficit);
   const expected=FUND+toRemit;
   const lbl=$('cash-total-label');
-  if(lbl)lbl.textContent=toRemit>0?`合計（預期備用金 ${fmt(FUND)} ＋ 應匯 ${fmt(toRemit)} = ${fmt(expected)}）`:`合計（預期備用金 ${fmt(FUND)}）`;
+  if(lbl){
+    if(toRemit>0)
+      lbl.textContent=`合計（預期備用金 ${fmt(FUND)} ＋ 應匯 ${fmt(toRemit)} = ${fmt(expected)}）`;
+    else if(deficit>0&&totalIncome<deficit)
+      lbl.textContent=`合計（備用金仍缺 ${fmt(deficit-Math.max(0,totalIncome-totalExp))}，預期 ${fmt(expected)}）`;
+    else
+      lbl.textContent=`合計（預期備用金 ${fmt(FUND)}）`;
+  }
   const cv=$('cash-total-val');if(cv)cv.textContent=fmt(t);
   checkFund();
 }
@@ -908,7 +922,12 @@ function checkFund(){
   msg.style.display='block';
   if(t===expected){
     msg.style.background='rgba(74,124,89,.1)';msg.style.color='#4A7C59';
-    msg.textContent=toRemit>0?`✓ 零用金相符（備用金 $3,000 ＋ 應匯 ${fmt(toRemit)}）`:'✓ 零用金相符，維持 $3,000';
+    if(toRemit>0)
+      msg.textContent=`✓ 零用金相符（備用金 $3,000 ＋ 應匯 ${fmt(toRemit)}）`;
+    else if(deficit>0)
+      msg.textContent=`✓ 零用金相符（備用金補回至 ${fmt(expected)}）`;
+    else
+      msg.textContent='✓ 零用金相符，維持 $3,000';
   } else if(t>expected){
     msg.style.background='rgba(184,48,48,.08)';msg.style.color='#B83030';
     msg.textContent=`✗ 零用金多了 ${fmt(t-expected)}，請再確認`;
