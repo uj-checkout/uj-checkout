@@ -741,6 +741,7 @@ async function enterStaffApp(){
   if(ok){
     await loadPrevPool();updateMetrics();
     await loadHistory();
+    await loadDraft();
     if(currentStore==='taipei')await initLaundry();
   }
   hideLoad();
@@ -944,7 +945,6 @@ async function loadDraft(){
   try{
     const {data}=await db.from('daily_records').select('*')
       .eq('store',currentStore).eq('date',today).eq('status','draft').limit(1);
-    toast(`查詢草稿：找到 ${(data||[]).length} 筆（store=${currentStore}）`,3000);
     if(data&&data.length){
       const r=data[0];draftId=r.id;isDraft=true;
       const allExp=r.expenses||[];
@@ -956,7 +956,7 @@ async function loadDraft(){
       $('draft-indicator').style.display='block';
       toast('🟡 載入今日草稿');
     }
-  }catch(e){console.error('loadDraft:',e);toast('✗ 草稿載入失敗：'+e.message,4000);}
+  }catch(e){console.error('loadDraft:',e);}
 }
 
 async function saveDraft(){
@@ -974,15 +974,14 @@ async function saveDraft(){
       expenses:[...incomes.map(r=>({...r,_income:true})),...expenses],cash_counts:cc,
       status:'draft'
     };
+    // 若還沒有 draftId，先查今天是否有草稿（可能是別人存的）
+    if(!draftId){
+      const {data:existing}=await db.from('daily_records').select('id')
+        .eq('store',currentStore).eq('date',today).eq('status','draft').limit(1);
+      if(existing&&existing.length)draftId=existing[0].id;
+    }
     if(draftId){
-      const {error:ue}=await db.from('daily_records').update(payload).eq('id',draftId);
-      if(ue){
-        // 舊草稿有問題，先刪再重新插入
-        await db.from('daily_records').delete().eq('id',draftId);
-        draftId=null;
-        const {data}=await db.from('daily_records').insert(payload).select();
-        if(data&&data[0])draftId=data[0].id;
-      }
+      await db.from('daily_records').update(payload).eq('id',draftId);
     }else{
       const {data}=await db.from('daily_records').insert(payload).select();
       if(data&&data[0])draftId=data[0].id;
