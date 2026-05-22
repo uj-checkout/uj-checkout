@@ -944,6 +944,7 @@ async function loadDraft(){
   try{
     const {data}=await db.from('daily_records').select('*')
       .eq('store',currentStore).eq('date',today).eq('status','draft').limit(1);
+    toast(`查詢草稿：找到 ${(data||[]).length} 筆（store=${currentStore}）`,3000);
     if(data&&data.length){
       const r=data[0];draftId=r.id;isDraft=true;
       const allExp=r.expenses||[];
@@ -955,7 +956,7 @@ async function loadDraft(){
       $('draft-indicator').style.display='block';
       toast('🟡 載入今日草稿');
     }
-  }catch(e){console.error('loadDraft:',e);}
+  }catch(e){console.error('loadDraft:',e);toast('✗ 草稿載入失敗：'+e.message,4000);}
 }
 
 async function saveDraft(){
