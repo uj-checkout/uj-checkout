@@ -714,7 +714,7 @@ async function enterApp(key){
     await loadHistory();
     await loadTransfers();
     await loadDraft();
-    if(key==='taipei')await initLaundry();
+    if(currentStore==='taipei')await initLaundry();
   }
   hideLoad();
   if(!ok)toast('⚠ 連線失敗，請按重新連線');
