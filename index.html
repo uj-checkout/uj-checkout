@@ -413,7 +413,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <span class="month-label" id="month-label"></span>
     <button class="btn-month" onclick="changeMonth(1)">下個月 ▶</button>
     <button class="btn-excel" onclick="exportExcel()"><i class="ti ti-table-export"></i> Excel</button>
-    <button class="btn-excel" style="background:var(--gold);" onclick="openAddDateModal()"><i class="ti ti-calendar-plus"></i> 新增</button>
+    <button class="btn-excel" id="btn-add-date" style="background:var(--gold);display:none;" onclick="openAddDateModal()"><i class="ti ti-calendar-plus"></i> 新增</button>
   </div>
   <div class="ms-cards">
     <div class="ms-card"><div class="ms-label">本期總收款</div><div class="ms-val" id="ms-income">$0</div></div>
@@ -991,7 +991,11 @@ async function delTransfer(id){
 }
 
 // ── History ────────────────────────────────────────────────
-function updateMonthLabel(){$('month-label').textContent=`${viewYear}年${viewMonth}月`;}
+function updateMonthLabel(){
+  $('month-label').textContent=`${viewYear}年${viewMonth}月`;
+  const addBtn=$('btn-add-date');
+  if(addBtn)addBtn.style.display=currentUser?'none':'inline-flex';
+}
 function changeMonth(d){
   viewMonth+=d;
   if(viewMonth>12){viewMonth=1;viewYear++;}
@@ -1041,10 +1045,11 @@ function renderHistory(rs){
       const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
       return`<div class="adm-detail-row"><span>${l.note}<span class="adm-detail-by"> · ${l.by}</span></span><span style="font-size:11px;color:var(--t3);">${ds}</span></div>`;
     }).join(''):'';
-    const editBtn=`<div style="display:flex;gap:8px;margin-top:10px;">
+    const isManager=!currentUser;
+    const editBtn=isManager?`<div style="display:flex;gap:8px;margin-top:10px;">
       <button class="his-edit-btn" onclick="openEditModal(${idx})"><i class="ti ti-edit"></i> 編輯</button>
       <button class="his-edit-btn" style="color:var(--red);border-color:#f0c0c0;" onclick="deleteDateRecord(${r.id},'${r.date}')"><i class="ti ti-trash"></i> 刪除</button>
-    </div>`;
+    </div>`:'';
     return`<div class="his-item">
       <div class="his-head" onclick="toggleHis(${idx})">
         <div>
