@@ -295,6 +295,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="user-badge" id="user-badge"><span id="user-display-name"></span></div>
     <span class="date-b" id="date-b"></span>
     <div class="sdot" id="sdot"></div>
+    <button id="btn-chpw-hero" onclick="openChangePwBuiltin()" style="display:none;background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:12px;padding:4px 8px;">改密碼</button>
     <button onclick="doLogout()" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:12px;padding:4px 8px;">登出</button>
   </div>
 </div>
@@ -302,6 +303,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 <div id="main">
   <div class="hero" id="hero">
     <div><div class="hero-name" id="hero-name"></div><div class="hero-addr" id="hero-addr"></div></div>
+    <button class="btn-switch" onclick="showStoreSwitch()" id="btn-switch" style="display:none;">切換門市</button>
     
   </div>
 
@@ -489,6 +491,8 @@ const BUILTIN={
   'uj-khh':   {store:'kaohsiung', display:'高雄概念店', pw:'uj-khh'},
   'uj-admin': {store:null, display:'總覽管理', pw:'uj-admin', admin:true},
   'uj-test':  {store:'test', display:'🧪 測試店', pw:'uj_123123'},
+  'uj-leon':  {store:'taipei', display:'Leon', pw:'uj-leon', canSwitch:true},
+  'uj-ryan':  {store:'taipei', display:'Ryan', pw:'uj-ryan', canSwitch:true},
 };
 const DENOMS=[
   {v:1000,t:'鈔'},{v:500,t:'鈔'},{v:100,t:'鈔'},
@@ -496,7 +500,7 @@ const DENOMS=[
 ];
 
 // ── State ──────────────────────────────────────────────────
-let db=null, currentStore=null, currentUser=null;
+let db=null, currentStore=null, currentUser=null, currentBuiltin=null;
 let incomes=[], expenses=[], cc={};
 let prevPool=FUND, draftId=null, isDraft=false;
 let viewYear=new Date().getFullYear(), viewMonth=new Date().getMonth()+1;
@@ -558,10 +562,13 @@ async function doLogin(){
   // 內建帳號
   const b=BUILTIN[user];
   if(!b){hideLoad();$('li-err').textContent='帳號不存在';return;}
-  const validPw=b.pw==='uj_123123'?pw===b.pw:pw===b.pw||pw===user;
+  const customPw=localStorage.getItem('pw_'+user);
+  const validPw=customPw?pw===customPw:(b.pw==='uj_123123'?pw===b.pw:pw===b.pw||pw===user);
   if(!validPw){hideLoad();$('li-err').textContent='密碼錯誤';return;}
   if(b.admin){localStorage.setItem('uj_store','__admin__');hideLoad();isAdmin=true;enterAdminApp();return;}
+  currentBuiltin=b;
   localStorage.setItem('uj_store',b.store);
+  localStorage.setItem('uj_builtin',user);
   hideLoad();
   await enterApp(b.store);
 }
@@ -569,6 +576,7 @@ async function doLogin(){
 function doLogout(){
   currentStore=null;currentUser=null;isAdmin=false;isDraft=false;draftId=null;
   incomes=[];expenses=[];cc={};prevPool=FUND;
+  currentBuiltin=null;
   clearAutoSave();
   $('main').style.display='none';
   $('admin-app').style.display='none';
@@ -576,6 +584,16 @@ function doLogout(){
   $('login-ov').style.display='flex';
   $('laundry-section').style.display='none';
   localStorage.removeItem('uj_store');localStorage.removeItem('uj_staff');
+}
+
+function openChangePwBuiltin(){
+  const key=localStorage.getItem('uj_builtin');
+  if(!key)return;
+  $('chpw-sub').textContent='更改密碼（'+key+'）';
+  $('chpw-new').value='';$('chpw-confirm').value='';$('chpw-err').textContent='';
+  // 覆寫 doChangePw 行為
+  window._chpwMode='builtin';
+  $('chpw-modal').classList.add('open');
 }
 
 function openChangePw(force=false){
@@ -586,6 +604,13 @@ async function doChangePw(){
   const nw=$('chpw-new').value.trim(), cf=$('chpw-confirm').value.trim();
   if(nw.length<6){$('chpw-err').textContent='密碼至少 6 字元';return;}
   if(nw!==cf){$('chpw-err').textContent='兩次輸入不一致';return;}
+  if(window._chpwMode==='builtin'){
+    const key=localStorage.getItem('uj_builtin');
+    if(key)localStorage.setItem('pw_'+key,nw);
+    $('chpw-modal').classList.remove('open');
+    window._chpwMode=null;
+    toast('✓ 密碼已更新');return;
+  }
   showLoad();
   try{
     await db.from('staff_accounts').update({password:nw}).eq('id',currentUser.id);
@@ -611,8 +636,12 @@ async function enterApp(store){
   $('main').style.display='block';
   $('hero-name').textContent=s.name;
   $('hero-addr').textContent=s.addr;
-  $('m-user').textContent=s.name;
+  $('m-user').textContent=currentBuiltin?.display||s.name;
+  // 改密碼按鈕：只對 canSwitch 帳號顯示
+  const chpwBtn=$('btn-chpw-hero');
+  if(chpwBtn)chpwBtn.style.display=currentBuiltin?.canSwitch?'block':'none';
   setDateBadge();
+  if($('btn-switch'))$('btn-switch').style.display=(currentBuiltin?.canSwitch)?'block':'none';
   renderCash();
   setDefaultDates();
   showLoad();
@@ -663,6 +692,21 @@ function setDateBadge(){
   const days=['日','一','二','三','四','五','六'];
   const n=new Date();
   $('date-b').textContent=`${n.getMonth()+1}/${n.getDate()}（週${days[n.getDay()]}）`;
+}
+
+// ── Store Switch ──────────────────────────────────────────
+function showStoreSwitch(){
+  const keys=Object.keys(STORES).filter(k=>k!=='test');
+  const html=keys.map(k=>`<button onclick="switchStore('${k}')" style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;border-bottom:1px solid var(--bd);background:none;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;color:var(--t1);">${STORES[k].name}</button>`).join('');
+  $('edit-modal-title').textContent='切換門市';
+  $('edit-modal-body').innerHTML=html;
+  document.querySelector('#edit-modal .btn-finish').style.display='none';
+  $('edit-modal').classList.add('open');
+}
+async function switchStore(store){
+  closeEditModal();
+  if(currentBuiltin)localStorage.setItem('uj_store',store);
+  await enterApp(store);
 }
 
 // ── Auto-save ──────────────────────────────────────────────
@@ -1466,6 +1510,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('li-pw')?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('pw-eye-btn')?.addEventListener('click',()=>{const p=document.getElementById('li-pw');if(p)p.type=p.type==='password'?'text':'password';});
   document.getElementById('btn-login')?.addEventListener('click',doLogin);
+  const savedBuiltinKey=localStorage.getItem('uj_builtin');
+  if(savedBuiltinKey&&BUILTIN[savedBuiltinKey])currentBuiltin=BUILTIN[savedBuiltinKey];
   const savedStaff=localStorage.getItem('uj_staff');
   if(savedStaff){
     try{
