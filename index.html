@@ -413,6 +413,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <span class="month-label" id="month-label"></span>
     <button class="btn-month" onclick="changeMonth(1)">下個月 ▶</button>
     <button class="btn-excel" onclick="exportExcel()"><i class="ti ti-table-export"></i> Excel</button>
+    <button class="btn-excel" style="background:var(--gold);" onclick="openAddDateModal()"><i class="ti ti-calendar-plus"></i> 新增</button>
   </div>
   <div class="ms-cards">
     <div class="ms-card"><div class="ms-label">本期總收款</div><div class="ms-val" id="ms-income">$0</div></div>
@@ -1046,7 +1047,16 @@ function renderHistory(rs){
     const cashTotal=r.cash_total||0;
     const cashRows=DENOMS.filter(dn=>(cc[dn.v]||0)>0).map(dn=>`<span style="font-size:12px;color:var(--t2);">$${dn.v.toLocaleString()}×${cc[dn.v]}</span>`).join('　');
     const cashDetail=cashTotal?`<div class="adm-detail-title">零用金清點</div><div style="padding:4px 0;font-size:12px;color:var(--t2);display:flex;flex-wrap:wrap;gap:8px;">${cashRows}</div><div class="adm-detail-row" style="margin-top:4px;"><span>清點合計</span><span style="font-weight:600;">${fmt(cashTotal)}</span></div>`:'';
-    const editBtn=`<button class="his-edit-btn" onclick="openEditModal(${idx})"><i class="ti ti-edit"></i> 編輯</button>`;
+    const editLog=r.edit_log||[];
+    const editLogHtml=editLog.length?`<div class="adm-detail-title">修改記錄</div>`+editLog.map(l=>{
+      const d=new Date(l.at);
+      const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return`<div class="adm-detail-row"><span>${l.note}<span class="adm-detail-by"> · ${l.by}</span></span><span style="font-size:11px;color:var(--t3);">${ds}</span></div>`;
+    }).join(''):'';
+    const editBtn=`<div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="his-edit-btn" onclick="openEditModal(${idx})"><i class="ti ti-edit"></i> 編輯</button>
+      <button class="his-edit-btn" style="color:var(--red);border-color:#f0c0c0;" onclick="deleteDateRecord(${r.id},'${r.date}')"><i class="ti ti-trash"></i> 刪除</button>
+    </div>`;
     return`<div class="his-item">
       <div class="his-head" onclick="toggleHis(${idx})">
         <div>
@@ -1060,7 +1070,7 @@ function renderHistory(rs){
         <div class="${r.return_amount?'his-ret':'his-ret zero'}">${r.return_amount?fmt(r.return_amount):'—'}</div>
       </div>
       <div class="his-body" id="his-body-${idx}">
-        ${incDetail}${expDetail}${cashDetail}
+        ${incDetail}${expDetail}${cashDetail}${editLogHtml}
         ${editBtn}
       </div>
     </div>`;
@@ -1082,7 +1092,12 @@ function openModal(title,body,onSave){
   if(!onSave)document.querySelector('#edit-modal .btn-finish').style.display='none';
   else document.querySelector('#edit-modal .btn-finish').style.display='block';
 }
-function closeEditModal(){$('edit-modal').classList.remove('open');editIdx=-1;editIncomes=[];editExpenses=[];}
+function closeEditModal(){
+  $('edit-modal').classList.remove('open');
+  editIdx=-1;editIncomes=[];editExpenses=[];editCashCounts={};
+  const btn=document.querySelector('#edit-modal .btn-finish');
+  if(btn){btn.textContent='儲存';btn.onclick=saveEdit;}
+}
 
 function openEditModal(idx){
   editIdx=idx;
@@ -1090,6 +1105,7 @@ function openEditModal(idx){
   const allExp=r.expenses||[];
   editIncomes=allExp.filter(e=>e._income).map(e=>({...e}));
   editExpenses=allExp.filter(e=>!e._income).map(e=>({...e}));
+  editCashCounts={...(r.cash_counts||{})};
   $('edit-modal-title').textContent=`編輯 ${r.date}`;
   $('edit-modal-body').innerHTML=`<div id="edit-body-inner"></div>`;
   document.querySelector('#edit-modal .btn-finish').style.display='block';
@@ -1098,6 +1114,8 @@ function openEditModal(idx){
 }
 
 const inputStyle="padding:7px 10px;border:1.5px solid var(--bd2);border-radius:var(--r);font-size:13px;background:var(--pa);color:var(--t1);font-family:'Noto Sans TC',sans-serif;outline:none;";
+
+let editCashCounts={};
 
 function renderEditBody(){
   const incRows=editIncomes.map((e,i)=>`
@@ -1112,6 +1130,15 @@ function renderEditBody(){
       <input style="width:90px;${inputStyle}" type="number" value="${e.amount}" oninput="editExpenses[${i}].amount=parseInt(this.value)||0"/>
       <button onclick="editExpenses.splice(${i},1);renderEditBody();" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:2px 4px;">×</button>
     </div>`).join('');
+  const cashRows=DENOMS.map(d=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <span style="font-size:13px;color:var(--t2);width:52px;">$${d.v.toLocaleString()}</span>
+      <span style="font-size:10px;color:var(--t3);width:14px;">${d.t}</span>
+      <button onclick="editCashCounts[${d.v}]=Math.max(0,(editCashCounts[${d.v}]||0)-1);document.getElementById('ecc-${d.v}').value=editCashCounts[${d.v}]||0;" style="background:none;border:1.5px solid var(--bd2);border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;color:var(--t2);">−</button>
+      <input id="ecc-${d.v}" type="number" value="${editCashCounts[d.v]||0}" min="0" style="width:44px;text-align:center;border:1.5px solid var(--bd2);border-radius:6px;padding:4px;font-size:13px;background:var(--pa);color:var(--t1);outline:none;" oninput="editCashCounts[${d.v}]=Math.max(0,parseInt(this.value)||0)"/>
+      <button onclick="editCashCounts[${d.v}]=(editCashCounts[${d.v}]||0)+1;document.getElementById('ecc-${d.v}').value=editCashCounts[${d.v}];" style="background:none;border:1.5px solid var(--bd2);border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;color:var(--t2);">+</button>
+      <span style="font-size:12px;color:var(--t3);min-width:50px;text-align:right;">$${((editCashCounts[d.v]||0)*d.v).toLocaleString()}</span>
+    </div>`).join('');
   $('edit-body-inner').innerHTML=`
     <div style="font-size:12px;color:var(--t3);margin-bottom:6px;font-weight:500;">收款明細</div>
     <div>${incRows||'<div style="font-size:12px;color:var(--t3);margin-bottom:8px;">無收款記錄</div>'}</div>
@@ -1122,11 +1149,13 @@ function renderEditBody(){
     </div>
     <div style="font-size:12px;color:var(--t3);margin-bottom:6px;font-weight:500;">支出明細</div>
     <div>${expRows||'<div style="font-size:12px;color:var(--t3);margin-bottom:8px;">無支出記錄</div>'}</div>
-    <div style="display:flex;gap:6px;margin-bottom:6px;">
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
       <input id="add-exp-name" placeholder="項目名稱" style="flex:1;${inputStyle}"/>
       <input id="add-exp-amt" type="number" placeholder="金額" style="width:90px;${inputStyle}"/>
       <button onclick="addEditExpense()" style="background:var(--red);border:none;border-radius:var(--r);color:#fff;padding:6px 12px;font-size:13px;cursor:pointer;">＋</button>
-    </div>`;
+    </div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:6px;font-weight:500;">零用金清點</div>
+    <div>${cashRows}</div>`;
 }
 
 function addEditIncome(){
@@ -1152,15 +1181,64 @@ async function saveEdit(){
   const newExp=editExpenses.map(e=>({...e}));
   const totInc=newInc.reduce((s,e)=>s+e.amount,0);
   const totExp=newExp.reduce((s,e)=>s+e.amount,0);
-  const ret=Math.max(0,totInc-totExp);
+  const cashTotal=DENOMS.reduce((s,d)=>s+(editCashCounts[d.v]||0)*d.v,0);
+  // 重算 return_amount（保持與原始 deficit 一致）
+  const ret=Math.max(0,totInc-totExp-(r.deficit||0));
+  // edit_log：記錄誰在何時修改
+  const prevLog=r.edit_log||[];
+  const logEntry={
+    by:userName(),
+    at:new Date().toISOString(),
+    note:`修改：收 ${fmt(totInc)} 支 ${fmt(totExp)} 匯 ${fmt(ret)}`
+  };
   showLoad();
   try{
     await db.from('daily_records').update({
       income:totInc,total_expense:totExp,return_amount:ret,
-      expenses:[...newInc,...newExp]
+      expenses:[...newInc,...newExp],
+      cash_counts:editCashCounts,cash_total:cashTotal,
+      edit_log:[...prevLog,logEntry]
     }).eq('id',r.id);
     hideLoad();toast('✓ 已儲存');closeEditModal();await loadHistory();
   }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+// ── 新增/刪除整筆日期 ──────────────────────────────────────
+async function addDateRecord(){
+  const date=$('new-date-input')?.value;
+  if(!date){toast('請選擇日期');return;}
+  showLoad();
+  try{
+    const {error}=await db.from('daily_records').insert({
+      date,store:currentStore,fund:FUND,
+      income:0,total_expense:0,return_amount:0,deficit:0,
+      expenses:[],cash_counts:{},cash_total:0,status:'final',
+      edit_log:[{by:userName(),at:new Date().toISOString(),note:'手動新增紀錄'}]
+    });
+    if(error)throw error;
+    hideLoad();toast('✓ 已新增 '+date);closeEditModal();await loadHistory();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+async function deleteDateRecord(id,date){
+  if(!confirm(`確定刪除 ${date} 的紀錄？此操作無法復原。`))return;
+  showLoad();
+  try{
+    await db.from('daily_records').delete().eq('id',id);
+    hideLoad();toast('✓ 已刪除 '+date);await loadHistory();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+// ── Add Date Modal ────────────────────────────────────────
+function openAddDateModal(){
+  $('edit-modal-title').textContent='新增日期紀錄';
+  $('edit-modal-body').innerHTML=`
+    <div style="font-size:13px;color:var(--t2);margin-bottom:10px;">選擇要新增的日期，預設為空白紀錄，新增後可再點「編輯」填寫明細。</div>
+    <input id="new-date-input" type="date" value="${localDate()}" style="width:100%;${inputStyle}padding:10px 12px;font-size:15px;"/>`;
+  document.querySelector('#edit-modal .btn-finish').textContent='確認新增';
+  document.querySelector('#edit-modal .btn-finish').onclick=addDateRecord;
+  document.querySelector('#edit-modal .btn-finish').style.display='block';
+  $('edit-modal').classList.add('open');
 }
 
 // ── Excel Export ───────────────────────────────────────────
@@ -1310,6 +1388,7 @@ function renderAdmPanel(store){
     const detail=hasDetail?`<div class="adm-day-detail" id="admd-${store}-${i}">
       ${incList.length?`<div class="adm-detail-title">收款明細</div>`+incList.map(e=>`<div class="adm-detail-row"><span>${e.note||'收款'}<span class="adm-detail-by"> · ${e.by||'—'}</span></span><span>${fmt(e.amount)}</span></div>`).join(''):''}
       ${expList.length?`<div class="adm-detail-title">支出明細</div>`+expList.map(e=>`<div class="adm-detail-row"><span>${e.name}<span class="adm-detail-by"> · ${e.by||'—'}</span></span><span style="color:var(--red)">${fmt(e.amount)}</span></div>`).join(''):''}
+      ${(r.edit_log||[]).length?`<div class="adm-detail-title">修改記錄</div>`+(r.edit_log||[]).map(l=>{const d=new Date(l.at);const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;return`<div class="adm-detail-row"><span>${l.note}<span class="adm-detail-by"> · ${l.by}</span></span><span style="font-size:11px;color:var(--t3);">${ds}</span></div>`;}).join(''):''}
     </div>`:'';
     return`<div class="adm-day">
       <div class="adm-day-row" onclick="toggleAdmDay('${store}-${i}',this)" style="cursor:${hasDetail?'pointer':'default'}">
