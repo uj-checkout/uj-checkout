@@ -1540,8 +1540,101 @@ function renderAdmPanel(store){
         <button onclick="calcAdmRange('${store}')">計算</button>
       </div>
       <div class="adm-range-result" id="adm-rr-${store}"></div>
+    </div>
+    <div class="adm-card">
+      <div class="adm-card-hd">
+        <span class="adm-card-hd-title">下載月份明細</span>
+        <span class="adm-card-hd-sub">${admYear}年${admMonth}月</span>
+      </div>
+      <div style="padding:12px 14px;">
+        <button onclick="exportAdmDetail('${store}')" style="width:100%;background:var(--gm);border:none;border-radius:var(--r);color:#fff;padding:11px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="ti ti-table-export"></i> 下載 ${admYear}年${admMonth}月 完整明細</button>
+      </div>
     </div>`;
 }
+async function exportAdmDetail(store){
+  const s=STORES[store];
+  const y=admYear, m=String(admMonth).padStart(2,'0');
+  const from=`${y}-${m}-01`;
+  const lastDay=new Date(y,admMonth,0).getDate();
+  const to=`${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+  showLoad();
+  try{
+    const [{data:recs},{data:trs}]=await Promise.all([
+      db.from('daily_records').select('*').eq('store',store).gte('date',from).lte('date',to).eq('status','final').order('date'),
+      db.from('transfer_records').select('*').eq('store',store).order('created_at')
+    ]);
+    hideLoad();
+
+    // 收款明細
+    const incRows=[['日期','備註','金額','填寫人']];
+    let totalInc=0;
+    (recs||[]).forEach(r=>{
+      const incs=(r.expenses||[]).filter(e=>e._income);
+      incs.forEach(e=>{incRows.push([r.date,e.note||'收款',e.amount,e.by||'—']);totalInc+=Number(e.amount||0);});
+    });
+    incRows.push(['','','','']);
+    incRows.push(['','總現金收入',totalInc,'']);
+
+    // 支出明細
+    const expRows=[['日期','項目','金額','填寫人']];
+    let totalExp=0;
+    (recs||[]).forEach(r=>{
+      const exps=(r.expenses||[]).filter(e=>!e._income);
+      exps.forEach(e=>{expRows.push([r.date,e.name,e.amount,e.by||'—']);totalExp+=Number(e.amount||0);});
+    });
+    expRows.push(['','','','']);
+    expRows.push(['','總支出',totalExp,'']);
+
+    // 匯款明細
+    const trRows=[['匯款日期區間（起）','匯款日期區間（迄）','應匯金額','實際匯款','差額']];
+    let totalTr=0;
+    (trs||[]).filter(r=>{
+      const d=r.created_at?.slice(0,10)||'';
+      return d>=from&&d<=to;
+    }).forEach(r=>{
+      trRows.push([r.date_from,r.date_to,r.range_income,r.transfer_amt,r.diff]);
+      totalTr+=Number(r.transfer_amt||0);
+    });
+    trRows.push(['','','','','']);
+    trRows.push(['','','','本月匯款合計',totalTr]);
+
+    // 每日彙總
+    const summaryRows=[['日期','收款','支出','應匯']];
+    (recs||[]).forEach(r=>summaryRows.push([r.date,r.income||0,r.total_expense||0,r.return_amount||0]));
+    summaryRows.push(['','','','']);
+    summaryRows.push(['合計',
+      (recs||[]).reduce((a,r)=>a+Number(r.income||0),0),
+      (recs||[]).reduce((a,r)=>a+Number(r.total_expense||0),0),
+      (recs||[]).reduce((a,r)=>a+Number(r.return_amount||0),0)
+    ]);
+
+    // 組合成一個 CSV（各區塊用空行隔開）
+    const sep=(rows)=>rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+    const csv=[
+      `"${s.name} ${y}年${admMonth}月 完整明細"`,
+      '',
+      '"【每日彙總】"',
+      sep(summaryRows),
+      '',
+      '"【收款明細】"',
+      sep(incRows),
+      '',
+      '"【支出明細】"',
+      sep(expRows),
+      '',
+      '"【匯款明細】"',
+      sep(trRows),
+    ].join('\n');
+
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`UJ_${store}_${y}${m}_明細.csv`;
+    a.click();
+    toast('✓ 下載成功');
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
 function toggleAdmDay(id,row){
   const panel=$(`admd-${id}`);if(!panel)return;
   const open=panel.classList.toggle('open');
