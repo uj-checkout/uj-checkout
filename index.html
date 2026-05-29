@@ -383,8 +383,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       <div class="ms-card"><div class="ms-label">應匯金額</div><div class="ms-val" id="fin-ret" style="color:var(--gs)">$0</div></div>
     </div>
     <div class="action-row">
-      <button class="btn-draft" onclick="saveDraft()"><i class="ti ti-device-floppy"></i> 暫存草稿</button>
-      <button class="btn-finish" onclick="finishCheckout()">✅ 完成結帳</button>
+      <button class="btn-finish" onclick="finishCheckout()" style="flex:1;">✅ 完成結帳</button>
     </div>
   </div>
 
@@ -1042,6 +1041,11 @@ function renderHistory(rs){
     const expList=allExp.filter(e=>!e._income);
     const incDetail=incList.length?`<div class="adm-detail-title">收款明細</div>`+incList.map(e=>`<div class="adm-detail-row"><span>${e.note||'收款'}<span class="adm-detail-by"> · ${e.by||'—'}</span></span><span>${fmt(e.amount)}</span></div>`).join(''):'';
     const expDetail=expList.length?`<div class="adm-detail-title">支出明細</div>`+expList.map(e=>`<div class="adm-detail-row"><span>${e.name}<span class="adm-detail-by"> · ${e.by||'—'}</span></span><span style="color:var(--red)">${fmt(e.amount)}</span></div>`).join(''):'';
+    // 零用金清點
+    const cc=r.cash_counts||{};
+    const cashTotal=r.cash_total||0;
+    const cashRows=DENOMS.filter(dn=>(cc[dn.v]||0)>0).map(dn=>`<span style="font-size:12px;color:var(--t2);">$${dn.v.toLocaleString()}×${cc[dn.v]}</span>`).join('　');
+    const cashDetail=cashTotal?`<div class="adm-detail-title">零用金清點</div><div style="padding:4px 0;font-size:12px;color:var(--t2);display:flex;flex-wrap:wrap;gap:8px;">${cashRows}</div><div class="adm-detail-row" style="margin-top:4px;"><span>清點合計</span><span style="font-weight:600;">${fmt(cashTotal)}</span></div>`:'';
     const editBtn=`<button class="his-edit-btn" onclick="openEditModal(${idx})"><i class="ti ti-edit"></i> 編輯</button>`;
     return`<div class="his-item">
       <div class="his-head" onclick="toggleHis(${idx})">
@@ -1056,7 +1060,7 @@ function renderHistory(rs){
         <div class="${r.return_amount?'his-ret':'his-ret zero'}">${r.return_amount?fmt(r.return_amount):'—'}</div>
       </div>
       <div class="his-body" id="his-body-${idx}">
-        ${incDetail}${expDetail}
+        ${incDetail}${expDetail}${cashDetail}
         ${editBtn}
       </div>
     </div>`;
@@ -1069,6 +1073,8 @@ function toggleHis(idx){
 
 // ── Edit Modal ─────────────────────────────────────────────
 let editIdx=-1;
+let editIncomes=[], editExpenses=[];
+
 function openModal(title,body,onSave){
   $('edit-modal-title').textContent=title;
   $('edit-modal-body').innerHTML=body;
@@ -1076,42 +1082,83 @@ function openModal(title,body,onSave){
   if(!onSave)document.querySelector('#edit-modal .btn-finish').style.display='none';
   else document.querySelector('#edit-modal .btn-finish').style.display='block';
 }
-function closeEditModal(){$('edit-modal').classList.remove('open');editIdx=-1;}
+function closeEditModal(){$('edit-modal').classList.remove('open');editIdx=-1;editIncomes=[];editExpenses=[];}
+
 function openEditModal(idx){
   editIdx=idx;
   const r=historyRecords[idx];
   const allExp=r.expenses||[];
-  const incList=allExp.filter(e=>e._income);
-  const expList=allExp.filter(e=>!e._income);
-  const incRows=incList.map((e,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
-    <input style="flex:1;padding:7px 10px;border:1.5px solid var(--bd2);border-radius:var(--r);font-size:13px;background:var(--pa);" value="${e.note||'收款'}" id="ei-note-${i}"/>
-    <input style="width:90px;padding:7px 10px;border:1.5px solid var(--bd2);border-radius:var(--r);font-size:13px;background:var(--pa);" type="number" value="${e.amount}" id="ei-amt-${i}"/>
-  </div>`).join('');
-  const expRows=expList.map((e,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
-    <input style="flex:1;padding:7px 10px;border:1.5px solid var(--bd2);border-radius:var(--r);font-size:13px;background:var(--pa);" value="${e.name}" id="ee-name-${i}"/>
-    <input style="width:90px;padding:7px 10px;border:1.5px solid var(--bd2);border-radius:var(--r);font-size:13px;background:var(--pa);" type="number" value="${e.amount}" id="ee-amt-${i}"/>
-  </div>`).join('');
-  openModal(`編輯 ${r.date}`,`
-    <div style="font-size:12px;color:var(--t3);margin-bottom:8px;">收款</div>
-    <div id="ei-list">${incRows||'<div style="font-size:13px;color:var(--t3);margin-bottom:8px;">無收款記錄</div>'}</div>
-    <div style="font-size:12px;color:var(--t3);margin:12px 0 8px;">支出</div>
-    <div id="ee-list">${expRows||'<div style="font-size:13px;color:var(--t3);margin-bottom:8px;">無支出記錄</div>'}</div>
-  `,true);
+  editIncomes=allExp.filter(e=>e._income).map(e=>({...e}));
+  editExpenses=allExp.filter(e=>!e._income).map(e=>({...e}));
+  $('edit-modal-title').textContent=`編輯 ${r.date}`;
+  $('edit-modal-body').innerHTML=`<div id="edit-body-inner"></div>`;
+  document.querySelector('#edit-modal .btn-finish').style.display='block';
+  $('edit-modal').classList.add('open');
+  renderEditBody();
 }
+
+const inputStyle='padding:7px 10px;border:1.5px solid var(--bd2);border-radius:var(--r);font-size:13px;background:var(--pa);color:var(--t1);font-family:'Noto Sans TC',sans-serif;outline:none;';
+
+function renderEditBody(){
+  const incRows=editIncomes.map((e,i)=>`
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+      <input style="flex:1;${inputStyle}" value="${e.note||'收款'}" oninput="editIncomes[${i}].note=this.value"/>
+      <input style="width:90px;${inputStyle}" type="number" value="${e.amount}" oninput="editIncomes[${i}].amount=parseInt(this.value)||0"/>
+      <button onclick="editIncomes.splice(${i},1);renderEditBody();" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:2px 4px;">×</button>
+    </div>`).join('');
+  const expRows=editExpenses.map((e,i)=>`
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+      <input style="flex:1;${inputStyle}" value="${e.name||''}" oninput="editExpenses[${i}].name=this.value"/>
+      <input style="width:90px;${inputStyle}" type="number" value="${e.amount}" oninput="editExpenses[${i}].amount=parseInt(this.value)||0"/>
+      <button onclick="editExpenses.splice(${i},1);renderEditBody();" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:2px 4px;">×</button>
+    </div>`).join('');
+  $('edit-body-inner').innerHTML=`
+    <div style="font-size:12px;color:var(--t3);margin-bottom:6px;font-weight:500;">收款明細</div>
+    <div>${incRows||'<div style="font-size:12px;color:var(--t3);margin-bottom:8px;">無收款記錄</div>'}</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <input id="add-inc-note" placeholder="備註（選填）" style="flex:1;${inputStyle}"/>
+      <input id="add-inc-amt" type="number" placeholder="金額" style="width:90px;${inputStyle}"/>
+      <button onclick="addEditIncome()" style="background:var(--gs);border:none;border-radius:var(--r);color:#fff;padding:6px 12px;font-size:13px;cursor:pointer;">＋</button>
+    </div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:6px;font-weight:500;">支出明細</div>
+    <div>${expRows||'<div style="font-size:12px;color:var(--t3);margin-bottom:8px;">無支出記錄</div>'}</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
+      <input id="add-exp-name" placeholder="項目名稱" style="flex:1;${inputStyle}"/>
+      <input id="add-exp-amt" type="number" placeholder="金額" style="width:90px;${inputStyle}"/>
+      <button onclick="addEditExpense()" style="background:var(--red);border:none;border-radius:var(--r);color:#fff;padding:6px 12px;font-size:13px;cursor:pointer;">＋</button>
+    </div>`;
+}
+
+function addEditIncome(){
+  const note=$('add-inc-note')?.value.trim();
+  const amt=parseInt($('add-inc-amt')?.value)||0;
+  if(amt<=0){toast('請輸入金額');return;}
+  editIncomes.push({note:note||'收款',amount:amt,by:userName(),_income:true});
+  renderEditBody();
+}
+function addEditExpense(){
+  const name=$('add-exp-name')?.value.trim();
+  const amt=parseInt($('add-exp-amt')?.value)||0;
+  if(!name){toast('請輸入項目名稱');return;}
+  if(amt<=0){toast('請輸入金額');return;}
+  editExpenses.push({name,amount:amt,by:userName()});
+  renderEditBody();
+}
+
 async function saveEdit(){
   const r=historyRecords[editIdx];
   if(!r)return;
-  const allExp=r.expenses||[];
-  const incList=allExp.filter(e=>e._income);
-  const expList=allExp.filter(e=>!e._income);
-  const newInc=incList.map((e,i)=>({...e,note:$(`ei-note-${i}`)?.value||e.note,amount:parseInt($(`ei-amt-${i}`)?.value)||e.amount,_income:true}));
-  const newExp=expList.map((e,i)=>({...e,name:$(`ee-name-${i}`)?.value||e.name,amount:parseInt($(`ee-amt-${i}`)?.value)||e.amount}));
+  const newInc=editIncomes.map(e=>({...e,_income:true}));
+  const newExp=editExpenses.map(e=>({...e}));
   const totInc=newInc.reduce((s,e)=>s+e.amount,0);
   const totExp=newExp.reduce((s,e)=>s+e.amount,0);
   const ret=Math.max(0,totInc-totExp);
   showLoad();
   try{
-    await db.from('daily_records').update({income:totInc,total_expense:totExp,return_amount:ret,expenses:[...newInc,...newExp]}).eq('id',r.id);
+    await db.from('daily_records').update({
+      income:totInc,total_expense:totExp,return_amount:ret,
+      expenses:[...newInc,...newExp]
+    }).eq('id',r.id);
     hideLoad();toast('✓ 已儲存');closeEditModal();await loadHistory();
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
