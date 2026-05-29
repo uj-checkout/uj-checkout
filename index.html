@@ -302,7 +302,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 <div id="main">
   <div class="hero" id="hero">
     <div><div class="hero-name" id="hero-name"></div><div class="hero-addr" id="hero-addr"></div></div>
-    <button class="btn-switch" onclick="showStoreSwitch()" id="btn-switch" style="display:none;">切換門市</button>
+    
   </div>
 
   <div class="pool-card">
@@ -611,7 +611,6 @@ async function enterApp(store){
   $('main').style.display='block';
   $('hero-name').textContent=s.name;
   $('hero-addr').textContent=s.addr;
-  $('btn-switch').style.display='block';
   $('m-user').textContent=s.name;
   setDateBadge();
   renderCash();
@@ -644,7 +643,6 @@ async function enterStaffApp(){
   $('main').style.display='block';
   $('hero-name').textContent=s.name;
   $('hero-addr').textContent=s.addr;
-  $('btn-switch').style.display='none';
   $('m-user').textContent=currentUser.display_name;
   setDateBadge();
   renderCash();
@@ -660,16 +658,6 @@ async function enterStaffApp(){
   updateMetrics();
 }
 
-function showStoreSwitch(){
-  const keys=Object.keys(STORES).filter(k=>k!=='test');
-  const opts=keys.map(k=>`<button onclick="switchStore('${k}')" style="display:block;width:100%;text-align:left;padding:12px 14px;border:none;border-bottom:1px solid var(--bd);background:none;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">${STORES[k].name}</button>`).join('');
-  openModal('切換門市',opts,null);
-}
-async function switchStore(store){
-  closeEditModal();
-  localStorage.setItem('uj_store',store);
-  await enterApp(store);
-}
 
 function setDateBadge(){
   const days=['日','一','二','三','四','五','六'];
