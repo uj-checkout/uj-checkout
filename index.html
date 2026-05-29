@@ -189,8 +189,8 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .lnd-item-right{text-align:right;}
 .lnd-item-right .lnd-qty{font-size:13px;font-weight:500;}
 .lnd-item-right .lnd-pts-used{font-size:11px;color:var(--t3);margin-top:1px;}
-.lnd-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 14px;border-top:1px solid var(--bd);}
-.lnd-form input{border:1.5px solid var(--bd2);border-radius:var(--r);padding:8px 10px;font-size:13px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;}
+.lnd-form{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 14px;border-top:1px solid var(--bd);}
+.lnd-form input{border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;}
 .lnd-form input:focus{border-color:var(--gs);}
 .btn-lnd-add{grid-column:1/-1;background:var(--gm);border:none;border-radius:var(--r);color:#fff;padding:10px;font-size:14px;cursor:pointer;}
 
@@ -416,11 +416,13 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
         <button class="btn-topup" onclick="openTopup()">+ 充值</button>
       </div>
       <div id="lnd-list"><div class="empty-hint">尚無記錄</div></div>
-      <div class="lnd-form">
-        <input id="lnd-time" type="datetime-local"/>
-        <input id="lnd-qty" type="number" placeholder="浴巾數量" min="1"/>
-        <input id="lnd-pts-use" type="number" placeholder="扣除點數"/>
-        <input id="lnd-staff" placeholder="負責人"/>
+      <div style="padding:12px 14px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px;">
+        <input id="lnd-time" type="datetime-local" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
+        <div style="display:flex;gap:8px;">
+          <input id="lnd-qty" type="number" placeholder="浴巾數量" min="1" style="flex:1;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
+          <input id="lnd-pts-use" type="number" placeholder="扣除點數" style="flex:1;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
+        </div>
+        <input id="lnd-staff" placeholder="負責人" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;"/>
         <button class="btn-lnd-add" onclick="addLaundry()">+ 新增洗浴巾記錄</button>
       </div>
     </div>
@@ -1374,7 +1376,7 @@ async function loadLaundry(){
       const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
       return`<div class="lnd-item">
         <div class="lnd-item-left"><div class="lnd-name">${r.staff_name||'—'}</div><div class="lnd-date">${ds}</div></div>
-        <div class="lnd-item-right"><div class="lnd-qty">浴巾 ${r.qty} 條</div><div class="lnd-pts-used">扣 ${r.pts_used}pts・餘 ${r._rem}pts</div></div>
+        <div class="lnd-item-right"><div class="lnd-qty">浴巾 ${r.qty} 條</div><div class="lnd-pts-used">扣 ${r.pts_used||0}pts・餘 ${r._rem}pts</div></div>
       </div>`;
     }).join('');
   }catch(e){console.error(e);}
