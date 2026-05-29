@@ -491,7 +491,7 @@ const BUILTIN={
   'uj-test':  {store:'test', display:'🧪 測試店', pw:'uj_123123'},
 };
 const DENOMS=[
-  {v:1000,t:'鈔'},{v:500,t:'鈔'},{v:100,t:'硬'},
+  {v:1000,t:'鈔'},{v:500,t:'鈔'},{v:100,t:'鈔'},
   {v:50,t:'硬'},{v:10,t:'硬'},{v:5,t:'硬'},{v:1,t:'硬'}
 ];
 
@@ -817,7 +817,8 @@ function updCashTotal(){
   const toRemit=Math.max(0,totInc-totExp-deficit);
   const expected=FUND+toRemit;
   const lbl=$('cash-total-label');
-  if(lbl)lbl.textContent=toRemit>0?`合計（預期備用金 ${fmt(FUND)} + 應匯 ${fmt(toRemit)} = ${fmt(expected)}）`:`合計（預期備用金 ${fmt(FUND)}）`;
+  const expectedShow=toRemit>0?FUND+toRemit:Math.max(0,prevPool+totInc-totExp);
+  if(lbl)lbl.textContent=toRemit>0?`合計（預期備用金 ${fmt(FUND)} ＋ 應匯 ${fmt(toRemit)} = ${fmt(FUND+toRemit)}）`:`合計（預期 ${fmt(expectedShow)}）`;
   checkFund();
 }
 function checkFund(){
@@ -829,11 +830,13 @@ function checkFund(){
   const totExp=expenses.reduce((s,r)=>s+r.amount,0);
   const deficit=Math.max(0,FUND-prevPool);
   const toRemit=Math.max(0,totInc-totExp-deficit);
-  const expected=FUND+toRemit;
+  // 預期清點 = FUND + 應匯（有多收入的情況）
+  // 若支出>收入，零用金被消耗，預期 = prevPool + 今日收入 - 今日支出
+  const expected=toRemit>0?FUND+toRemit:Math.max(0,prevPool+totInc-totExp);
   msg.style.display='block';
   if(t===expected){
     msg.style.background='rgba(74,124,89,.1)';msg.style.color='#4A7C59';
-    msg.textContent=toRemit>0?`✓ 零用金相符（備用金 + 應匯 ${fmt(toRemit)}）`:'✓ 零用金相符，維持 $3,000';
+    msg.textContent=toRemit>0?`✓ 零用金相符（備用金 $3,000 ＋ 應匯 ${fmt(toRemit)}）`:`✓ 零用金相符（${fmt(expected)}）`;
   }else if(t>expected){
     msg.style.background='rgba(184,48,48,.08)';msg.style.color='#B83030';
     msg.textContent=`✗ 零用金多了 ${fmt(t-expected)}，請再確認`;
