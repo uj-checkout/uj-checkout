@@ -105,6 +105,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .input-row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);}
 .inp{flex:1;border:1.5px solid var(--bd2);border-radius:var(--r);padding:8px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;}
 .inp:focus{border-color:var(--gs);}
+.inp.note{flex:1;}
 .inp.amt{width:100px;flex:none;}
 .btn-add{background:var(--gm);border:none;border-radius:var(--r);color:#fff;width:38px;height:38px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
@@ -321,6 +322,19 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   .action-row{gap:8px;}
   /* 草稿 bar */
   .draft-bar{padding:6px 12px;font-size:11px;}
+
+  /* 輸入列：備註獨行，金額+按鈕同行 */
+  .input-row{flex-wrap:wrap;}
+  .inp.note{flex:0 0 100%;width:100%;}
+  .inp.amt{flex:1;}
+  .btn-add{width:44px;height:44px;font-size:22px;}
+  /* 零用金清點：單欄，大按鈕 */
+  .cash-grid{grid-template-columns:1fr !important;gap:4px;padding:10px 12px;}
+  .btn-cnt{width:40px;height:40px;font-size:20px;}
+  .inp-cnt{width:52px;padding:8px 4px;font-size:16px;}
+  .denom-label{font-size:14px;width:58px;}
+  .denom-sub{min-width:60px;}
+  .count-ctrl{gap:10px;}
 }
 </style>
 </head>
@@ -391,7 +405,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="card-header"><span class="card-title">收款記錄</span><span class="card-total" id="income-total">$0</span></div>
     <div id="income-list"><div class="empty-hint">尚無收款記錄</div></div>
     <div class="input-row">
-      <input class="inp" id="inc-note" placeholder="備註（選填）" onkeydown="if(event.key==='Enter')document.getElementById('inc-amt').focus()"/>
+      <input class="inp note" id="inc-note" placeholder="備註（選填）" onkeydown="if(event.key==='Enter')document.getElementById('inc-amt').focus()"/>
       <input class="inp amt" id="inc-amt" type="number" placeholder="金額" min="0" onkeydown="if(event.key==='Enter')addIncome()"/>
       <button class="btn-add" onclick="addIncome()"><i class="ti ti-plus"></i></button>
     </div>
@@ -403,7 +417,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="card-header"><span class="card-title">支出記錄</span><span class="card-total red" id="exp-total">$0</span></div>
     <div id="exp-list"><div class="empty-hint">尚無支出記錄</div></div>
     <div class="input-row">
-      <input class="inp" id="exp-name" placeholder="項目名稱" onkeydown="if(event.key==='Enter')document.getElementById('exp-amt').focus()"/>
+      <input class="inp note" id="exp-name" placeholder="項目名稱" onkeydown="if(event.key==='Enter')document.getElementById('exp-amt').focus()"/>
       <input class="inp amt" id="exp-amt" type="number" placeholder="金額" min="0" onkeydown="if(event.key==='Enter')addExpense()"/>
       <button class="btn-add" onclick="addExpense()"><i class="ti ti-plus"></i></button>
     </div>
