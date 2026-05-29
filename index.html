@@ -372,7 +372,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="card-header"><span class="card-title">收款記錄</span><span class="card-total" id="income-total">$0</span></div>
     <div id="income-list"><div class="empty-hint">尚無收款記錄</div></div>
     <div style="padding:8px 12px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px;">
-      <input class="inp" id="inc-note" placeholder="備註（選填）" style="width:100%;" onkeydown="if(event.key==='Enter')document.getElementById('inc-amt').focus()"/>
+      <input class="inp" id="inc-note" placeholder="填入客人本名" style="width:100%;" required onkeydown="if(event.key==='Enter')document.getElementById('inc-amt').focus()"/>
       <div style="display:flex;gap:8px;">
         <input class="inp amt" id="inc-amt" type="number" placeholder="金額" min="0" style="flex:1;" onkeydown="if(event.key==='Enter')addIncome()"/>
         <button class="btn-add" onclick="addIncome()"><i class="ti ti-plus"></i></button>
@@ -386,7 +386,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="card-header"><span class="card-title">支出記錄</span><span class="card-total red" id="exp-total">$0</span></div>
     <div id="exp-list"><div class="empty-hint">尚無支出記錄</div></div>
     <div style="padding:8px 12px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px;">
-      <input class="inp" id="exp-name" placeholder="項目名稱" style="width:100%;" onkeydown="if(event.key==='Enter')document.getElementById('exp-amt').focus()"/>
+      <input class="inp" id="exp-name" placeholder="郵資、文具、清潔用品⋯" style="width:100%;" required onkeydown="if(event.key==='Enter')document.getElementById('exp-amt').focus()"/>
       <div style="display:flex;gap:8px;">
         <input class="inp amt" id="exp-amt" type="number" placeholder="金額" min="0" style="flex:1;" onkeydown="if(event.key==='Enter')addExpense()"/>
         <button class="btn-add" onclick="addExpense()"><i class="ti ti-plus"></i></button>
@@ -810,6 +810,7 @@ function updateMetrics(){
 function addIncome(){
   const note=$('inc-note').value.trim();
   const amt=parseInt($('inc-amt').value)||0;
+  if(!note){toast('請填入客人本名');$('inc-note').focus();return;}
   if(amt<=0){toast('請輸入金額');return;}
   const by=userName();
   incomes.push({note:note||'收款',amount:amt,by,ts:Date.now()});
@@ -835,7 +836,7 @@ function renderIncome(){
 function addExpense(){
   const name=$('exp-name').value.trim();
   const amt=parseInt($('exp-amt').value)||0;
-  if(!name){toast('請輸入項目名稱');return;}
+  if(!name){toast('請填入支出項目名稱');$('exp-name').focus();return;}
   if(amt<=0){toast('請輸入金額');return;}
   const by=userName();
   expenses.push({name,amount:amt,by,ts:Date.now()});
