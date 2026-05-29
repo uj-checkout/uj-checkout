@@ -265,10 +265,10 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   <div class="login-box">
     <div class="login-title">Urban Jungle</div>
     <div class="login-sub">下班結帳 4.0</div>
-    <input class="login-field" id="li-user" placeholder="帳號" autocomplete="username" onkeydown="if(event.key==='Enter')$('li-pw').focus()"/>
+    <input class="login-field" id="li-user" placeholder="帳號" autocomplete="username"/>
     <div class="pw-wrap">
-      <input class="login-field" id="li-pw" type="password" placeholder="密碼" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <button class="pw-eye" onclick="togglePw()"><i class="ti ti-eye"></i></button>
+      <input class="login-field" id="li-pw" type="password" placeholder="密碼" autocomplete="current-password"/>
+      <button class="pw-eye" id="pw-eye-btn"><i class="ti ti-eye"></i></button>
     </div>
     <div class="login-err" id="li-err"></div>
     <button class="btn-login" onclick="doLogin()">登 入</button>
@@ -1390,6 +1390,10 @@ async function calcAdmRange(store){
 
 // ── Init ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',async()=>{
+  document.getElementById('li-user')?.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('li-pw').focus();});
+  document.getElementById('li-pw')?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('pw-eye-btn')?.addEventListener('click',()=>{const p=document.getElementById('li-pw');if(p)p.type=p.type==='password'?'text':'password';});
+  document.getElementById('btn-login')?.addEventListener('click',doLogin);
   const savedStaff=localStorage.getItem('uj_staff');
   if(savedStaff){
     try{
