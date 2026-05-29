@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Urban Jungle · 下班結帳 4.0</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
@@ -16,7 +16,7 @@
   --gold:#B8963C;--red:#B83030;--white:#FFF;
   --r:8px;--rl:14px;
 }
-body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);min-height:100vh;}
+body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);min-height:100vh;overflow-x:hidden;}
 
 /* ── Login ── */
 .login-ov{position:fixed;inset:0;background:var(--gd);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;}
@@ -53,7 +53,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .sdot.ok{background:#5db87a;} .sdot.err{background:#e05555;}
 
 /* ── Layout ── */
-#main{display:none;max-width:680px;margin:0 auto;padding:16px 14px 80px;}
+#main{display:none;max-width:680px;margin:0 auto;padding:16px 14px 80px;overflow-x:hidden;}
 #admin-app{display:none;max-width:780px;margin:0 auto;padding:0 0 60px;}
 
 /* ── Hero (C-style) ── */
@@ -103,7 +103,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
 /* ── Input row ── */
 .input-row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);}
-.inp{flex:1;border:1.5px solid var(--bd2);border-radius:var(--r);padding:8px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;}
+.inp{flex:1;min-width:0;border:1.5px solid var(--bd2);border-radius:var(--r);padding:8px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;}
 .inp:focus{border-color:var(--gs);}
 .inp.note{flex:1;}
 .inp.amt{width:100px;flex:none;}
@@ -267,72 +267,40 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   .pool-card{padding:12px 14px;}
   .pool-val{font-size:22px;}
   .metrics{grid-template-columns:repeat(3,1fr);gap:6px;}
-  .metric{padding:10px 10px;}
+  .metric{padding:10px;}
   .ml{font-size:9px;}
-  .mv{font-size:16px;}
-  /* 零用金清點：手機改單欄 */
-  .denom-row{justify-content:space-between;}
-  .denom-label{width:60px;}
-  .denom-sub{min-width:60px;}
-  /* 輸入列 */
-  .input-row{padding:8px 10px;gap:6px;}
-  .inp{font-size:14px;padding:8px 10px;}
-  .inp.amt{width:85px;}
-  /* 收支列 */
-  .rec-row{padding:8px 10px;}
-  .rec-note{font-size:13px;}
-  /* card header */
+  .mv{font-size:15px;}
+  .topbar{padding:8px 12px;}
+  .store-badge{font-size:11px;padding:3px 8px;}
+  .date-b{font-size:11px;}
+  .pool-sub-val{font-size:14px;}
+  .sh{margin-bottom:6px;}
+  .st{font-size:12px;}
+  .draft-bar{padding:6px 12px;font-size:11px;}
   .card-header{padding:8px 12px;}
-  /* 區間匯款日期 */
-  .tr-date-row{padding:10px 12px;}
-  .tr-date-row input[type=date]{font-size:13px;padding:7px 8px;}
-  /* 月導航 */
-  .month-nav{flex-wrap:wrap;gap:6px;}
-  .btn-month{font-size:12px;padding:5px 10px;}
-  .btn-excel{font-size:11px;padding:5px 10px;}
-  /* 歷史紀錄 */
+  .rec-row{padding:8px 10px;}
   .his-head{padding:10px 12px;}
-  .his-date{font-size:13px;}
   .his-body{padding:8px 12px;}
-  /* 確認結帳 */
+  .btn-finish{font-size:14px;padding:12px;}
   .ms-cards{gap:6px;}
   .ms-card{padding:8px 10px;}
   .ms-label{font-size:9px;}
   .ms-val{font-size:15px;}
-  .btn-finish{font-size:14px;padding:12px;}
-  /* topbar */
-  .topbar{padding:8px 12px;}
-  .store-badge{font-size:11px;padding:3px 8px;}
-  .date-b{font-size:11px;}
-  /* pool card */
-  .pool-right{text-align:right;}
-  .pool-sub-val{font-size:14px;}
-  /* sh section title */
-  .sh{margin-bottom:6px;}
-  .st{font-size:12px;}
-  /* admin */
+  .month-nav{flex-wrap:wrap;gap:6px;}
+  .btn-month{font-size:12px;padding:5px 10px;}
+  .btn-excel{font-size:11px;padding:5px 10px;}
+  .action-row{gap:8px;}
   .adm-body{padding:10px 12px 60px;}
   .adm-summary{gap:6px;}
   .adm-sum-card{padding:10px;}
   .adm-sum-val{font-size:15px;}
   .adm-col-hd{grid-template-columns:80px 1fr 1fr 1fr 14px;padding:5px 10px;font-size:10px;}
   .adm-day-row{grid-template-columns:80px 1fr 1fr 1fr 14px;padding:8px 10px;font-size:12px;}
-  /* action row */
-  .action-row{gap:8px;}
-  /* 草稿 bar */
-  .draft-bar{padding:6px 12px;font-size:11px;}
-
-  /* 輸入列：備註獨行，金額+按鈕同行 */
-  .input-row{flex-wrap:wrap;}
-  .inp.note{flex:0 0 100%;width:100%;}
-  .inp.amt{flex:1;}
-  .btn-add{width:44px;height:44px;font-size:22px;}
-  /* 零用金清點：單欄，大按鈕 */
   .cash-grid{grid-template-columns:1fr !important;gap:4px;padding:10px 12px;}
   .btn-cnt{width:40px;height:40px;font-size:20px;}
   .inp-cnt{width:52px;padding:8px 4px;font-size:16px;}
   .denom-label{font-size:14px;width:58px;}
-  .denom-sub{min-width:60px;}
+  .denom-sub{min-width:60px;font-size:13px;}
   .count-ctrl{gap:10px;}
 }
 </style>
