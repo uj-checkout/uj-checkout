@@ -912,6 +912,11 @@ async function enterStaffApp(){
   $('hero-name').textContent=s.name;
   $('hero-addr').textContent=s.addr;
   $('m-user').textContent=currentUser.display_name;
+  // 員工也顯示底部導航（可切換到會員頁）
+  if($('bottom-nav'))$('bottom-nav').style.display='flex';
+  if($('nav-admin'))$('nav-admin').style.display='none';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if($('nav-checkout'))$('nav-checkout').classList.add('active');
   setDateBadge();
   renderCash();
   setDefaultDates();
