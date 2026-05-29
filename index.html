@@ -257,6 +257,71 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .sh{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .st{font-size:13px;font-weight:500;color:var(--t2);white-space:nowrap;}
 .sl{flex:1;height:1px;background:var(--bd);}
+
+/* ── Mobile RWD ── */
+@media (max-width: 480px) {
+  #main{padding:10px 10px 80px;}
+  .hero{padding:12px 14px;}
+  .hero-name{font-size:19px;}
+  .pool-card{padding:12px 14px;}
+  .pool-val{font-size:22px;}
+  .metrics{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .metric{padding:10px 10px;}
+  .ml{font-size:9px;}
+  .mv{font-size:16px;}
+  /* 零用金清點：手機改單欄 */
+  .cash-grid{grid-template-columns:1fr;gap:6px;padding:10px 12px;}
+  .denom-row{justify-content:space-between;}
+  .denom-label{width:60px;}
+  .denom-sub{min-width:60px;}
+  /* 輸入列 */
+  .input-row{padding:8px 10px;gap:6px;}
+  .inp{font-size:14px;padding:8px 10px;}
+  .inp.amt{width:85px;}
+  /* 收支列 */
+  .rec-row{padding:8px 10px;}
+  .rec-note{font-size:13px;}
+  /* card header */
+  .card-header{padding:8px 12px;}
+  /* 區間匯款日期 */
+  .tr-date-row{padding:10px 12px;}
+  .tr-date-row input[type=date]{font-size:13px;padding:7px 8px;}
+  /* 月導航 */
+  .month-nav{flex-wrap:wrap;gap:6px;}
+  .btn-month{font-size:12px;padding:5px 10px;}
+  .btn-excel{font-size:11px;padding:5px 10px;}
+  /* 歷史紀錄 */
+  .his-head{padding:10px 12px;}
+  .his-date{font-size:13px;}
+  .his-body{padding:8px 12px;}
+  /* 確認結帳 */
+  .ms-cards{gap:6px;}
+  .ms-card{padding:8px 10px;}
+  .ms-label{font-size:9px;}
+  .ms-val{font-size:15px;}
+  .btn-finish{font-size:14px;padding:12px;}
+  /* topbar */
+  .topbar{padding:8px 12px;}
+  .store-badge{font-size:11px;padding:3px 8px;}
+  .date-b{font-size:11px;}
+  /* pool card */
+  .pool-right{text-align:right;}
+  .pool-sub-val{font-size:14px;}
+  /* sh section title */
+  .sh{margin-bottom:6px;}
+  .st{font-size:12px;}
+  /* admin */
+  .adm-body{padding:10px 12px 60px;}
+  .adm-summary{gap:6px;}
+  .adm-sum-card{padding:10px;}
+  .adm-sum-val{font-size:15px;}
+  .adm-col-hd{grid-template-columns:80px 1fr 1fr 1fr 14px;padding:5px 10px;font-size:10px;}
+  .adm-day-row{grid-template-columns:80px 1fr 1fr 1fr 14px;padding:8px 10px;font-size:12px;}
+  /* action row */
+  .action-row{gap:8px;}
+  /* 草稿 bar */
+  .draft-bar{padding:6px 12px;font-size:11px;}
+}
 </style>
 </head>
 <body>
@@ -811,6 +876,8 @@ function renderExp(){
 function renderCash(){
   const g=$('cash-grid');
   if(!g)return;
+  // 手機單欄，桌機雙欄由 CSS 控制
+  g.style.gridTemplateColumns='1fr';
   g.innerHTML=DENOMS.map(d=>`
     <div class="denom-row">
       <span class="denom-label">$${d.v.toLocaleString()}</span>
