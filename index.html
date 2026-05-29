@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Urban Jungle · 下班結帳 4.0</title>
+<title>Urban Jungle · 店務系統 4.0</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -303,6 +303,71 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   .denom-sub{min-width:60px;font-size:13px;}
   .count-ctrl{gap:10px;}
 }
+
+/* ── Bottom Nav ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);display:flex;z-index:50;max-width:680px;margin:0 auto;}
+@media(min-width:681px){.bottom-nav{left:50%;transform:translateX(-50%);}}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 12px;cursor:pointer;gap:2px;color:var(--t3);font-size:10px;border:none;background:none;font-family:'Noto Sans TC',sans-serif;}
+.nav-item.active{color:var(--gm);}
+.nav-item i{font-size:22px;}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--gm);margin-top:1px;}
+
+/* ── Member Page ── */
+#member-app{display:none;max-width:680px;margin:0 auto;padding:14px 14px 80px;}
+.mem-search-hero{background:var(--gd);border-radius:16px;padding:16px;margin-bottom:12px;}
+.msh-title{color:rgba(255,255,255,.5);font-size:11px;margin-bottom:10px;letter-spacing:.06em;}
+.msh-input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 14px;width:100%;color:#fff;font-size:15px;outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;}
+.msh-input::placeholder{color:rgba(255,255,255,.35);}
+.msh-filters{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.filter-chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px;color:rgba(255,255,255,.7);cursor:pointer;white-space:nowrap;border:none;font-family:'Noto Sans TC',sans-serif;}
+.filter-chip.on{background:rgba(255,255,255,.9);color:var(--gd);}
+.mem-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.mem-stat{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;text-align:center;}
+.msl{font-size:10px;color:var(--t3);margin-bottom:3px;}
+.msv{font-size:18px;font-weight:600;color:var(--t1);}
+.msv.g{color:var(--gs);}
+.msv.o{color:var(--gold);}
+.msv.r{color:var(--red);}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.qa-btn{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.qa-btn i{font-size:22px;color:var(--gs);}
+.qa-btn span{font-size:11px;color:var(--t2);}
+.mem-list-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.mem-list-title{font-size:13px;font-weight:500;color:var(--t2);}
+.mem-list-count{font-size:12px;color:var(--t3);}
+.mem-card{background:#fff;border:1px solid var(--bd);border-radius:14px;margin-bottom:8px;overflow:hidden;cursor:pointer;}
+.mem-card-top{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;}
+.mem-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex-shrink:0;}
+.av-ok{background:#C8DBC0;color:#2D4A28;}
+.av-exp{background:#F5D0D0;color:#B83030;}
+.av-soon{background:#FEE9B0;color:#B8963C;}
+.mem-info{flex:1;min-width:0;}
+.mem-name-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.mem-name{font-size:15px;font-weight:500;color:var(--t1);}
+.mem-id{font-size:10px;color:var(--t3);margin-top:1px;}
+.mbadge{font-size:10px;padding:3px 9px;border-radius:10px;white-space:nowrap;}
+.mb-ok{background:#E8F0E4;color:var(--gs);}
+.mb-exp{background:#FCEAEA;color:var(--red);}
+.mb-soon{background:#FEF3E0;color:var(--gold);}
+.mem-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.meta-item{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--t3);}
+.mem-detail{display:none;border-top:1px solid var(--bd);padding:0;}
+.mem-detail.open{display:block;}
+.md-row{display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--bd);font-size:13px;}
+.md-row:last-child{border-bottom:none;}
+.md-label{color:var(--t3);}
+.md-val{color:var(--t1);font-weight:500;text-align:right;max-width:60%;}
+.mem-gift-tag{font-size:11px;color:var(--gs);background:#EAF3DE;padding:3px 8px;border-radius:6px;margin-top:5px;display:inline-block;}
+.mem-note-tag{font-size:11px;color:var(--gold);margin-top:3px;}
+/* 新增會員 */
+.add-mem-card{background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-top:14px;}
+.add-mem-body{padding:14px;display:flex;flex-direction:column;gap:10px;}
+.add-mem-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.add-label{font-size:11px;color:var(--t3);margin-bottom:4px;}
+.add-input{width:100%;border:1.5px solid var(--bd2);border-radius:8px;padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;}
+.add-input:focus{border-color:var(--gs);}
+.btn-add-mem{width:calc(100% - 28px);margin:0 14px 14px;background:var(--gd);border:none;border-radius:10px;color:#fff;padding:12px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.enc-bar{background:#EAF3DE;border:1px solid #C8DBC0;border-radius:8px;padding:8px 12px;font-size:11px;color:var(--gs);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 </style>
 </head>
 <body>
@@ -334,7 +399,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
 <div class="topbar" id="topbar" style="display:none;">
   <div class="topbar-l">
-    <span class="logo-sub">🌿 下班結帳 4.0</span>
+    <span class="logo-sub">🌿 Urban Jungle 店務系統</span>
   </div>
   <div class="topbar-r">
     <div class="store-badge" id="store-badge"></div>
@@ -478,6 +543,101 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   <div id="his-list"></div>
 </div>
 
+<!-- Member App -->
+<div id="member-app">
+  <div class="enc-bar"><i class="ti ti-lock" style="font-size:13px;"></i> 會員資料加密保護，僅限授權帳號查看</div>
+
+  <!-- 搜尋主區 -->
+  <div class="mem-search-hero">
+    <div class="msh-title">🔍 會員查詢</div>
+    <input class="msh-input" id="mem-search" placeholder="姓名、電話、會員編號…" oninput="renderMembers()"/>
+    <div class="msh-filters" id="mem-filters">
+      <button class="filter-chip on" onclick="setMemFilter('all',this)">全部</button>
+      <button class="filter-chip" onclick="setMemFilter('ok',this)">有效</button>
+      <button class="filter-chip" onclick="setMemFilter('soon',this)">即將到期</button>
+      <button class="filter-chip" onclick="setMemFilter('exp',this)">已到期</button>
+      <button class="filter-chip" onclick="setMemFilter('taipei',this)">台北</button>
+      <button class="filter-chip" onclick="setMemFilter('hsinchu',this)">新竹</button>
+      <button class="filter-chip" onclick="setMemFilter('taichung',this)">台中</button>
+      <button class="filter-chip" onclick="setMemFilter('kaohsiung',this)">高雄</button>
+    </div>
+  </div>
+
+  <!-- 統計 -->
+  <div class="mem-stats">
+    <div class="mem-stat"><div class="msl">會員總數</div><div class="msv" id="ms-total">—</div></div>
+    <div class="mem-stat"><div class="msl">有效</div><div class="msv g" id="ms-ok">—</div></div>
+    <div class="mem-stat"><div class="msl">即將到期</div><div class="msv o" id="ms-soon">—</div></div>
+  </div>
+
+  <!-- 快速功能 -->
+  <div class="quick-actions">
+    <div class="qa-btn" onclick="scrollToAddMem()"><i class="ti ti-user-plus"></i><span>新增會員</span></div>
+    <div class="qa-btn" id="btn-download-backup" onclick="downloadMemberBackup()" style="display:none;"><i class="ti ti-database-export"></i><span>下載備份</span></div>
+    <div class="qa-btn" onclick="setMemFilter('soon',null)"><i class="ti ti-calendar-due"></i><span>到期提醒</span></div>
+  </div>
+
+  <!-- 列表 -->
+  <div class="mem-list-hd">
+    <span class="mem-list-title">會員列表</span>
+    <span class="mem-list-count" id="mem-count">共 0 筆</span>
+  </div>
+  <div id="mem-list"></div>
+
+  <!-- 新增會員 -->
+  <div class="add-mem-card" id="add-mem-section">
+    <div class="card-header"><span class="card-title">新增會員</span><span class="card-sub" id="add-mem-new-id">系統自動產生編號</span></div>
+    <div class="add-mem-body">
+      <div>
+        <div class="add-label">姓名</div>
+        <input class="add-input" id="am-name" placeholder="會員姓名（必填）"/>
+      </div>
+      <div>
+        <div class="add-label">電話</div>
+        <input class="add-input" id="am-phone" placeholder="09XX-XXX-XXX"/>
+      </div>
+      <div class="add-mem-row2">
+        <div>
+          <div class="add-label">分店</div>
+          <select class="add-input" id="am-store">
+            <option value="台北">台北旗艦店</option>
+            <option value="新竹">新竹形象店</option>
+            <option value="台中">台中主題店</option>
+            <option value="高雄">高雄概念店</option>
+          </select>
+        </div>
+        <div>
+          <div class="add-label">承辦人</div>
+          <input class="add-input" id="am-staff" placeholder="承辦人"/>
+        </div>
+      </div>
+      <div class="add-mem-row2">
+        <div>
+          <div class="add-label">入會日</div>
+          <input class="add-input" id="am-join" type="date"/>
+        </div>
+        <div>
+          <div class="add-label">到期日</div>
+          <input class="add-input" id="am-exp" type="date"/>
+        </div>
+      </div>
+      <div>
+        <div class="add-label">生日</div>
+        <input class="add-input" id="am-birth" type="date"/>
+      </div>
+      <div>
+        <div class="add-label">隨卡贈送</div>
+        <input class="add-input" id="am-gift" placeholder="洋蘭乳 / 萊姆去…"/>
+      </div>
+      <div>
+        <div class="add-label">附註</div>
+        <input class="add-input" id="am-note" placeholder="備註說明"/>
+      </div>
+    </div>
+    <button class="btn-add-mem" onclick="addMember()">＋ 新增會員</button>
+  </div>
+</div>
+
 <!-- Admin -->
 <div id="admin-app">
   <div class="adm-topbar">
@@ -520,6 +680,19 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div id="edit-modal-body"></div>
     <button class="btn-finish" onclick="saveEdit()" style="width:100%;margin-top:12px;">儲存</button>
   </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav" id="bottom-nav" style="display:none;">
+  <button class="nav-item active" id="nav-checkout" onclick="switchPage('checkout')">
+    <i class="ti ti-receipt"></i><span>結帳</span>
+  </button>
+  <button class="nav-item" id="nav-member" onclick="switchPage('member')">
+    <i class="ti ti-users"></i><span>會員</span>
+  </button>
+  <button class="nav-item" id="nav-admin" onclick="switchPage('admin')" style="display:none;" id="nav-admin-btn">
+    <i class="ti ti-chart-bar"></i><span>總覽</span>
+  </button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -633,7 +806,9 @@ function doLogout(){
   clearAutoSave();
   $('main').style.display='none';
   $('admin-app').style.display='none';
+  if($('member-app'))$('member-app').style.display='none';
   $('topbar').style.display='none';
+  if($('bottom-nav'))$('bottom-nav').style.display='none';
   $('login-ov').style.display='flex';
   $('laundry-section').style.display='none';
   localStorage.removeItem('uj_store');localStorage.removeItem('uj_staff');
@@ -687,6 +862,7 @@ async function enterApp(store){
   $('store-badge').style.display='block';
   $('user-badge').style.display='none';
   $('main').style.display='block';
+  $('bottom-nav').style.display='flex';
   $('hero-name').textContent=s.name;
   $('hero-addr').textContent=s.addr;
   $('m-user').textContent=currentBuiltin?.display||s.name;
@@ -1428,6 +1604,10 @@ function enterAdminApp(){
   $('user-badge').style.display='none';
   $('store-badge').textContent='總覽管理';$('store-badge').style.display='block';
   $('admin-app').style.display='block';
+  $('bottom-nav').style.display='flex';
+  if($('nav-admin'))$('nav-admin').style.display='flex';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if($('nav-admin'))$('nav-admin').classList.add('active');
   const today=new Date();
   admYear=today.getFullYear();admMonth=today.getMonth()+1;
   $('adm-today').textContent=`${today.getMonth()+1}/${today.getDate()}`;
@@ -1662,6 +1842,479 @@ async function calcAdmRange(store){
       <div class="rr-row"><span>已匯款</span><span>-${fmt(totTr)}</span></div>
       <div class="rr-row"><span>待匯金額</span><span style="color:${pending>0?'var(--red)':'var(--gs)'}">${fmt(pending)}</span></div>`;
   }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+// ── Member Data ───────────────────────────────────────────
+const MEMBER_DATA=[
+{"id":"UJVIP00001","name":"劉皓謙","store":"台北","staff":"Leon","joinDate":"2024-08-01","expDate":"2099-12-31","gift":"","phone":"0913328895","birth":"1994-08-22","note":""},
+{"id":"UJVIP00002","name":"謝惟倫","store":"台北","staff":"Frank","joinDate":"2024-08-11","expDate":"2025-08-11","gift":"洋蘭乳/萊姆去","phone":"0927563992","birth":"1992-11-25","note":""},
+{"id":"UJVIP00003","name":"周大山","store":"台北","staff":"Frank","joinDate":"2024-08-16","expDate":"2025-08-16","gift":"洋蘭乳/萊姆去","phone":"0970518620","birth":"1993-01-27","note":""},
+{"id":"UJVIP00004","name":"劉民慶","store":"台北","staff":"Frank","joinDate":"2024-08-17","expDate":"2025-08-17","gift":"","phone":"0912879155","birth":"1993-07-10","note":""},
+{"id":"UJVIP00005","name":"林庭宇","store":"台北","staff":"Frank","joinDate":"2024-08-17","expDate":"2025-08-17","gift":"","phone":"0978326567","birth":"1997-03-03","note":"未領"},
+{"id":"UJVIP00006","name":"邱顯崴","store":"台北","staff":"Frank","joinDate":"2025-05-15","expDate":"2026-05-15","gift":"果殼去*1","phone":"0930037175","birth":"1998-11-14","note":""},
+{"id":"UJVIP00007","name":"林師謀","store":"台北","staff":"Bryan","joinDate":"2025-10-27","expDate":"2026-10-27","gift":"萊姆去*1","phone":"0970413262","birth":"2001-11-04","note":""},
+{"id":"UJVIP00008","name":"劉起華","store":"台北","staff":"Frank","joinDate":"2024-08-24","expDate":"2025-08-24","gift":"潘恩乳/果殼去","phone":"0972231251","birth":"1990-11-20","note":""},
+{"id":"UJVIP00009","name":"洪全華","store":"台北","staff":"Frank","joinDate":"2024-08-25","expDate":"2025-08-25","gift":"洋蘭乳/萊姆去","phone":"0910314365","birth":"1987-10-14","note":""},
+{"id":"UJVIP00010","name":"黃凱帝","store":"台北","staff":"Bryan","joinDate":"2025-10-27","expDate":"202610-27","gift":"果殼去*1","phone":"0952970798","birth":"1988-08-01","note":""},
+{"id":"UJVIP00011","name":"劉伊森","store":"台北","staff":"Frank","joinDate":"2024-08-17","expDate":"2025-08-17","gift":"","phone":"0930859711","birth":"1988-03-12","note":""},
+{"id":"UJVIP00012","name":"李桓齊","store":"台北","staff":"Frank","joinDate":"2024-08-28","expDate":"2025-08-28","gift":"","phone":"0978823678","birth":"1988-11-17","note":""},
+{"id":"UJVIP00013","name":"邵麒澂","store":"台北","staff":"Frank","joinDate":"2024-08-29","expDate":"2024-08-29","gift":"洋蘭乳/萊姆去","phone":"0975623389","birth":"1998-03-10","note":""},
+{"id":"UJVIP00014","name":"周明宏","store":"台北","staff":"Frank","joinDate":"2024-09-04","expDate":"2025-09-04","gift":"","phone":"0988972089","birth":"1979-05-27","note":""},
+{"id":"UJVIP00015","name":"林銘翰","store":"台北","staff":"Frank","joinDate":"2024-09-05","expDate":"2025-09-05","gift":"洋蘭乳/萊姆去","phone":"0933667073","birth":"1996-07-11","note":""},
+{"id":"UJVIP00016","name":"李崧帆","store":"台北","staff":"Chang","joinDate":"2024-08-10","expDate":"2025-08-10","gift":"","phone":"0968660890","birth":"1996-05-28","note":""},
+{"id":"UJVIP00017","name":"洪瑛志","store":"台北","staff":"Chang","joinDate":"2024-08-10","expDate":"2025-08-10","gift":"","phone":"0927357551","birth":"1995-12-25","note":""},
+{"id":"UJVIP00018","name":"林伯宇","store":"台北","staff":"Chang","joinDate":"2024-08-14","expDate":"2025-08-14","gift":"洋蘭乳/果殼去","phone":"0908887538","birth":"1990-04-09","note":""},
+{"id":"UJVIP00019","name":"陳力豪","store":"台北","staff":"Chang","joinDate":"2024-08-21","expDate":"2025-08-21","gift":"","phone":"0919292525","birth":"1990-04-09","note":""},
+{"id":"UJVIP00020","name":"Edgar Kao","store":"台北","staff":"Chang","joinDate":"2024-08-21","expDate":"2025-08-21","gift":"","phone":"0975308075","birth":"1984-01-05","note":"本人不要"},
+{"id":"UJVIP00021","name":"Henry Lin","store":"台北","staff":"Chang","joinDate":"2024-08-26","expDate":"2025-08-26","gift":"","phone":"0928232087","birth":"1985-04-25","note":""},
+{"id":"UJVIP00022","name":"林逸軒","store":"台北","staff":"Chang","joinDate":"2025-10-13","expDate":"2026-10-13","gift":"","phone":"0988819409","birth":"1978-03-21","note":"未領"},
+{"id":"UJVIP00023","name":"陳品翰","store":"台北","staff":"Bryan","joinDate":"2025-10-31","expDate":"2026-10-31","gift":"果殼去*1","phone":"0963359171","birth":"1995-06-15","note":""},
+{"id":"UJVIP00024","name":"鍾威廉","store":"台北","staff":"Chang","joinDate":"2024-08-30","expDate":"2025-08-30","gift":"","phone":"0983800966","birth":"1993-11-28","note":""},
+{"id":"UJVIP00025","name":"James Lin","store":"台北","staff":"Chang","joinDate":"2024-08-31","expDate":"2024-08-31","gift":"","phone":"0922740709","birth":"1985-01-01","note":""},
+{"id":"UJVIP00026","name":"Eason_0925","store":"台北","staff":"Chang","joinDate":"2024-08-31","expDate":"2025-08-31","gift":"","phone":"0927780202","birth":"1991-09-25","note":""},
+{"id":"UJVIP00027","name":"楊德亮","store":"新竹","staff":"Frank","joinDate":"2024-09-06","expDate":"2025-09-06","gift":"洋蘭乳/萊姆去","phone":"0978321213","birth":"1987-11-04","note":""},
+{"id":"UJVIP00028","name":"沈峻宇","store":"新竹","staff":"Frank","joinDate":"2024-09-06","expDate":"2025-09-06","gift":"潘恩乳/果殼去","phone":"0968558197","birth":"1990-05-31","note":""},
+{"id":"UJVIP00030","name":"郭威慶","store":"新竹","staff":"Frank","joinDate":"2024-09-21","expDate":"2025-09-21","gift":"潘恩乳/萊姆去","phone":"0931711911","birth":"1998-02-16","note":""},
+{"id":"UJVIP00031","name":"吳其瑾","store":"新竹","staff":"Leon","joinDate":"2024-09-29","expDate":"2025-09-29","gift":"洋蘭乳/萊姆去","phone":"0988071889","birth":"1994-07-20","note":""},
+{"id":"UJVIP00033","name":"呂典嘉","store":"新竹","staff":"Bryan","joinDate":"2024-10-21","expDate":"2025-10-21","gift":"洋蘭乳/果殼去","phone":"0935286286","birth":"1983-12-19","note":""},
+{"id":"UJVIP00034","name":"徐軾哲","store":"新竹","staff":"Bryan","joinDate":"2024-10-28","expDate":"2025-10-28","gift":"洋蘭乳/果殼去","phone":"0963147739","birth":"1998-07-11","note":""},
+{"id":"UJVIP00035","name":"吳澤霖","store":"新竹","staff":"Bryan","joinDate":"2024-12-30","expDate":"2025-12-30","gift":"洋蘭乳/果殼去","phone":"0978916131","birth":"1990-01-05","note":""},
+{"id":"UJVIP00036","name":"林子軒","store":"新竹","staff":"Frank","joinDate":"2024-11-15","expDate":"2025-11-15","gift":"洋蘭乳/萊姆去","phone":"0919365058","birth":"1985-04-11","note":""},
+{"id":"UJVIP00037","name":"謝佳興","store":"新竹","staff":"Chang","joinDate":"2024-11-21","expDate":"2025-11-21","gift":"","phone":"0911216585","birth":"1985-12-29","note":""},
+{"id":"UJVIP00038","name":"游孟舜","store":"新竹","staff":"Bryan","joinDate":"2025-01-04","expDate":"2026-01-04","gift":"洋蘭乳/果殼去","phone":"0975706753","birth":"1997-04-23","note":""},
+{"id":"UJVIP00039","name":"劉奕辰","store":"台北","staff":"Frank","joinDate":"2024-09-07","expDate":"2025-09-07","gift":"","phone":"0921339791","birth":"1984-03-15","note":""},
+{"id":"UJVIP00040","name":"謝惟倫","store":"台北","staff":"Frank","joinDate":"2024-09-07","expDate":"2025-09-07","gift":"","phone":"0927563992","birth":"1992-11-25","note":""},
+{"id":"UJVIP00041","name":"李士鈞","store":"台北","staff":"Bryan","joinDate":"2026-02-14","expDate":"2027-02-14","gift":"洋蘭乳/萊姆去","phone":"0903502377","birth":"1997-07-07","note":"續會小洋蘭"},
+{"id":"UJVIP00042","name":"洪銘彥","store":"新竹","staff":"Leon","joinDate":"2024-09-04","expDate":"2025-09-03","gift":"","phone":"0988722512","birth":"1996-03-08","note":""},
+{"id":"UJVIP00043","name":"陳汶俊","store":"台北","staff":"Frank","joinDate":"2024-09-15","expDate":"2025-09-15","gift":"","phone":"0920498982","birth":"1998-06-17","note":""},
+{"id":"UJVIP00044","name":"張耀仁","store":"台北","staff":"Frank","joinDate":"2024-09-21","expDate":"2025-09-21","gift":"洋蘭乳/萊姆去","phone":"0909672392","birth":"1995-08-28","note":""},
+{"id":"UJVIP00045","name":"陳柏安","store":"台北","staff":"Frank","joinDate":"2024-09-27","expDate":"2025-09-27","gift":"","phone":"0928639686","birth":"1980-08-28","note":""},
+{"id":"UJVIP00046","name":"劉淨名","store":"台北","staff":"Frank","joinDate":"2024-09-27","expDate":"2025-09-27","gift":"洋蘭乳/萊姆去","phone":"0911768233","birth":"1993-08-19","note":""},
+{"id":"UJVIP00047","name":"王仁宏","store":"台北","staff":"Ryan","joinDate":"2024-10-10","expDate":"2025-10-10","gift":"洋蘭乳/萊姆去","phone":"0918156065","birth":"1978-10-19","note":""},
+{"id":"UJVIP00048","name":"楊智鈞","store":"台北","staff":"Leon","joinDate":"2024-10-18","expDate":"2025-10-18","gift":"","phone":"0953811803","birth":"1986-04-22","note":""},
+{"id":"UJVIP00049","name":"陳晏正","store":"台北","staff":"Chang","joinDate":"2024-09-01","expDate":"2026-09-05","gift":"洋蘭乳/果殼去","phone":"0912859958","birth":"1995-04-18","note":"續會萊姆去"},
+{"id":"UJVIP00050","name":"林育弘","store":"台北","staff":"Leon","joinDate":"2024-10-17","expDate":"2099-12-31","gift":"","phone":"0989524279","birth":"1991-10-17","note":""},
+{"id":"UJVIP00051","name":"周子崴","store":"台北","staff":"Chang","joinDate":"2024-09-03","expDate":"2025-09-03","gift":"","phone":"0928611723","birth":"1994-11-06","note":"未領"},
+{"id":"UJVIP00052","name":"劉一正","store":"台北","staff":"Chang","joinDate":"2024-09-05","expDate":"2025-09-05","gift":"","phone":"0928673726","birth":"1991-03-06","note":""},
+{"id":"UJVIP00053","name":"童聖恩","store":"台北","staff":"Chang","joinDate":"2024-09-15","expDate":"2025-09-15","gift":"","phone":"0987036148","birth":"1993-02-17","note":""},
+{"id":"UJVIP00054","name":"曾啟捷","store":"台北","staff":"Chang","joinDate":"2025-11-22","expDate":"2026-11-21","gift":"萊姆去","phone":"0988133541","birth":"1992-12-04","note":""},
+{"id":"UJVIP00058","name":"江叡穎","store":"台北","staff":"Bryan","joinDate":"2025-10-19","expDate":"2026-10-19","gift":"果殼去","phone":"0906226393","birth":"1999-10-21","note":"續會"},
+{"id":"UJVIP00059","name":"陳冠辰","store":"台北","staff":"Frank","joinDate":"2024-09-08","expDate":"2025-09-08","gift":"","phone":"0972390121","birth":"2002-11-11","note":""},
+{"id":"UJVIP00060","name":"王暄堯","store":"台北","staff":"Bryan","joinDate":"2024-10-23","expDate":"2025-10-23","gift":"","phone":"0928386835","birth":"1994-01-26","note":""},
+{"id":"UJVIP00061","name":"林相甫","store":"高雄","staff":"Ryan","joinDate":"2025-11-28","expDate":"2026-11-28","gift":"洋蘭乳","phone":"0988513185","birth":"1997-01-04","note":""},
+{"id":"UJVIP00062","name":"廖智堯","store":"台北","staff":"Bryan","joinDate":"2025-10-24","expDate":"2026-10-24","gift":"小洋蘭","phone":"0989799529","birth":"1992-03-23","note":"續會"},
+{"id":"UJVIP00063","name":"白家南","store":"台北","staff":"Frank","joinDate":"2024-10-26","expDate":"2025-10-26","gift":"","phone":"0912138836","birth":"1978-12-21","note":""},
+{"id":"UJVIP00064","name":"魏佑嘉","store":"台北","staff":"Leon","joinDate":"2024-11-02","expDate":"2025-11-02","gift":"","phone":"0970751260","birth":"1990-04-22","note":""},
+{"id":"UJVIP00065","name":"林于凱","store":"台北","staff":"Chang","joinDate":"2024-11-04","expDate":"2025-11-04","gift":"","phone":"0916199707","birth":"1981-04-04","note":""},
+{"id":"UJVIP00066","name":"Darren Chen","store":"台北","staff":"Chang","joinDate":"2024-11-05","expDate":"2025-11-05","gift":"","phone":"0958662832","birth":"1995-05-27","note":""},
+{"id":"UJVIP00067","name":"粘為亙","store":"台北","staff":"Bryan","joinDate":"2025-11-06","expDate":"2026-11-06","gift":"小洋蘭","phone":"0933932075","birth":"1983-08-22","note":"續會"},
+{"id":"UJVIP00068","name":"張萬宇","store":"台北","staff":"Chang","joinDate":"2024-11-18","expDate":"2025-11-18","gift":"","phone":"0977772848","birth":"1990-10-14","note":""},
+{"id":"UJVIP00069","name":"黃寓紘","store":"高雄","staff":"Ryan","joinDate":"2024-08-01","expDate":"2099-12-31","gift":"","phone":"0966358016","birth":"1994-06-10","note":""},
+{"id":"UJVIP00070","name":"Sylar Su","store":"台北","staff":"Chang","joinDate":"2024-11-15","expDate":"2025-11-15","gift":"","phone":"","birth":"1985-12-21","note":""},
+{"id":"UJVIP00071","name":"張家豪","store":"新竹","staff":"Bryan","joinDate":"2025-01-12","expDate":"2026-01-12","gift":"潘恩乳/果殼去","phone":"0905230220","birth":"1999-11-05","note":""},
+{"id":"UJVIP00072","name":"何紫令","store":"新竹","staff":"Bryan","joinDate":"2025-01-21","expDate":"2026-01-21","gift":"潘恩乳/果殼去","phone":"0912890178","birth":"1989-08-28","note":""},
+{"id":"UJVIP00073","name":"郭俊宏","store":"新竹","staff":"Bryan","joinDate":"2025-01-24","expDate":"2026-01-24","gift":"潘恩乳/果殼去","phone":"0919312726","birth":"1985-06-23","note":""},
+{"id":"UJVIP00074","name":"林則毅","store":"新竹","staff":"Bryan","joinDate":"2025-02-17","expDate":"2026-02-17","gift":"","phone":"0936799490","birth":"1991-06-24","note":""},
+{"id":"UJVIP00075","name":"范皓鈞","store":"台北","staff":"Chang","joinDate":"2024-11-18","expDate":"2025-11-18","gift":"","phone":"0983084978","birth":"1990-03-13","note":""},
+{"id":"UJVIP00076","name":"闕仕明","store":"台北","staff":"Leon","joinDate":"2024-09-19","expDate":"2099-12-31","gift":"","phone":"0935517125","birth":"1986-12-06","note":""},
+{"id":"UJVIP00077","name":"林智傑","store":"台北","staff":"Leon","joinDate":"2024-09-26","expDate":"2025-09-25","gift":"","phone":"0975896628","birth":"1983-06-30","note":""},
+{"id":"UJVIP00078","name":"劉邦良","store":"台北","staff":"Leon","joinDate":"2024-09-27","expDate":"2025-09-26","gift":"","phone":"0934059584","birth":"1981-06-25","note":""},
+{"id":"UJVIP00079","name":"林哲宇","store":"台北","staff":"Leon","joinDate":"2024-10-04","expDate":"2025-10-03","gift":"","phone":"0919224498","birth":"1987-11-16","note":""},
+{"id":"UJVIP00080","name":"陳世瑾","store":"台北","staff":"Leon","joinDate":"2024-10-04","expDate":"2025-10-03","gift":"","phone":"0953736598","birth":"1985-05-26","note":""},
+{"id":"UJVIP00081","name":"林文藻","store":"台北","staff":"Chang","joinDate":"2024-10-04","expDate":"2025-10-04","gift":"烏木保濕露/果殼去","phone":"0935130951","birth":"1977-07-09","note":""},
+{"id":"UJVIP00082","name":"陳書賢","store":"台北","staff":"Chang","joinDate":"2024-10-05","expDate":"2025-10-05","gift":"","phone":"0987787279","birth":"1990-10-10","note":""},
+{"id":"UJVIP00083","name":"葉祐鈞","store":"台北","staff":"Leon","joinDate":"2024-10-05","expDate":"2025-10-05","gift":"","phone":"0989842768","birth":"1989-07-13","note":""},
+{"id":"UJVIP00084","name":"蔣元柏","store":"台北","staff":"Chang","joinDate":"2024-10-05","expDate":"2025-10-05","gift":"潘恩乳/果殼去","phone":"0981581002","birth":"1996-10-02","note":""},
+{"id":"UJVIP00085","name":"許家華","store":"台北","staff":"Chang","joinDate":"2024-10-06","expDate":"2025-10-06","gift":"","phone":"0989371909","birth":"1995-12-23","note":""},
+{"id":"UJVIP00086","name":"鄧煒耀","store":"台北","staff":"Chang","joinDate":"2024-10-07","expDate":"2025-10-07","gift":"","phone":"0978630760","birth":"1993-06-22","note":""},
+{"id":"UJVIP00087","name":"鄭諺璘","store":"台北","staff":"Leon","joinDate":"2024-10-10","expDate":"2025-10-10","gift":"","phone":"0988617314","birth":"1995-05-27","note":""},
+{"id":"UJVIP00088","name":"黃昶榮","store":"台北","staff":"Frank","joinDate":"2024-08-01","expDate":"2099-12-31","gift":"","phone":"0975736502","birth":"1998-05-23","note":""},
+{"id":"UJVIP00089","name":"劉炳勛","store":"台北","staff":"Leon","joinDate":"2024-10-10","expDate":"2025-10-10","gift":"","phone":"0975269606","birth":"1994-08-18","note":""},
+{"id":"UJVIP00090","name":"葉秉鈞","store":"台北","staff":"Leon","joinDate":"2024-10-10","expDate":"2025-10-10","gift":"","phone":"0922950930","birth":"1989-09-30","note":""},
+{"id":"UJVIP00091","name":"邱晉威","store":"台北","staff":"Frank","joinDate":"2024-10-12","expDate":"2025-10-12","gift":"","phone":"0930012633","birth":"1995-11-09","note":""},
+{"id":"UJVIP00092","name":"林子超","store":"台北","staff":"Leon","joinDate":"2024-10-15","expDate":"2025-10-15","gift":"潘恩乳/果殼去","phone":"0953643003","birth":"1985-09-13","note":""},
+{"id":"UJVIP00093","name":"謝瑞慶","store":"台北","staff":"Frank","joinDate":"2024-10-17","expDate":"2025-10-17","gift":"","phone":"0923269989","birth":"1988-08-28","note":""},
+{"id":"UJVIP00094","name":"曾柏衡","store":"台北","staff":"Leon","joinDate":"2024-10-17","expDate":"2025-10-17","gift":"洋蘭乳/果殼去","phone":"0916359872","birth":"1998-08-01","note":""},
+{"id":"UJVIP00095","name":"Maki Arai","store":"台北","staff":"Chang","joinDate":"2024-10-18","expDate":"2025-10-18","gift":"","phone":"0911250088","birth":"1995-03-24","note":""},
+{"id":"UJVIP00097","name":"趙俊豪","store":"台北","staff":"Leon","joinDate":"2024-10-15","expDate":"2025-10-15","gift":"","phone":"0938900919","birth":"1997-09-19","note":""},
+{"id":"UJVIP00098","name":"蔡育愷","store":"台北","staff":"Leon","joinDate":"2024-10-18","expDate":"2025-10-18","gift":"洋蘭乳/小洋蘭乳","phone":"0933022093","birth":"1997-05-15","note":""},
+{"id":"UJVIP00099","name":"林敬堯","store":"台北","staff":"Leon","joinDate":"2024-08-01","expDate":"2025-08-01","gift":"","phone":"0961021621","birth":"1987-06-21","note":""},
+{"id":"UJVIP00100","name":"藍祥恩","store":"台北","staff":"Bryan","joinDate":"2024-10-01","expDate":"2025-10-01","gift":"","phone":"0982396556","birth":"1992-01-15","note":""},
+{"id":"UJVIP00101","name":"鄭勝倫","store":"台北","staff":"Chang","joinDate":"2025-07-25","expDate":"2026-07-25","gift":"潘恩乳/果殼去","phone":"0975312831","birth":"1994-01-15","note":""},
+{"id":"UJVIP00102","name":"周士凱","store":"台北","staff":"Bryan","joinDate":"2025-07-30","expDate":"2026-07-30","gift":"潘恩乳/果殼去","phone":"0970553187","birth":"2005-11-27","note":""},
+{"id":"UJVIP00105","name":"吳睿哲","store":"台北","staff":"Bryan","joinDate":"2024-10-05","expDate":"2025-10-05","gift":"潘恩乳/果殼去","phone":"0910073221","birth":"1989-03-01","note":""},
+{"id":"UJVIP00110","name":"吳東欣","store":"新竹","staff":"Bryan","joinDate":"2025-11-14","expDate":"2026-11-14","gift":"果殼去*1","phone":"0958329835","birth":"1978-06-29","note":""},
+{"id":"UJVIP00113","name":"彭中正","store":"新竹","staff":"Bryan","joinDate":"2025-11-18","expDate":"2026-11-18","gift":"果殼去*1","phone":"0931122676","birth":"2001-09-06","note":""},
+{"id":"UJVIP00114","name":"余晏程","store":"新竹","staff":"Bryan","joinDate":"2025-10-21","expDate":"2026-10-21","gift":"果殼去*1","phone":"0912455233","birth":"1995-04-22","note":""},
+{"id":"UJVIP00115","name":"賴建豪","store":"台北","staff":"Leon","joinDate":"2025-07-24","expDate":"2026-07-24","gift":"潘恩乳/萊姆去","phone":"0972838755","birth":"1982-07-01","note":""},
+{"id":"UJVIP00117","name":"陸鵬右","store":"台中","staff":"Mai","joinDate":"2025-08-23","expDate":"2026-08-22","gift":"潘恩乳/果殼去","phone":"0979353623","birth":"2001-07-11","note":""},
+{"id":"UJVIP00118","name":"張名傑","store":"台中","staff":"Roy","joinDate":"2025-09-01","expDate":"2026-08-31","gift":"潘恩乳/萊姆去","phone":"0900191269","birth":"1995-06-12","note":""},
+{"id":"UJVIP00119","name":"劉達義","store":"台中","staff":"Mai","joinDate":"2025-09-16","expDate":"2026-09-15","gift":"潘恩乳/果殼去","phone":"0952856871","birth":"1984-06-08","note":""},
+{"id":"UJVIP00120","name":"莊閎均","store":"台中","staff":"Mai","joinDate":"2025-09-28","expDate":"2026-09-27","gift":"潘恩乳/果殼去","phone":"0905118506","birth":"1995-10-04","note":""},
+{"id":"UJVIP00121","name":"李承峻","store":"台中","staff":"Roy","joinDate":"2025-10-02","expDate":"2026-10-01","gift":"潘恩乳/萊姆去","phone":"0900165062","birth":"2001-10-05","note":""},
+{"id":"UJVIP00122","name":"周浩正","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0935842789","birth":"1996-02-09","note":"原閃電VIP刷新"},
+{"id":"UJVIP00123","name":"魁","store":"台中","staff":"Roy","joinDate":"2025-11-03","expDate":"2026-11-23","gift":"洋蘭乳100ml","phone":"0986599120","birth":"1999-08-24","note":""},
+{"id":"UJVIP00124","name":"邱Mike","store":"台中","staff":"Roy","joinDate":"2025-11-05","expDate":"2026-11-04","gift":"萊姆拋光霜","phone":"0926697456","birth":"1984-12-09","note":""},
+{"id":"UJVIP00125","name":"陳奕廷","store":"台中","staff":"Roy","joinDate":"2025-11-12","expDate":"2026-11-11","gift":"藍甘菊100ml","phone":"0921049848","birth":"1991-06-07","note":""},
+{"id":"UJVIP00126","name":"吳哲維","store":"高雄","staff":"Ryan","joinDate":"2025-11-15","expDate":"2026-11-14","gift":"小洋蘭","phone":"0988716730","birth":"1994-01-03","note":""},
+{"id":"UJVIP00127","name":"林祐賢","store":"高雄","staff":"Ryan","joinDate":"2025-11-17","expDate":"2026-11-16","gift":"萊姆去","phone":"0935622552","birth":"2002-02-01","note":""},
+{"id":"UJVIP00128","name":"徐銘謙","store":"高雄","staff":"Ryan","joinDate":"2025-11-05","expDate":"2026-11-04","gift":"調理霧","phone":"0978588286","birth":"1990-10-08","note":""},
+{"id":"UJVIP00131","name":"鄭宇庭","store":"高雄","staff":"Ryan","joinDate":"2025-11-23","expDate":"2026-11-22","gift":"小洋蘭","phone":"0922668296","birth":"1997-02-11","note":""},
+{"id":"UJVIP00132","name":"馮浩原","store":"高雄","staff":"Ryan","joinDate":"2025-11-06","expDate":"2026-11-05","gift":"萊姆去角質","phone":"0975277102","birth":"1997-02-12","note":""},
+{"id":"UJVIP00136","name":"陳聖杰","store":"高雄","staff":"Ryan","joinDate":"2025-11-05","expDate":"2026-11-04","gift":"襪子","phone":"0930778635","birth":"1990-11-03","note":""},
+{"id":"UJVIP00140","name":"田善軒","store":"高雄","staff":"Ryan","joinDate":"2025-11-07","expDate":"2026-11-06","gift":"果殼拋光霜","phone":"香港客人","birth":"1996-03-29","note":""},
+{"id":"UJVIP00141","name":"陳昱佑","store":"高雄","staff":"Ryan","joinDate":"2025-11-08","expDate":"2026-11-07","gift":"果殼拋光霜","phone":"0909911699","birth":"1998-09-10","note":""},
+{"id":"UJVIP00142","name":"林昶任","store":"高雄","staff":"Ryan","joinDate":"2025-11-09","expDate":"2026-11-08","gift":"果殼拋光霜","phone":"0919930047","birth":"1988-03-05","note":""},
+{"id":"UJVIP00143","name":"陳奕憲","store":"高雄","staff":"Ryan","joinDate":"2025-11-09","expDate":"2026-11-08","gift":"萊姆拋光霜","phone":"0992338348","birth":"1998-04-05","note":""},
+{"id":"UJVIP00144","name":"蘇毓舜","store":"高雄","staff":"Ryan","joinDate":"2025-11-09","expDate":"2026-11-08","gift":"萊姆拋光霜","phone":"0976719133","birth":"1997-01-28","note":""},
+{"id":"UJVIP00145","name":"陳澧洋","store":"高雄","staff":"Ryan","joinDate":"2025-11-12","expDate":"2026-11-11","gift":"萊姆拋光霜","phone":"0928630770","birth":"1995-08-28","note":""},
+{"id":"UJVIP00146","name":"姜皓仁","store":"高雄","staff":"Ryan","joinDate":"2025-11-21","expDate":"2026-11-20","gift":"萊姆拋光霜","phone":"0927177711","birth":"1998-10-24","note":""},
+{"id":"UJVIP00147","name":"黃子欣","store":"台中","staff":"Roy","joinDate":"2025-11-15","expDate":"2026-11-14","gift":"藍甘菊100ml","phone":"0979280107","birth":"1993-09-22","note":""},
+{"id":"UJVIP00150","name":"陳信豪","store":"高雄","staff":"Ryan","joinDate":"2025-11-16","expDate":"2026-11-16","gift":"藍甘菊水","phone":"0919191913","birth":"","note":""},
+{"id":"UJVIP00152","name":"尤竣星","store":"高雄","staff":"Ryan","joinDate":"2025-11-21","expDate":"2026-11-20","gift":"小洋蘭乳","phone":"0908839688","birth":"1999-10-17","note":""},
+{"id":"UJVIP00153","name":"田峻浩","store":"高雄","staff":"Ryan","joinDate":"2024-09-29","expDate":"2025-09-29","gift":"洋蘭乳/萊姆去","phone":"0913363798","birth":"","note":""},
+{"id":"UJVIP00154","name":"戴諺綸","store":"高雄","staff":"Ryan","joinDate":"2025-11-16","expDate":"2026-11-16","gift":"萊姆去","phone":"0952682818","birth":"","note":""},
+{"id":"UJVIP00155","name":"劉威麟","store":"台中","staff":"Mai","joinDate":"2025-12-21","expDate":"2026-12-20","gift":"洋蘭乳/果殼去","phone":"0955455908","birth":"1968-12-16","note":""},
+{"id":"UJVIP00156","name":"Jeremy","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0966355780","birth":"1998-02-20","note":"原閃電VIP刷新"},
+{"id":"UJVIP00157","name":"洪國勛","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0919655332","birth":"1999-06-02","note":"原閃電VIP刷新"},
+{"id":"UJVIP00158","name":"林昱安","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0982139678","birth":"1999-11-19","note":"原閃電VIP刷新"},
+{"id":"UJVIP00159","name":"蔡青益","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0975229503","birth":"1992-01-06","note":"原閃電VIP刷新"},
+{"id":"UJVIP00160","name":"趙祥安","store":"台中","staff":"Roy","joinDate":"2025-05-13","expDate":"2026-05-12","gift":"","phone":"0905266286","birth":"1996-04-13","note":""},
+{"id":"UJVIP00161","name":"李佑城","store":"台中","staff":"Roy","joinDate":"2025-05-13","expDate":"2026-05-12","gift":"","phone":"0975857085","birth":"1993-06-08","note":""},
+{"id":"UJVIP00162","name":"王芳謙","store":"台中","staff":"Roy","joinDate":"2025-05-13","expDate":"2026-05-12","gift":"","phone":"0958060601","birth":"1990-04-29","note":""},
+{"id":"UJVIP00163","name":"陳龍寬","store":"台中","staff":"Mai","joinDate":"2025-05-14","expDate":"2026-04-30","gift":"","phone":"0978393500","birth":"2000-04-11","note":"原閃電VIP刷新"},
+{"id":"UJVIP00165","name":"林俊宏","store":"高雄","staff":"Ryan","joinDate":"2024-09-16","expDate":"2025-09-16","gift":"洋蘭乳/萊姆去","phone":"0979881109","birth":"1996-11-09","note":""},
+{"id":"UJVIP00166","name":"王俊傑","store":"高雄","staff":"Ryan","joinDate":"2024-09-08","expDate":"2025-09-08","gift":"洋蘭乳/果殼去","phone":"0976708007","birth":"1995-09-21","note":""},
+{"id":"UJVIP00167","name":"黃柏瀧","store":"高雄","staff":"Ryan","joinDate":"2024-09-09","expDate":"2025-09-09","gift":"洋蘭乳/果殼去","phone":"0911703881","birth":"1990-05-29","note":""},
+{"id":"UJVIP00168","name":"馮捷昇","store":"高雄","staff":"Ryan","joinDate":"2024-09-18","expDate":"2025-09-18","gift":"洋蘭乳/萊姆去","phone":"0972333788","birth":"1996-07-23","note":""},
+{"id":"UJVIP00169","name":"林靖昌","store":"台北","staff":"Chang","joinDate":"2024-08-01","expDate":"2099-12-31","gift":"","phone":"","birth":"","note":""},
+{"id":"UJVIP00170","name":"蔡育銘","store":"高雄","staff":"Ryan","joinDate":"2025-11-19","expDate":"2026-11-18","gift":"萊姆去","phone":"0933608483","birth":"1998-08-07","note":""},
+{"id":"UJVIP00171","name":"張嘉倫","store":"高雄","staff":"Ryan","joinDate":"2024-09-18","expDate":"2025-09-18","gift":"萊姆乳/萊姆去","phone":"0987513662","birth":"1996-01-05","note":""},
+{"id":"UJVIP00172","name":"洪子明","store":"高雄","staff":"Ryan","joinDate":"2025-11-22","expDate":"2026-11-21","gift":"大洋蘭乳","phone":"0965037665","birth":"1994-04-27","note":""},
+{"id":"UJVIP00173","name":"張平原","store":"高雄","staff":"Ryan","joinDate":"2024-09-15","expDate":"2025-09-15","gift":"洋蘭乳/萊姆去","phone":"0989379605","birth":"1992-07-09","note":""},
+{"id":"UJVIP00174","name":"張瑋豪","store":"高雄","staff":"Ryan","joinDate":"2024-09-15","expDate":"2025-09-15","gift":"洋蘭乳/萊姆去","phone":"0984188256","birth":"1997-04-13","note":""},
+{"id":"UJVIP00175","name":"王鵬雄","store":"高雄","staff":"Ryan","joinDate":"2025-11-10","expDate":"2026-11-09","gift":"洋蘭乳","phone":"0921666367","birth":"","note":""},
+{"id":"UJVIP00176","name":"施明宏","store":"台北","staff":"Frank","joinDate":"2024-11-21","expDate":"2025-11-21","gift":"","phone":"0932128928","birth":"1981-01-24","note":""},
+{"id":"UJVIP00177","name":"邱博義","store":"台北","staff":"Chang","joinDate":"2024-11-23","expDate":"2025-11-23","gift":"","phone":"0963029025","birth":"1986-11-11","note":""},
+{"id":"UJVIP00178","name":"吳哲緯","store":"台北","staff":"Frank","joinDate":"2024-11-28","expDate":"2025-11-28","gift":"積乳/小洋蘭乳","phone":"0910327130","birth":"1991-05-27","note":""},
+{"id":"UJVIP00179","name":"謝耀國","store":"台北","staff":"Leon","joinDate":"2024-11-30","expDate":"2025-11-30","gift":"","phone":"0925297662","birth":"1996-10-07","note":""},
+{"id":"UJVIP00180","name":"吳嘉隆","store":"台北","staff":"Frank","joinDate":"2024-12-01","expDate":"2025-12-01","gift":"洋蘭乳/小洋蘭乳","phone":"0987355825","birth":"1994-09-26","note":""},
+{"id":"UJVIP00181","name":"黃偉誠","store":"台北","staff":"Chang","joinDate":"2024-12-05","expDate":"2025-12-05","gift":"","phone":"0939906286","birth":"1986-05-03","note":""},
+{"id":"UJVIP00182","name":"朱紹華","store":"台北","staff":"Chang","joinDate":"2024-12-06","expDate":"2025-12-06","gift":"","phone":"0953662762","birth":"1995-10-04","note":""},
+{"id":"UJVIP00183","name":"鄭柏彥","store":"台北","staff":"Chang","joinDate":"2024-12-06","expDate":"2025-12-06","gift":"","phone":"0911290580","birth":"1992-12-27","note":""},
+{"id":"UJVIP00184","name":"曾紀霖","store":"台北","staff":"Chang","joinDate":"2024-12-11","expDate":"2025-12-11","gift":"","phone":"0983806835","birth":"2001-03-20","note":""},
+{"id":"UJVIP00185","name":"陳勁延","store":"台北","staff":"Bryan","joinDate":"2024-12-16","expDate":"2025-12-16","gift":"","phone":"0911856545","birth":"1993-07-28","note":""},
+{"id":"UJVIP00186","name":"羅文良","store":"台北","staff":"Frank","joinDate":"2024-12-20","expDate":"2025-12-20","gift":"","phone":"0981742575","birth":"1990-01-27","note":""},
+{"id":"UJVIP00187","name":"翁天真","store":"台北","staff":"Chang","joinDate":"2024-12-22","expDate":"2025-12-22","gift":"","phone":"0905827351","birth":"1995-10-29","note":""},
+{"id":"UJVIP00188","name":"林余展","store":"台北","staff":"Chang","joinDate":"2024-12-23","expDate":"2025-12-23","gift":"","phone":"0988109876","birth":"1998-07-23","note":""},
+{"id":"UJVIP00189","name":"Thomas Hung","store":"台北","staff":"Chang","joinDate":"2024-12-23","expDate":"2025-12-23","gift":"","phone":"0972395617","birth":"1990-03-09","note":""},
+{"id":"UJVIP00190","name":"葉日詠","store":"台北","staff":"Frank","joinDate":"2024-12-25","expDate":"2025-12-25","gift":"","phone":"0955523033","birth":"2001-02-06","note":""},
+{"id":"UJVIP00191","name":"顏劭恆","store":"台北","staff":"Frank","joinDate":"2024-12-26","expDate":"2025-12-26","gift":"","phone":"0905157015","birth":"2001-03-14","note":""},
+{"id":"UJVIP00192","name":"周國豐","store":"台北","staff":"Chang","joinDate":"2024-12-26","expDate":"2025-12-26","gift":"","phone":"","birth":"9999-04-27","note":""},
+{"id":"UJVIP00193","name":"蘇福錦","store":"台北","staff":"Leon","joinDate":"2024-08-31","expDate":"2025-08-31","gift":"","phone":"0988915097","birth":"1992-11-24","note":""},
+{"id":"UJVIP00194","name":"黃開哲","store":"台北","staff":"Frank","joinDate":"2024-12-29","expDate":"2025-12-29","gift":"洋蘭乳/萊姆去","phone":"0908091150","birth":"1998-09-20","note":""},
+{"id":"UJVIP00195","name":"陳健銘","store":"台北","staff":"Frank","joinDate":"2024-12-29","expDate":"2025-12-29","gift":"","phone":"0937306231","birth":"1987-10-12","note":""},
+{"id":"UJVIP00196","name":"蘇柏丞","store":"台北","staff":"Bryan","joinDate":"2024-12-31","expDate":"2025-12-31","gift":"","phone":"0958305973","birth":"1989-08-01","note":""},
+{"id":"UJVIP00197","name":"高敬原","store":"台北","staff":"Leon","joinDate":"2024-01-03","expDate":"2025-0103","gift":"","phone":"0975314989","birth":"1994-07-06","note":""},
+{"id":"UJVIP00198","name":"何杰修","store":"台北","staff":"Bryan","joinDate":"2025-01-04","expDate":"2026-01-04","gift":"潘恩乳/果殼去","phone":"0953098714","birth":"2000-07-20","note":""},
+{"id":"UJVIP00199","name":"徐子翔","store":"台北","staff":"Chang","joinDate":"2025-01-05","expDate":"2026-01-05","gift":"","phone":"0955329529","birth":"1992-11-01","note":""},
+{"id":"UJVIP00200","name":"褚涌佑","store":"台北","staff":"Leon","joinDate":"2024-11-02","expDate":"2025-11-02","gift":"","phone":"0910973395","birth":"1988-05-15","note":""},
+{"id":"UJVIP00202","name":"汪楷程","store":"新竹","staff":"Bryan","joinDate":"2025-05-24","expDate":"2026-05-24","gift":"洋蘭乳/萊姆去","phone":"0955528468","birth":"1991-09-20","note":""},
+{"id":"UJVIP00203","name":"謝棋安","store":"新竹","staff":"Bryan","joinDate":"2025-05-05","expDate":"2026-05-05","gift":"潘恩乳/果殼去","phone":"0972154661","birth":"1965-09-20","note":""},
+{"id":"UJVIP00204","name":"謝雨辰","store":"新竹","staff":"Bryan","joinDate":"2025-10-13","expDate":"2026-10-13","gift":"萊姆去","phone":"0972502908","birth":"1993-05-03","note":"六週年入會優惠"},
+{"id":"UJVIP00205","name":"黃哲禹","store":"新竹","staff":"Frank","joinDate":"2025-06-21","expDate":"2026-06-21","gift":"洋蘭乳/萊姆去","phone":"0988838073","birth":"2000-08-22","note":""},
+{"id":"UJVIP00206","name":"簡丞彣","store":"台北","staff":"Frank","joinDate":"2025-01-24","expDate":"2026-01-24","gift":"潘恩乳/萊姆去","phone":"0939889344","birth":"1981-10-17","note":""},
+{"id":"UJVIP00207","name":"陳瑞泓","store":"台北","staff":"Bryan","joinDate":"2025-01-31","expDate":"2026-01-31","gift":"潘恩乳/果殼去","phone":"0901066871","birth":"1976-08-25","note":""},
+{"id":"UJVIP00208","name":"詹竣翊","store":"台北","staff":"Bryan","joinDate":"2025-02-01","expDate":"2026-02-01","gift":"","phone":"0972468532","birth":"1999-05-31","note":""},
+{"id":"UJVIP00209","name":"游竣宇","store":"台北","staff":"Chang","joinDate":"2025-02-11","expDate":"2026-02-11","gift":"","phone":"0953209381","birth":"1998-10-08","note":""},
+{"id":"UJVIP00210","name":"吳德倫","store":"台北","staff":"Bryan","joinDate":"2025-02-24","expDate":"2026-02-24","gift":"潘恩乳/萊姆去","phone":"0935989850","birth":"1983-08-23","note":""},
+{"id":"UJVIP00211","name":"呂玠鋆","store":"台北","staff":"Chang","joinDate":"2025-03-06","expDate":"2026-03-06","gift":"","phone":"0972627389","birth":"1990-12-24","note":""},
+{"id":"UJVIP00212","name":"王經盛","store":"台北","staff":"Frank","joinDate":"2025-03-18","expDate":"2026-03-18","gift":"洋蘭乳/果殼去","phone":"0976356882","birth":"1999-08-24","note":""},
+{"id":"UJVIP00213","name":"陳仰沛","store":"台北","staff":"Chang","joinDate":"2025-03-20","expDate":"2026-03-20","gift":"","phone":"0961182622","birth":"1985-11-16","note":""},
+{"id":"UJVIP00214","name":"吳欣陽","store":"台北","staff":"Bryan","joinDate":"2025-04-01","expDate":"2026-04-01","gift":"果殼乳/果殼去","phone":"0910062188","birth":"1995-11-11","note":""},
+{"id":"UJVIP00215","name":"葉杰","store":"台北","staff":"Frank","joinDate":"2025-04-03","expDate":"2026-04-03","gift":"洋蘭乳/萊姆去","phone":"0929797887","birth":"1997-08-23","note":""},
+{"id":"UJVIP00216","name":"房憲佑","store":"台北","staff":"Frank","joinDate":"2025-04-05","expDate":"2026-04-05","gift":"洋蘭乳/萊姆乳","phone":"0975116536","birth":"1985-09-04","note":""},
+{"id":"UJVIP00217","name":"林品辰","store":"台北","staff":"Chang","joinDate":"2025-04-05","expDate":"2026-04-05","gift":"","phone":"0926896859","birth":"1988-08-25","note":""},
+{"id":"UJVIP00218","name":"劉彥至","store":"台北","staff":"Chang","joinDate":"2025-04-07","expDate":"2026-04-07","gift":"萊姆乳/果殼去","phone":"0981569851","birth":"1996-03-08","note":""},
+{"id":"UJVIP00219","name":"邱翊愷","store":"台北","staff":"Chang","joinDate":"2025-04-22","expDate":"2026-04-22","gift":"潘恩乳/果殼去","phone":"0966381123","birth":"2001-11-23","note":""},
+{"id":"UJVIP00220","name":"Kyle lin","store":"台北","staff":"Frank","joinDate":"2025-04-25","expDate":"2026-04-25","gift":"潘恩乳/果殼去","phone":"0987114489","birth":"1967-12-19","note":""},
+{"id":"UJVIP00221","name":"周繼威","store":"台北","staff":"Bryan","joinDate":"2025-01-07","expDate":"2026-01-07","gift":"洋蘭乳/果殼去","phone":"0963046956","birth":"1995-05-01","note":""},
+{"id":"UJVIP00222","name":"李明德","store":"台北","staff":"Bryan","joinDate":"2025-05-06","expDate":"2026-05-06","gift":"萊姆去","phone":"0932167024","birth":"1965-09-20","note":""},
+{"id":"UJVIP00223","name":"黃鼎鈞","store":"台北","staff":"Frank","joinDate":"2025-05-10","expDate":"2026-05-10","gift":"洋蘭乳/萊姆去","phone":"0970759596","birth":"1998-09-11","note":""},
+{"id":"UJVIP00224","name":"廖志鈞","store":"台北","staff":"Leon","joinDate":"2025-05-10","expDate":"2026-05-10","gift":"萊姆去","phone":"0918124628","birth":"1997-02-12","note":""},
+{"id":"UJVIP00225","name":"徐宇澤","store":"台北","staff":"Chang","joinDate":"2025-03-17","expDate":"2026-03-17","gift":"","phone":"0986983117","birth":"1995-06-06","note":""},
+{"id":"UJVIP00229","name":"林柏亘","store":"新竹","staff":"Bryan","joinDate":"2025-10-28","expDate":"2026-10-28","gift":"萊姆去*1","phone":"0963669051","birth":"1999-06-23","note":""},
+{"id":"UJVIP00230","name":"曾璟杰","store":"新竹","staff":"Bryan","joinDate":"2025-11-02","expDate":"2026-11-02","gift":"果殼去*1","phone":"0972880966","birth":"1992-09-27","note":""},
+{"id":"UJVIP00231","name":"徐啟富","store":"新竹","staff":"Bryan","joinDate":"2025-11-13","expDate":"2026-11-13","gift":"萊姆去*1","phone":"0934265706","birth":"1988-03-20","note":""},
+{"id":"UJVIP00232","name":"徐嘉隆","store":"台北","staff":"Frank","joinDate":"2025-05-10","expDate":"2026-05-10","gift":"洋蘭乳/萊姆去","phone":"0970759596","birth":"1998-09-11","note":""},
+{"id":"UJVIP00233","name":"徐博彥","store":"台北","staff":"Chang","joinDate":"2025-05-14","expDate":"2026-05-14","gift":"小洋蘭","phone":"0905025871","birth":"1991-11-12","note":""},
+{"id":"UJVIP00234","name":"馬尚德","store":"台北","staff":"Frank","joinDate":"2025-05-15","expDate":"2026-05-15","gift":"萊姆去","phone":"0953061198","birth":"1988-04-30","note":""},
+{"id":"UJVIP00235","name":"廖偉丞","store":"台北","staff":"Bryan","joinDate":"2025-05-16","expDate":"2026-05-16","gift":"潘恩乳/萊姆去","phone":"0938128759","birth":"1996-08-02","note":""},
+{"id":"UJVIP00236","name":"戴銘頡","store":"台北","staff":"Chang","joinDate":"2025-05-17","expDate":"2026-05-17","gift":"果殼去*1","phone":"0975207279","birth":"1996-10-19","note":""},
+{"id":"UJVIP00237","name":"徐至理","store":"台北","staff":"Chang","joinDate":"2025-05-22","expDate":"2026-05-22","gift":"潘恩乳/果殼去","phone":"0987447197","birth":"1990-03-31","note":""},
+{"id":"UJVIP00238","name":"曾國安","store":"台北","staff":"Chang","joinDate":"2025-05-24","expDate":"2026-05-24","gift":"果殼去*1","phone":"0968069003","birth":"2000-03-09","note":""},
+{"id":"UJVIP00239","name":"何沅洋","store":"台北","staff":"Bryan","joinDate":"2025-06-02","expDate":"2026-06-02","gift":"潘恩乳/果殼去","phone":"0981210739","birth":"1995-06-02","note":""},
+{"id":"UJVIP00240","name":"殷鼎鈞","store":"台北","staff":"Bryan","joinDate":"2025-06-03","expDate":"2026-06-03","gift":"果殼去*1","phone":"0976588015","birth":"1988-06-17","note":""},
+{"id":"UJVIP00241","name":"林俞磊","store":"台北","staff":"Bryan","joinDate":"2025-06-04","expDate":"2026-06-04","gift":"萊姆去*1","phone":"0921911561","birth":"1977-04-17","note":""},
+{"id":"UJVIP00242","name":"葉晉良","store":"台北","staff":"Frank","joinDate":"2025-06-07","expDate":"2026-06-07","gift":"萊姆去*1","phone":"0937039792","birth":"1982-08-27","note":""},
+{"id":"UJVIP00243","name":"陳勁宏","store":"台北","staff":"Bryan","joinDate":"2025-06-11","expDate":"2026-06-11","gift":"潘恩乳/萊姆去","phone":"0975925297","birth":"1993-03-31","note":""},
+{"id":"UJVIP00244","name":"張哲豪","store":"台北","staff":"Bryan","joinDate":"2025-06-16","expDate":"2026-06-16","gift":"果殼去*1","phone":"0975161279","birth":"1999-09-28","note":""},
+{"id":"UJVIP00245","name":"鍾昊嶧","store":"台北","staff":"Bryan","joinDate":"2025-06-16","expDate":"2026-06-16","gift":"萊姆去*1","phone":"0938386716","birth":"2001-09-29","note":""},
+{"id":"UJVIP00246","name":"田凱碩","store":"台北","staff":"Bryan","joinDate":"2025-06-18","expDate":"2026-06-18","gift":"萊姆去*1","phone":"0935328028","birth":"1992-02-28","note":""},
+{"id":"UJVIP00247","name":"宋蘅繹","store":"台北","staff":"Frank","joinDate":"2025-07-09","expDate":"2026-07-09","gift":"萊姆乳/果殼去","phone":"0912160263","birth":"2001-01-13","note":""},
+{"id":"UJVIP00248","name":"蔡宗佑","store":"台北","staff":"Bryan","joinDate":"2025-07-15","expDate":"2026-07-15","gift":"潘恩乳/萊姆去","phone":"0912057023","birth":"1990-12-03","note":""},
+{"id":"UJVIP00249","name":"李元碩","store":"台北","staff":"Frank","joinDate":"2025-07-22","expDate":"2026-07-22","gift":"洋蘭乳/果殼去","phone":"0913158432","birth":"1991-03-27","note":""},
+{"id":"UJVIP00250","name":"黃恭鵬","store":"台北","staff":"Leon","joinDate":"2025-05-31","expDate":"2026-05-31","gift":"果殼去*1","phone":"0972312787","birth":"2000-04-29","note":""},
+{"id":"UJVIP00251","name":"Jammy","store":"台中","staff":"Mai","joinDate":"2025-05-16","expDate":"2026-05-15","gift":"","phone":"0922971963","birth":"1996-08-06","note":""},
+{"id":"UJVIP00252","name":"蕭大鈞","store":"台中","staff":"Roy","joinDate":"2025-05-17","expDate":"2026-05-16","gift":"","phone":"0930832186","birth":"1976-12-11","note":""},
+{"id":"UJVIP00253","name":"蔡承憲","store":"台中","staff":"Mai","joinDate":"2026-01-05","expDate":"2027-01-04","gift":"","phone":"0988266650","birth":"2022-11-17","note":""},
+{"id":"UJVIP00254","name":"Hsieh Tony","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0919321160","birth":"1990-10-29","note":"原閃電VIP刷新"},
+{"id":"UJVIP00255","name":"李健瑞","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0975123147","birth":"1989-08-06","note":"原閃電VIP刷新"},
+{"id":"UJVIP00256","name":"江江","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0981582876","birth":"1995-10-23","note":"原閃電VIP刷新"},
+{"id":"UJVIP00257","name":"俊升","store":"台中","staff":"Mai","joinDate":"2025-05-25","expDate":"2026-05-24","gift":"小洋蘭乳","phone":"0966873168","birth":"1997-06-10","note":""},
+{"id":"UJVIP00258","name":"張殿京","store":"台中","staff":"Roy","joinDate":"2025-05-25","expDate":"2026-05-24","gift":"","phone":"0911130319","birth":"1987-04-04","note":""},
+{"id":"UJVIP00259","name":"詹皓博","store":"台中","staff":"Mai","joinDate":"2025-05-30","expDate":"2026-05-29","gift":"果殼去","phone":"0919678384","birth":"2002-01-13","note":""},
+{"id":"UJVIP00260","name":"進春","store":"台中","staff":"Roy","joinDate":"2025-05-31","expDate":"2026-05-30","gift":"","phone":"0905022822","birth":"1994-01-28","note":""},
+{"id":"UJVIP00261","name":"鄭俊建","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0912680335","birth":"1983-10-04","note":"原閃電VIP刷新"},
+{"id":"UJVIP00262","name":"陳柏任","store":"台中","staff":"Roy","joinDate":"2025-06-02","expDate":"2026-06-01","gift":"","phone":"0923817778","birth":"1979-07-16","note":""},
+{"id":"UJVIP00263","name":"陳信傑","store":"台中","staff":"Roy","joinDate":"2025-06-07","expDate":"2026-06-06","gift":"","phone":"0919542257","birth":"1990-07-08","note":""},
+{"id":"UJVIP00264","name":"李懿軒","store":"台中","staff":"Roy","joinDate":"2025-06-08","expDate":"2026-06-07","gift":"","phone":"0956670956","birth":"2000-05-27","note":""},
+{"id":"UJVIP00265","name":"林鈞宥","store":"台中","staff":"Mai","joinDate":"2025-06-10","expDate":"2025-06-09","gift":"果殼去","phone":"0906708760","birth":"2001-09-14","note":""},
+{"id":"UJVIP00266","name":"林敬棋","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2027-05-04","gift":"萊姆去","phone":"0972604497","birth":"1992-06-29","note":"2026-05-05續會"},
+{"id":"UJVIP00267","name":"吳慶程","store":"台中","staff":"Roy","joinDate":"2025-06-12","expDate":"2026-06-11","gift":"果殼去","phone":"0939383020","birth":"1995-11-11","note":""},
+{"id":"UJVIP00268","name":"柯典佑","store":"台中","staff":"Mai","joinDate":"2025-06-14","expDate":"2026-06-13","gift":"潘恩乳/果殼去","phone":"0970731673","birth":"1996-03-27","note":""},
+{"id":"UJVIP00269","name":"周泰霆","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0929780829","birth":"1989-08-29","note":"原閃電VIP刷新"},
+{"id":"UJVIP00270","name":"楊凱宏","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0967154398","birth":"1995-02-22","note":"原閃電VIP刷新"},
+{"id":"UJVIP00271","name":"張孟仁","store":"台中","staff":"Mai","joinDate":"2025-06-16","expDate":"2026-06-15","gift":"潘恩乳/果殼去","phone":"0903711583","birth":"2001-07-23","note":""},
+{"id":"UJVIP00272","name":"鄧旭倫","store":"台中","staff":"Mai","joinDate":"2025-06-16","expDate":"2026-06-15","gift":"洋蘭乳/果殼去","phone":"0921338376","birth":"1992-03-05","note":""},
+{"id":"UJVIP00273","name":"周柏叡","store":"台中","staff":"Mai","joinDate":"2025-06-17","expDate":"2026-06-16","gift":"果殼","phone":"0970401930","birth":"1994-12-07","note":""},
+{"id":"UJVIP00274","name":"莊騰喆","store":"台中","staff":"Roy","joinDate":"2025-06-21","expDate":"2026-06-20","gift":"","phone":"0970701580","birth":"2001-09-17","note":""},
+{"id":"UJVIP00275","name":"蘇展湟","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0903687399","birth":"2000-02-09","note":"原閃電VIP刷新"},
+{"id":"UJVIP00276","name":"符爾晉","store":"台中","staff":"Roy","joinDate":"2025-05-15","expDate":"2026-05-14","gift":"","phone":"0981239218","birth":"1994-09-24","note":""},
+{"id":"UJVIP00277","name":"Eric","store":"台中","staff":"Roy","joinDate":"2025-06-25","expDate":"2026-06-23","gift":"萊姆去","phone":"0938213532","birth":"1995-06-10","note":""},
+{"id":"UJVIP00278","name":"王晨博","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0909154315","birth":"1994-02-07","note":""},
+{"id":"UJVIP00279","name":"林家德","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0988810821","birth":"1994-08-21","note":""},
+{"id":"UJVIP00280","name":"康正行","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0958608345","birth":"1991-07-02","note":""},
+{"id":"UJVIP00281","name":"劉宗樺","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0955718224","birth":"1999-07-18","note":""},
+{"id":"UJVIP00282","name":"楊琮宇","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0912022042","birth":"1991-05-23","note":"原閃電VIP刷新"},
+{"id":"UJVIP00283","name":"劉宗樺","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0955718224","birth":"1999-07-18","note":"原閃電VIP刷新"},
+{"id":"UJVIP00284","name":"李志軒","store":"台中","staff":"Roy","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0916815970","birth":"2000-05-25","note":"原閃電VIP刷新"},
+{"id":"UJVIP00285","name":"簡正奇","store":"台中","staff":"Mai","joinDate":"2025-05-01","expDate":"2026-04-30","gift":"","phone":"0917283040","birth":"1997-01-22","note":"原閃電VIP刷新"},
+{"id":"UJVIP00286","name":"曾宇綸","store":"台中","staff":"Roy","joinDate":"2025-08-11","expDate":"2026-08-10","gift":"潘恩乳/萊姆去","phone":"0987920042","birth":"2005-01-26","note":""},
+{"id":"UJVIP00287","name":"蔡承恩","store":"台中","staff":"Mai","joinDate":"2025-08-16","expDate":"2026-08-15","gift":"潘恩乳/萊姆去","phone":"0953371379","birth":"1999-08-16","note":""},
+{"id":"UJVIP00288","name":"淋鈺豪","store":"台中","staff":"Mai","joinDate":"2025-08-19","expDate":"2026-08-18","gift":"潘恩乳/果殼去","phone":"0970675001","birth":"1993-03-08","note":""},
+{"id":"UJVIP00289","name":"呂杰龍","store":"台中","staff":"Mai","joinDate":"2025-11-15","expDate":"2026-11-14","gift":"潘恩乳/果殼去","phone":"0965603267","birth":"2006-01-14","note":""},
+{"id":"UJVIP00290","name":"邢仁傑","store":"台中","staff":"Roy","joinDate":"2025-11-20","expDate":"2026-11-19","gift":"萊姆拋光","phone":"0903907808","birth":"1983-06-17","note":""},
+{"id":"UJVIP00291","name":"何冠杰","store":"台中","staff":"Roy","joinDate":"2025-11-27","expDate":"2026-11-26","gift":"無","phone":"0923277955","birth":"1993-11-28","note":""},
+{"id":"UJVIP00292","name":"陳喣霖","store":"台中","staff":"Mai","joinDate":"2025-11-28","expDate":"2026-11-27","gift":"洋蘭乳/果殼去","phone":"0975807995","birth":"1990-12-28","note":""},
+{"id":"UJVIP00293","name":"鐘文均","store":"台中","staff":"Roy","joinDate":"2025-12-04","expDate":"2026-12-03","gift":"洋蘭乳100ml","phone":"0963155355","birth":"1997-09-02","note":""},
+{"id":"UJVIP00294","name":"陳彥嘉","store":"台中","staff":"Roy","joinDate":"2025-12-06","expDate":"2026-12-05","gift":"萊姆拋光","phone":"0921495775","birth":"1996-07-20","note":""},
+{"id":"UJVIP00295","name":"王銘撤","store":"台中","staff":"Roy","joinDate":"2025-12-14","expDate":"2026-12-13","gift":"萊姆拋光","phone":"0930082938","birth":"1959-08-15","note":""},
+{"id":"UJVIP00296","name":"惟彬","store":"台中","staff":"Roy","joinDate":"2025-12-15","expDate":"2026-12-14","gift":"萊姆拋光","phone":"0956684168","birth":"1997-01-28","note":""},
+{"id":"UJVIP00297","name":"莊栢瑞","store":"台中","staff":"Roy","joinDate":"2026-01-03","expDate":"2027-01-02","gift":"潘恩乳/果殼去","phone":"0929810525","birth":"1992-05-25","note":""},
+{"id":"UJVIP00328","name":"林廷鍏","store":"高雄","staff":"Ryan","joinDate":"2025-11-17","expDate":"2026-11-16","gift":"潘恩乳","phone":"0983506030","birth":"2002-02-10","note":""},
+{"id":"UJVIP00331","name":"蘇聖煒","store":"新竹","staff":"Bryan","joinDate":"2025-11-23","expDate":"2026-11-23","gift":"萊姆去*1","phone":"0939818137","birth":"1991-12-18","note":""},
+{"id":"UJVIP00333","name":"鄭逸洋","store":"新竹","staff":"Bryan","joinDate":"2025-12-08","expDate":"2026-12-08","gift":"果殼去*1","phone":"0988274385","birth":"1988-09-08","note":""},
+{"id":"UJVIP00334","name":"鄭仁傑","store":"新竹","staff":"Bryan","joinDate":"2025-12-13","expDate":"2026-12-13","gift":"果殼去*1","phone":"0952116070","birth":"1978-08-19","note":""},
+{"id":"UJVIP00335","name":"黃瑞堯","store":"新竹","staff":"Bryan","joinDate":"2025-12-15","expDate":"2026-12-15","gift":"萊姆去*1","phone":"0932377980","birth":"1989-11-23","note":""},
+{"id":"UJVIP00337","name":"李晉丞","store":"高雄","staff":"Leon","joinDate":"2025-11-16","expDate":"2026-11-16","gift":"萊姆去","phone":"0927133938","birth":"1988-07-29","note":""},
+{"id":"UJVIP00339","name":"李岦陽","store":"高雄","staff":"Ryan","joinDate":"2025-11-21","expDate":"2026-11-20","gift":"萊姆去","phone":"0981118966","birth":"2001-10-27","note":""},
+{"id":"UJVIP00340","name":"蔡佳誠","store":"高雄","staff":"Ryan","joinDate":"2025-11-27","expDate":"2026-11-26","gift":"小洋蘭","phone":"0901334134","birth":"1995-02-26","note":""},
+{"id":"UJVIP00359","name":"陳威宇","store":"高雄","staff":"Ryan","joinDate":"2025-11-15","expDate":"2026-11-14","gift":"萊姆拋光霜","phone":"0918959944","birth":"2000-01-17","note":""},
+{"id":"UJVIP00360","name":"楊棋淮","store":"高雄","staff":"Ryan","joinDate":"2025-11-15","expDate":"2026-11-14","gift":"萊姆拋光霜","phone":"0978507835","birth":"1994-10-09","note":""},
+{"id":"UJVIP00361","name":"蔡耀麟","store":"新竹","staff":"Bryan","joinDate":"2025-02-05","expDate":"","gift":"潘恩乳/果殼去","phone":"0989028990","birth":"1990-12-18","note":""},
+{"id":"UJVIP00362","name":"羅志中","store":"新竹","staff":"Bryan","joinDate":"2025-02-27","expDate":"","gift":"小洋蘭/果殼去","phone":"0982310019","birth":"1984-10-26","note":""},
+{"id":"UJVIP00365","name":"蕭嘉豪","store":"新竹","staff":"Bryan","joinDate":"2025-02-27","expDate":"","gift":"小洋蘭/果殼去","phone":"0982888676","birth":"1988-04-06","note":""},
+{"id":"UJVIP00368","name":"董廣駿","store":"台北","staff":"Bryan","joinDate":"2025-11-25","expDate":"","gift":"","phone":"9516609653","birth":"1985-12-07","note":"贈會員"},
+{"id":"UJVIP00369","name":"魏彣憲","store":"台北","staff":"Bryan","joinDate":"2025-11-29","expDate":"2026-11-29","gift":"果殼去*1","phone":"0956796816","birth":"1976-09-29","note":""},
+{"id":"UJVIP00374","name":"曾俊卿","store":"台北","staff":"Bryan","joinDate":"2025-12-28","expDate":"2026-12-28","gift":"潘恩乳/果殼去","phone":"0922052712","birth":"1986-10-24","note":""},
+{"id":"UJVIP00375","name":"楊智峯","store":"台北","staff":"Bryan","joinDate":"2026-01-02","expDate":"2027-01-02","gift":"潘恩乳/果殼去","phone":"66238602","birth":"1989-08-14","note":"澳門客人"},
+{"id":"UJVIP00379","name":"劉凱旻","store":"台北","staff":"Bryan","joinDate":"2026-02-14","expDate":"2027-02-14","gift":"小洋蘭/果殼去","phone":"0908275552","birth":"2002-06-15","note":""},
+{"id":"UJVIP00381","name":"Jacky","store":"新竹","staff":"Bryan","joinDate":"2025-03-16","expDate":"2026-03-13","gift":"小洋蘭/果殼去","phone":"0978305155","birth":"1980-01-30","note":"香港在台工作"},
+{"id":"UJVIP00382","name":"黃嘉揚","store":"新竹","staff":"Bryan","joinDate":"2025-04-11","expDate":"2026-04-11","gift":"小洋蘭/萊姆去","phone":"0963782779","birth":"2001-06-20","note":""},
+{"id":"UJVIP00384","name":"陳和均","store":"新竹","staff":"Bryan","joinDate":"2026-05-25","expDate":"2027-05-25","gift":"小洋蘭/萊姆去","phone":"0937991821","birth":"1992-10-13","note":""}
+];
+
+// ── Member State ──────────────────────────────────────────
+let memFilter='all', memNewMembers=[];
+
+function switchPage(page){
+  // 隱藏所有
+  $('main') && ($('main').style.display='none');
+  $('member-app') && ($('member-app').style.display='none');
+  $('admin-app') && ($('admin-app').style.display='none');
+  // 重設 nav
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(page==='checkout'){
+    $('main').style.display='block';
+    $('nav-checkout').classList.add('active');
+  } else if(page==='member'){
+    $('member-app').style.display='block';
+    $('nav-member').classList.add('active');
+    initMemberPage();
+  } else if(page==='admin'){
+    $('admin-app').style.display='block';
+    $('nav-admin').classList.add('active');
+  }
+}
+
+function initMemberPage(){
+  // 設定預設日期
+  const today=localDate();
+  if($('am-join'))$('am-join').value=today;
+  // 下載備份只有店長（內建帳號）和 admin 可用
+  const canDownload=!currentUser||isAdmin;
+  const dlBtn=$('btn-download-backup');
+  if(dlBtn)dlBtn.style.display=canDownload?'flex':'none';
+  // 產生下一個編號
+  const allIds=[...MEMBER_DATA,...memNewMembers].map(m=>parseInt(m.id.replace('UJVIP','')||0)).filter(n=>!isNaN(n));
+  const nextNum=Math.max(...allIds,0)+1;
+  if($('add-mem-new-id'))$('add-mem-new-id').textContent=`下一個編號：UJVIP${String(nextNum).padStart(5,'0')}`;
+  renderMembers();
+  updateMemStats();
+}
+
+function memStatus(expDate){
+  if(!expDate)return 'exp';
+  const exp=new Date(expDate);
+  const now=new Date();
+  const diff=(exp-now)/(1000*60*60*24);
+  if(diff<0)return 'exp';
+  if(diff<=30)return 'soon';
+  return 'ok';
+}
+
+function setMemFilter(f, el){
+  memFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderMembers();
+}
+
+function renderMembers(){
+  const q=($('mem-search')?.value||'').toLowerCase().trim();
+  const allMem=[...MEMBER_DATA,...memNewMembers];
+  const storeMap={taipei:'台北',hsinchu:'新竹',taichung:'台中',kaohsiung:'高雄'};
+  
+  const filtered=allMem.filter(m=>{
+    const st=memStatus(m.expDate);
+    if(memFilter==='ok'&&st!=='ok')return false;
+    if(memFilter==='soon'&&st!=='soon')return false;
+    if(memFilter==='exp'&&st!=='exp')return false;
+    if(['taipei','hsinchu','taichung','kaohsiung'].includes(memFilter)&&m.store!==storeMap[memFilter])return false;
+    if(q&&!m.name.toLowerCase().includes(q)&&!m.phone.includes(q)&&!m.id.toLowerCase().includes(q)&&!(m.note||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  
+  if($('mem-count'))$('mem-count').textContent=`共 ${filtered.length} 筆`;
+  const el=$('mem-list');
+  if(!el)return;
+  if(!filtered.length){el.innerHTML='<div class="empty-hint">無符合的會員</div>';return;}
+  
+  const days=['日','一','二','三','四','五','六'];
+  el.innerHTML=filtered.map((m,i)=>{
+    const st=memStatus(m.expDate);
+    const avCls=st==='ok'?'av-ok':st==='soon'?'av-soon':'av-exp';
+    const badgeText=st==='ok'?'有效':st==='soon'?'30天內到期':'已到期';
+    const badgeCls=st==='ok'?'mb-ok':st==='soon'?'mb-soon':'mb-exp';
+    const firstChar=m.name.slice(0,1);
+    // 格式化電話
+    const ph=m.phone?m.phone.replace(/^(\d{4})(\d{3})(\d{3})$/,'$1-$2-$3'):m.phone;
+    // 格式化日期
+    const fmtD=d=>d?d.slice(0,10).replace(/-/g,'/'):'—';
+    // 生日星座
+    const birthDisp=m.birth?fmtD(m.birth):'—';
+    return `<div class="mem-card" id="mc-${i}">
+      <div class="mem-card-top" onclick="toggleMemDetail(${i})">
+        <div class="mem-av ${avCls}">${firstChar}</div>
+        <div class="mem-info">
+          <div class="mem-name-row">
+            <div><div class="mem-name">${m.name}</div><div class="mem-id">${m.id}</div></div>
+            <span class="mbadge ${badgeCls}">${badgeText}</span>
+          </div>
+          <div class="mem-meta">
+            <span class="meta-item"><i class="ti ti-building-store" style="font-size:12px;"></i>${m.store}</span>
+            <span class="meta-item"><i class="ti ti-user" style="font-size:12px;"></i>${m.staff||'—'}</span>
+            ${m.phone?`<span class="meta-item"><i class="ti ti-phone" style="font-size:12px;"></i>${ph}</span>`:''}</div>
+          ${m.gift?`<div class="mem-gift-tag">${m.gift}</div>`:''}
+          ${m.note?`<div class="mem-note-tag">${m.note}</div>`:''}
+        </div>
+      </div>
+      <div class="mem-detail" id="md-${i}">
+        <div class="md-row"><span class="md-label">會員編號</span><span class="md-val">${m.id}</span></div>
+        <div class="md-row"><span class="md-label">電話</span><span class="md-val">${ph||'—'}</span></div>
+        <div class="md-row"><span class="md-label">生日</span><span class="md-val">${birthDisp}</span></div>
+        <div class="md-row"><span class="md-label">分店</span><span class="md-val">${m.store}</span></div>
+        <div class="md-row"><span class="md-label">承辦人</span><span class="md-val">${m.staff||'—'}</span></div>
+        <div class="md-row"><span class="md-label">入會日</span><span class="md-val">${fmtD(m.joinDate)}</span></div>
+        <div class="md-row"><span class="md-label">到期日</span><span class="md-val" style="${st==='exp'?'color:var(--red)':st==='soon'?'color:var(--gold)':''}">${fmtD(m.expDate)}</span></div>
+        <div class="md-row"><span class="md-label">隨卡贈送</span><span class="md-val" style="color:var(--gs)">${m.gift||'—'}</span></div>
+        <div class="md-row"><span class="md-label">附註</span><span class="md-val">${m.note||'—'}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMemDetail(i){
+  const d=$(`md-${i}`);
+  if(d)d.classList.toggle('open');
+}
+
+function updateMemStats(){
+  const all=[...MEMBER_DATA,...memNewMembers];
+  const ok=all.filter(m=>memStatus(m.expDate)==='ok').length;
+  const soon=all.filter(m=>memStatus(m.expDate)==='soon').length;
+  if($('ms-total'))$('ms-total').textContent=all.length;
+  if($('ms-ok'))$('ms-ok').textContent=ok;
+  if($('ms-soon'))$('ms-soon').textContent=soon;
+}
+
+function scrollToAddMem(){
+  $('add-mem-section')?.scrollIntoView({behavior:'smooth'});
+}
+
+function addMember(){
+  const name=$('am-name')?.value.trim();
+  const phone=$('am-phone')?.value.trim();
+  const store=$('am-store')?.value;
+  const staff=$('am-staff')?.value.trim();
+  const join=$('am-join')?.value;
+  const exp=$('am-exp')?.value;
+  const birth=$('am-birth')?.value;
+  const gift=$('am-gift')?.value.trim();
+  const note=$('am-note')?.value.trim();
+  if(!name){toast('請輸入姓名');return;}
+  const allIds=[...MEMBER_DATA,...memNewMembers].map(m=>parseInt(m.id.replace('UJVIP',''))||0).filter(n=>!isNaN(n));
+  const nextNum=Math.max(...allIds,0)+1;
+  const newId=`UJVIP${String(nextNum).padStart(5,'0')}`;
+  memNewMembers.push({id:newId,name,store,staff,joinDate:join,expDate:exp,gift,phone,birth,note});
+  // 清空表單
+  ['am-name','am-phone','am-staff','am-exp','am-birth','am-gift','am-note'].forEach(id=>{if($(id))$(id).value='';});
+  renderMembers();updateMemStats();
+  const nextNum2=nextNum+1;
+  if($('add-mem-new-id'))$('add-mem-new-id').textContent=`下一個編號：UJVIP${String(nextNum2).padStart(5,'0')}`;
+  toast(`✓ 已新增 ${name}（${newId}）`);
+  $('add-mem-section')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function downloadMemberBackup(){
+  // 下載完整備份：所有會員資料（無論效期）
+  const all=[...MEMBER_DATA,...memNewMembers];
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const rows=[['會員編號','姓名','分店','承辦人','入會日','到期日','隨卡贈送','電話','生日','附註','狀態']];
+  all.forEach(m=>{
+    const st=memStatus(m.expDate);
+    const stTxt=st==='ok'?'有效':st==='soon'?'即將到期':'已到期';
+    rows.push([m.id,m.name,m.store,m.staff,m.joinDate,m.expDate,m.gift,m.phone,m.birth,m.note,stTxt]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${c||''}"`) .join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`UJ_會員備份_${dateStr}.csv`;
+  a.click();
+  toast(`✓ 下載完成，共 ${all.length} 筆`);
 }
 
 // ── Init ───────────────────────────────────────────────────
