@@ -416,11 +416,14 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
         <button class="btn-topup" onclick="openTopup()">+ 充值</button>
       </div>
       <div id="lnd-list"><div class="empty-hint">尚無記錄</div></div>
-      <div style="padding:12px 14px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px;">
-        <input id="lnd-time" type="datetime-local" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
-        <input id="lnd-qty" type="number" placeholder="浴巾數量" min="1" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
-        <input id="lnd-pts-use" type="number" placeholder="扣除點數" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
-        <input id="lnd-staff" placeholder="負責人" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:10px 12px;font-size:14px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
+      <div style="padding:12px 14px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;">
+          <input id="lnd-date" type="date" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;flex:1;"/>
+          <input id="lnd-time-only" type="time" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;width:110px;flex:none;"/>
+        </div>
+        <input id="lnd-qty" type="number" placeholder="浴巾數量" min="1" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
+        <input id="lnd-pts-use" type="number" placeholder="扣除點數" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
+        <input id="lnd-staff" placeholder="負責人" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
         <button class="btn-lnd-add" onclick="addLaundry()">+ 新增洗浴巾記錄</button>
       </div>
     </div>
@@ -1352,8 +1355,11 @@ async function exportExcel(){
 async function initLaundry(){
   $('laundry-section').style.display='block';
   const now=new Date();
-  const lndTime=$('lnd-time');
-  if(lndTime)lndTime.value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const lndDate=$('lnd-date'), lndTimeOnly=$('lnd-time-only');
+  const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const timeStr=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  if(lndDate)lndDate.value=dateStr;
+  if(lndTimeOnly)lndTimeOnly.value=timeStr;
   if($('lnd-staff')&&currentUser)$('lnd-staff').value=currentUser.display_name||'';
   await loadLaundry();
 }
@@ -1384,7 +1390,9 @@ async function addLaundry(){
   const qty=parseInt($('lnd-qty')?.value)||0;
   const pts=parseInt($('lnd-pts-use')?.value)||0;
   const staff=$('lnd-staff')?.value.trim();
-  const time=$('lnd-time')?.value;
+  const dateVal=$('lnd-date')?.value||localDate();
+  const timeVal=$('lnd-time-only')?.value||'00:00';
+  const time=`${dateVal}T${timeVal}`;
   if(qty<=0){toast('請輸入浴巾數量');return;}
   showLoad();
   try{
