@@ -905,7 +905,7 @@ function updCashTotal(){
   const expected=FUND+toRemit;
   const lbl=$('cash-total-label');
   const expectedShow=toRemit>0?FUND+toRemit:Math.max(0,prevPool+totInc-totExp);
-  if(lbl)lbl.textContent=toRemit>0?`合計（預期備用金 ${fmt(FUND)} ＋ 應匯 ${fmt(toRemit)} = ${fmt(FUND+toRemit)}）`:`合計（預期 ${fmt(expectedShow)}）`;
+  if(lbl)lbl.textContent=toRemit>0?`合計（預期 ${fmt(FUND+toRemit)}）`:`合計（預期 ${fmt(expectedShow)}）`;
   checkFund();
 }
 function checkFund(){
@@ -923,7 +923,7 @@ function checkFund(){
   msg.style.display='block';
   if(t===expected){
     msg.style.background='rgba(74,124,89,.1)';msg.style.color='#4A7C59';
-    msg.textContent=toRemit>0?`✓ 零用金相符（備用金 $3,000 ＋ 應匯 ${fmt(toRemit)}）`:`✓ 零用金相符（${fmt(expected)}）`;
+    msg.textContent='✓ 零用金相符';
   }else if(t>expected){
     msg.style.background='rgba(184,48,48,.08)';msg.style.color='#B83030';
     msg.textContent=`✗ 零用金多了 ${fmt(t-expected)}，請再確認`;
