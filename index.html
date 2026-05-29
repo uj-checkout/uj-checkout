@@ -570,6 +570,12 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="mem-stat"><div class="msl">即將到期</div><div class="msv o" id="ms-soon">—</div></div>
   </div>
 
+  <!-- 生日提醒 -->
+  <div id="birthday-alert" style="display:none;background:#FEF3E0;border:1px solid #F5C87A;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:500;color:#B8963C;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ti ti-cake" style="font-size:15px;"></i> 近期生日會員</div>
+    <div id="birthday-list"></div>
+  </div>
+
   <!-- 快速功能 -->
   <div class="quick-actions">
     <div class="qa-btn" onclick="scrollToAddMem()"><i class="ti ti-user-plus"></i><span>新增會員</span></div>
@@ -586,8 +592,12 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
   <!-- 新增會員 -->
   <div class="add-mem-card" id="add-mem-section">
-    <div class="card-header"><span class="card-title">新增會員</span><span class="card-sub" id="add-mem-new-id">系統自動產生編號</span></div>
+    <div class="card-header"><span class="card-title">新增會員</span></div>
     <div class="add-mem-body">
+      <div>
+        <div class="add-label">會員編號（必填）</div>
+        <input class="add-input" id="am-id" placeholder="例：UJVIP00101 / UJHSZ00001…"/>
+      </div>
       <div>
         <div class="add-label">姓名</div>
         <input class="add-input" id="am-name" placeholder="會員姓名（必填）"/>
@@ -2162,6 +2172,8 @@ function initMemberPage(){
   // 設定預設日期
   const today=localDate();
   if($('am-join'))$('am-join').value=today;
+  // 生日提醒（本月 + 未來7天）
+  showBirthdayAlert();
   // 下載備份只有店長（內建帳號）和 admin 可用
   const canDownload=!currentUser||isAdmin;
   const dlBtn=$('btn-download-backup');
@@ -2191,6 +2203,39 @@ function setMemFilter(f, el){
   renderMembers();
 }
 
+function showBirthdayAlert(){
+  const today=new Date();
+  const todayM=today.getMonth()+1;
+  const todayD=today.getDate();
+  const soon=[];
+  const allMem=[...MEMBER_DATA,...memNewMembers];
+  allMem.forEach(m=>{
+    if(!m.birth||!m.name)return;
+    const b=m.birth.slice(0,10);
+    const parts=b.split('-');
+    if(parts.length<3)return;
+    const bM=parseInt(parts[1]);
+    const bD=parseInt(parts[2]);
+    // 計算今年生日距今天數
+    const thisYearBirth=new Date(today.getFullYear(),bM-1,bD);
+    const diff=Math.ceil((thisYearBirth-today)/(1000*60*60*24));
+    if(diff>=0&&diff<=14){
+      soon.push({name:m.name,phone:m.phone,month:bM,day:bD,diff,store:m.store});
+    }
+  });
+  const el=$('birthday-alert');
+  const list=$('birthday-list');
+  if(!el||!list)return;
+  if(!soon.length){el.style.display='none';return;}
+  soon.sort((a,b)=>a.diff-b.diff);
+  el.style.display='block';
+  list.innerHTML=soon.map(b=>`
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(184,150,60,.15);">
+      <span style="color:var(--t1);font-weight:500;">${b.name} <span style="color:var(--t3);font-weight:400;">· ${b.store}</span></span>
+      <span style="color:${b.diff===0?'var(--red)':'var(--gold)'};">${b.diff===0?'🎂 今天！':`${b.month}/${b.day}（${b.diff}天後）`}</span>
+    </div>`).join('');
+}
+
 function renderMembers(){
   const q=($('mem-search')?.value||'').toLowerCase().trim();
   const allMem=[...MEMBER_DATA,...memNewMembers];
@@ -2206,9 +2251,16 @@ function renderMembers(){
     return true;
   });
   
-  if($('mem-count'))$('mem-count').textContent=`共 ${filtered.length} 筆`;
+  const q2=($('mem-search')?.value||'').toLowerCase().trim();
   const el=$('mem-list');
   if(!el)return;
+  // 沒有搜尋條件且篩選為「全部」時不顯示列表
+  if(!q2&&memFilter==='all'){
+    el.innerHTML='<div class="empty-hint" style="padding:20px;font-size:13px;color:var(--t3);text-align:center;"><i class="ti ti-search" style="font-size:24px;display:block;margin-bottom:8px;"></i>輸入關鍵字或選擇篩選條件查詢會員</div>';
+    if($('mem-count'))$('mem-count').textContent='';
+    return;
+  }
+  if($('mem-count'))$('mem-count').textContent=`共 ${filtered.length} 筆`;
   if(!filtered.length){el.innerHTML='<div class="empty-hint">無符合的會員</div>';return;}
   
   const days=['日','一','二','三','四','五','六'];
@@ -2274,6 +2326,7 @@ function scrollToAddMem(){
 }
 
 function addMember(){
+  const newId=($('am-id')?.value.trim()||'').toUpperCase();
   const name=$('am-name')?.value.trim();
   const phone=$('am-phone')?.value.trim();
   const store=$('am-store')?.value;
@@ -2283,17 +2336,16 @@ function addMember(){
   const birth=$('am-birth')?.value;
   const gift=$('am-gift')?.value.trim();
   const note=$('am-note')?.value.trim();
-  if(!name){toast('請輸入姓名');return;}
-  const allIds=[...MEMBER_DATA,...memNewMembers].map(m=>parseInt(m.id.replace('UJVIP',''))||0).filter(n=>!isNaN(n));
-  const nextNum=Math.max(...allIds,0)+1;
-  const newId=`UJVIP${String(nextNum).padStart(5,'0')}`;
+  if(!newId){toast('請輸入會員編號');$('am-id').focus();return;}
+  if(!name){toast('請輸入姓名');$('am-name').focus();return;}
+  const allMem=[...MEMBER_DATA,...memNewMembers];
+  if(allMem.some(m=>m.id.toUpperCase()===newId)){toast('⚠ 此編號已存在，請確認');$('am-id').focus();return;}
   memNewMembers.push({id:newId,name,store,staff,joinDate:join,expDate:exp,gift,phone,birth,note});
-  // 清空表單
-  ['am-name','am-phone','am-staff','am-exp','am-birth','am-gift','am-note'].forEach(id=>{if($(id))$(id).value='';});
+  ['am-id','am-name','am-phone','am-staff','am-exp','am-birth','am-gift','am-note'].forEach(id=>{if($(id))$(id).value='';});
+  if($('am-join'))$('am-join').value=localDate();
   renderMembers();updateMemStats();
-  const nextNum2=nextNum+1;
-  if($('add-mem-new-id'))$('add-mem-new-id').textContent=`下一個編號：UJVIP${String(nextNum2).padStart(5,'0')}`;
   toast(`✓ 已新增 ${name}（${newId}）`);
+  $('mem-search').value='';
   $('add-mem-section')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
