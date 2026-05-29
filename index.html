@@ -324,7 +324,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="card-header"><span class="card-title">收款記錄</span><span class="card-total" id="income-total">$0</span></div>
     <div id="income-list"><div class="empty-hint">尚無收款記錄</div></div>
     <div class="input-row">
-      <input class="inp" id="inc-note" placeholder="備註（選填）" onkeydown="if(event.key==='Enter')$('inc-amt').focus()"/>
+      <input class="inp" id="inc-note" placeholder="備註（選填）" onkeydown="if(event.key==='Enter')document.getElementById('inc-amt').focus()"/>
       <input class="inp amt" id="inc-amt" type="number" placeholder="金額" min="0" onkeydown="if(event.key==='Enter')addIncome()"/>
       <button class="btn-add" onclick="addIncome()"><i class="ti ti-plus"></i></button>
     </div>
@@ -336,7 +336,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="card-header"><span class="card-title">支出記錄</span><span class="card-total red" id="exp-total">$0</span></div>
     <div id="exp-list"><div class="empty-hint">尚無支出記錄</div></div>
     <div class="input-row">
-      <input class="inp" id="exp-name" placeholder="項目名稱" onkeydown="if(event.key==='Enter')$('exp-amt').focus()"/>
+      <input class="inp" id="exp-name" placeholder="項目名稱" onkeydown="if(event.key==='Enter')document.getElementById('exp-amt').focus()"/>
       <input class="inp amt" id="exp-amt" type="number" placeholder="金額" min="0" onkeydown="if(event.key==='Enter')addExpense()"/>
       <button class="btn-add" onclick="addExpense()"><i class="ti ti-plus"></i></button>
     </div>
