@@ -1356,27 +1356,28 @@ async function initLaundry(){
   const now=new Date();
   const lndTime=$('lnd-time');
   if(lndTime)lndTime.value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  if($('lnd-staff')&&currentUser)$('lnd-staff').value=currentUser.display_name||'';
   await loadLaundry();
 }
 async function loadLaundry(){
   if(!db)return;
   try{
-    const {data}=await db.from('laundry_records').select('*').order('created_at',{ascending:false}).limit(20);
+    const {data}=await db.from('laundry_records').select('*').order('done_at',{ascending:false}).limit(20);
     const {data:topup}=await db.from('laundry_topups').select('pts').order('created_at',{ascending:false});
     const totalPts=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
-    const usedPts=(data||[]).reduce((s,r)=>s+Number(r.pts_used||0),0);
+    const usedPts=(data||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
     const remPts=totalPts-usedPts;
     $('lnd-pts').textContent=remPts.toLocaleString()+'pts';
     const el=$('lnd-list');
     if(!data||!data.length){el.innerHTML='<div class="empty-hint">尚無記錄</div>';return;}
     let running=totalPts;
-    const rows=[...data].reverse().map(r=>{running-=Number(r.pts_used||0);return{...r,_rem:running};}).reverse();
+    const rows=[...data].reverse().map(r=>{running-=Number(r.deduct||0);return{...r,_rem:running};}).reverse();
     el.innerHTML=rows.map(r=>{
-      const d=new Date(r.created_at);
+      const d=new Date(r.done_at||r.created_at);
       const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
       return`<div class="lnd-item">
-        <div class="lnd-item-left"><div class="lnd-name">${r.staff_name||'—'}</div><div class="lnd-date">${ds}</div></div>
-        <div class="lnd-item-right"><div class="lnd-qty">浴巾 ${r.qty} 條</div><div class="lnd-pts-used">扣 ${r.pts_used||0}pts・餘 ${r._rem}pts</div></div>
+        <div class="lnd-item-left"><div class="lnd-name">${r.who||'—'}</div><div class="lnd-date">${ds}</div></div>
+        <div class="lnd-item-right"><div class="lnd-qty">浴巾 ${r.qty} 條</div><div class="lnd-pts-used">扣 ${r.deduct||0}pts・餘 ${r.remain_pts!=null?r.remain_pts:r._rem}pts</div></div>
       </div>`;
     }).join('');
   }catch(e){console.error(e);}
@@ -1389,7 +1390,13 @@ async function addLaundry(){
   if(qty<=0){toast('請輸入浴巾數量');return;}
   showLoad();
   try{
-    await db.from('laundry_records').insert({qty,pts_used:pts,staff_name:staff,created_at:time?new Date(time).toISOString():new Date().toISOString()});
+    // 先算剩餘點數
+    const {data:latestR}=await db.from('laundry_records').select('remain_pts').order('done_at',{ascending:false}).limit(1);
+    const {data:topupR}=await db.from('laundry_topups').select('pts');
+    const totalPtsNow=(topupR||[]).reduce((s,r)=>s+Number(r.pts||0),0);
+    const usedPtsNow=(await db.from('laundry_records').select('deduct')).data?.reduce((s,r)=>s+Number(r.deduct||0),0)||0;
+    const remainNow=totalPtsNow-usedPtsNow-pts;
+    await db.from('laundry_records').insert({qty,deduct:pts,who:staff,done_at:time?new Date(time).toISOString():new Date().toISOString(),remain_pts:remainNow});
     hideLoad();toast('✓ 已新增');
     if($('lnd-qty'))$('lnd-qty').value='';
     if($('lnd-pts-use'))$('lnd-pts-use').value='';
