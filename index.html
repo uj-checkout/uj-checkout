@@ -610,21 +610,21 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
   <!-- 新增會員面板 -->
   <div id="panel-add" style="display:none;">
-    <div class="add-mem-card" id="add-mem-section">
-      <div class="card-header"><span class="card-title">新增會員</span></div>
-      <div style="padding:12px;display:flex;flex-direction:column;gap:10px;">
-        <div><div class="add-label">會員編號（必填）</div><input id="am-id" placeholder="例：UJVIP00385" class="add-input"/></div>
-        <div><div class="add-label">姓名（必填）</div><input id="am-name" placeholder="會員姓名" class="add-input"/></div>
-        <div><div class="add-label">電話</div><input id="am-phone" placeholder="09XX-XXX-XXX" class="add-input"/></div>
-        <div><div class="add-label">分店</div><select id="am-store" class="add-input"><option value="台北">台北旗艦店</option><option value="新竹">新竹形象店</option><option value="台中">台中主題店</option><option value="高雄">高雄概念店</option></select></div>
-        <div><div class="add-label">承辦人</div><input id="am-staff" placeholder="承辦人姓名" class="add-input"/></div>
-        <div><div class="add-label">入會日</div><input id="am-join" type="date" class="add-input"/></div>
-        <div><div class="add-label">到期日</div><input id="am-exp" type="date" class="add-input"/></div>
-        <div><div class="add-label">生日</div><input id="am-birth" type="date" class="add-input"/></div>
-        <div><div class="add-label">隨卡贈送</div><input id="am-gift" placeholder="洋蘭乳 / 萊姆去…" class="add-input"/></div>
-        <div><div class="add-label">附註</div><input id="am-note" placeholder="備註說明" class="add-input"/></div>
+    <div style="background:#fff;border:1px solid #E0D8CC;border-radius:14px;overflow:hidden;margin-top:4px;">
+      <div style="padding:10px 14px;border-bottom:1px solid #E0D8CC;font-size:14px;font-weight:500;">新增會員</div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:12px;width:100%;box-sizing:border-box;">
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">會員編號（必填）</label><input id="am-id" placeholder="例：UJVIP00385" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">姓名（必填）</label><input id="am-name" placeholder="會員姓名" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">電話</label><input id="am-phone" placeholder="09XX-XXX-XXX" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">分店</label><select id="am-store" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"><option value="台北">台北旗艦店</option><option value="新竹">新竹形象店</option><option value="台中">台中主題店</option><option value="高雄">高雄概念店</option></select></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">承辦人</label><input id="am-staff" placeholder="承辦人姓名" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">入會日</label><input id="am-join" type="date" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">到期日</label><input id="am-exp" type="date" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">生日</label><input id="am-birth" type="date" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">隨卡贈送</label><input id="am-gift" placeholder="洋蘭乳 / 萊姆去…" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <div><label style="font-size:11px;color:#888;margin-bottom:5px;display:block;">附註</label><input id="am-note" placeholder="備註說明" style="display:block;width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:12px 10px;font-size:15px;background:#FAFAF8;color:#2C2C2C;outline:none;font-family:sans-serif;box-sizing:border-box;margin:0;-webkit-appearance:none;appearance:none;"/></div>
+        <button onclick="addMember()" style="display:block;width:100%;background:#1C2B1A;border:none;border-radius:10px;color:#fff;padding:14px;font-size:15px;cursor:pointer;box-sizing:border-box;font-family:sans-serif;margin:0;">＋ 新增會員</button>
       </div>
-      <div style="padding:0 12px 12px;"><button onclick="addMember()" style="width:100%;background:var(--gd);border:none;border-radius:10px;color:#fff;padding:13px;font-size:15px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">＋ 新增會員</button></div>
     </div>
   </div>
 
