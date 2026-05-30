@@ -2512,6 +2512,9 @@ async function toggleGPanel(panel){
   const panelEl=$(`o-panel-${panel}`);
   if(panelEl)panelEl.style.display='block';
   document.getElementById(`gtile-${panel}`)?.classList.add('g-tile-active');
+  showLoad();
+  await loadOfficePosts();
+  hideLoad();
   if(panel==='announce')renderAnnounces();
   else if(panel==='memo')await renderMemos();
   else if(panel==='birthday')renderBirthdays();
@@ -3077,6 +3080,7 @@ function renewMember(i, e){
     memNewMembers.push({...m,expDate:newExpStr,_renewed:true});
   }
   toast(`✓ ${m.name} 已續會，到期日更新為 ${newExpStr.replace(/-/g,'/')}`);
+  renderNewMembers();
   renderMembers();updateMemStats();
 }
 
@@ -3215,6 +3219,7 @@ function addMember(){
   renderMembers();updateMemStats();
   toast(`✓ 已新增 ${name}（${newId}）`);
   $('mem-search').value='';
+  renderNewMembers();
   $('add-mem-section')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
