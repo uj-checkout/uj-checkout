@@ -2247,12 +2247,13 @@ function showBirthdayAlert(){
       soon.push({name:m.name,phone:m.phone,month:bM,day:bD,diff,store:m.store});
     }
   });
-  const el=$('birthday-alert');
   const list=$('birthday-list');
-  if(!el||!list)return;
-  if(!soon.length){el.style.display='none';return;}
+  if(!list)return;
+  if(!soon.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--t3);padding:4px 0;">近14天內無生日會員</div>';
+    return;
+  }
   soon.sort((a,b)=>a.diff-b.diff);
-  el.style.display='block';
   list.innerHTML=soon.map(b=>`
     <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(184,150,60,.15);">
       <span style="color:var(--t1);font-weight:500;">${b.name} <span style="color:var(--t3);font-weight:400;">· ${b.store}</span></span>
