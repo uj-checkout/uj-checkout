@@ -2870,7 +2870,22 @@ function switchPage(page){
   }
 }
 
-function initMemberPage(){
+async function loadMembersFromDB(){
+  if(!db)return;
+  try{
+    const {data}=await db.from('members').select('*').order('created_at',{ascending:false});
+    if(data&&data.length){
+      // 轉換欄位名稱對應
+      memNewMembers=(data||[]).map(r=>({
+        id:r.id,name:r.name,store:r.store,staff:r.staff,
+        joinDate:r.join_date,expDate:r.exp_date,
+        gift:r.gift,phone:r.phone,birth:r.birth,note:r.note
+      }));
+    }
+  }catch(e){console.error('loadMembersFromDB:',e);}
+}
+
+async function initMemberPage(){
   hideMemberPanels();
   memActivePanel=null;
   if($('mem-search'))$('mem-search').value='';
@@ -2878,6 +2893,7 @@ function initMemberPage(){
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('on'));
   const chips=document.querySelectorAll('.filter-chip');
   if(chips[0])chips[0].classList.add('on');
+  await loadMembersFromDB();
   updateMemStats();
   showBirthdayAlert();
   initNewMemberMonthSel();
@@ -2930,7 +2946,9 @@ function renderNewMembers(){
 
 function getMergedMembers(){
   const merged=new Map();
-  [...MEMBER_DATA,...memNewMembers].forEach(m=>merged.set(m.id,m));
+  // MEMBER_DATA 先放，memNewMembers（含DB資料）後放覆蓋
+  MEMBER_DATA.forEach(m=>merged.set(m.id,m));
+  memNewMembers.forEach(m=>merged.set(m.id,{...merged.get(m.id)||{},...m}));
   return [...merged.values()];
 }
 
@@ -3086,12 +3104,8 @@ function renewMember(i, e){
 
 function getFilteredMembers(){
   const q=($('mem-search')?.value||'').toLowerCase().trim();
-  const allMem=[...MEMBER_DATA,...memNewMembers];
   const storeMap={taipei:'台北',hsinchu:'新竹',taichung:'台中',kaohsiung:'高雄'};
-  // 合併覆寫：memNewMembers 中 _renewed 的優先
-  const merged=new Map();
-  allMem.forEach(m=>merged.set(m.id,m));
-  const mergedArr=[...merged.values()];
+  const mergedArr=getMergedMembers();
   return mergedArr.filter(m=>{
     const st=memStatus(m.expDate);
     if(memFilter==='ok'&&st!=='ok')return false;
@@ -3174,9 +3188,7 @@ function toggleMemDetail(i){
 }
 
 function updateMemStats(){
-  const merged=new Map();
-  [...MEMBER_DATA,...memNewMembers].forEach(m=>merged.set(m.id,m));
-  const all=[...merged.values()];
+  const all=getMergedMembers();
   const ok=all.filter(m=>memStatus(m.expDate)==='ok').length;
   const soon=all.filter(m=>memStatus(m.expDate)==='soon').length;
   const exp=all.filter(m=>memStatus(m.expDate)==='exp').length;
@@ -3198,7 +3210,7 @@ function updateMemStats(){
 
 
 
-function addMember(){
+async function addMember(){
   const newId=($('am-id')?.value.trim()||'').toUpperCase();
   const name=$('am-name')?.value.trim();
   const phone=$('am-phone')?.value.trim();
@@ -3211,23 +3223,29 @@ function addMember(){
   const note=$('am-note')?.value.trim();
   if(!newId){toast('請輸入會員編號');$('am-id').focus();return;}
   if(!name){toast('請輸入姓名');$('am-name').focus();return;}
-  const allMem=[...MEMBER_DATA,...memNewMembers];
+  const allMem=getMergedMembers();
   if(allMem.some(m=>m.id.toUpperCase()===newId)){toast('⚠ 此編號已存在，請確認');$('am-id').focus();return;}
-  memNewMembers.push({id:newId,name,store,staff,joinDate:join,expDate:exp,gift,phone,birth,note});
-  ['am-id','am-name','am-phone','am-staff','am-exp','am-birth','am-gift','am-note'].forEach(id=>{if($(id))$(id).value='';});
-  if($('am-join'))$('am-join').value=localDate();
-  renderMembers();updateMemStats();
-  toast(`✓ 已新增 ${name}（${newId}）`);
-  $('mem-search').value='';
-  renderNewMembers();
-  $('add-mem-section')?.scrollIntoView({behavior:'smooth',block:'start'});
+  showLoad();
+  try{
+    await db.from('members').insert({
+      id:newId,name,store,staff,
+      join_date:join,exp_date:exp,gift,phone,birth,note
+    });
+    // 同時更新本地快取
+    memNewMembers.push({id:newId,name,store,staff,joinDate:join,expDate:exp,gift,phone,birth,note});
+    hideLoad();
+    ['am-id','am-name','am-phone','am-staff','am-exp','am-birth','am-gift','am-note'].forEach(id=>{if($(id))$(id).value='';});
+    if($('am-join'))$('am-join').value=localDate();
+    renderMembers();updateMemStats();
+    toast(`✓ 已新增 ${name}（${newId}）`);
+    $('mem-search').value='';
+    renderNewMembers();
+  }catch(e){hideLoad();toast('✗ 新增失敗：'+e.message);}
 }
 
 function downloadMemberBackup(){
   // 下載完整備份：所有會員資料（無論效期）
-  const merged=new Map();
-  [...MEMBER_DATA,...memNewMembers].forEach(m=>merged.set(m.id,m));
-  const all=[...merged.values()];
+  const all=getMergedMembers();
   const now=new Date();
   const dateStr=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
   const rows=[['會員編號','姓名','分店','承辦人','入會日','到期日','隨卡贈送','電話','生日','附註','狀態']];
