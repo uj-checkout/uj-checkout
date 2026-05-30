@@ -2975,8 +2975,8 @@ function renderNewMembers(){
   const sel=$('ms-new-monthsel');
   const ym=sel?.value||defaultYm;
   const isManager=!currentUser;
-  const allMem=getMergedMembers();
-  const filtered=allMem.filter(m=>{
+  // 直接從 DB 來源的 memNewMembers 篩選（不混 MEMBER_DATA）
+  const filtered=memNewMembers.filter(m=>{
     if(!m.joinDate)return false;
     return m.joinDate.slice(0,7)===ym;
   });
