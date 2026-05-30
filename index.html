@@ -432,6 +432,9 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     </div>
     <div class="login-err" id="li-err"></div>
     <button class="btn-login" onclick="doLogin()">登 入</button>
+    <div style="text-align:center;margin-top:14px;">
+      <button onclick="showRegister()" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;text-decoration:underline;">申請帳號</button>
+    </div>
   </div>
 </div>
 
@@ -443,6 +446,33 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <input class="chpw-input" id="chpw-confirm" type="password" placeholder="確認新密碼"/>
     <div class="chpw-err" id="chpw-err"></div>
     <button class="btn-chpw" onclick="doChangePw()">確認更新</button>
+  </div>
+</div>
+
+<!-- 申請帳號 Modal -->
+<div class="chpw-modal" id="register-modal">
+  <div class="chpw-box">
+    <div class="chpw-title">申請帳號</div>
+    <div class="chpw-sub">申請後由店長審核，審核通過即可登入</div>
+    <div style="display:flex;align-items:center;gap:0;margin-bottom:10px;">
+      <span style="background:#E0D8CC;border:1.5px solid #C8C0B0;border-right:none;border-radius:8px 0 0 8px;padding:11px 12px;font-size:14px;color:#555;white-space:nowrap;">uj-</span>
+      <input class="chpw-input" id="reg-username" placeholder="英文名（如 frank）" style="margin-bottom:0;border-radius:0 8px 8px 0;border-left:none;flex:1;"/>
+    </div>
+    <input class="chpw-input" id="reg-display" placeholder="顯示名稱（中文姓名）"/>
+    <input class="chpw-input" id="reg-pw" type="password" placeholder="設定密碼（至少 6 字元）"/>
+    <input class="chpw-input" id="reg-pw2" type="password" placeholder="確認密碼"/>
+    <div class="chpw-sub" style="margin-bottom:6px;">申請門市</div>
+    <select class="chpw-input" id="reg-store" style="margin-bottom:10px;">
+      <option value="taipei">台北旗艦店</option>
+      <option value="hsinchu">新竹形象店</option>
+      <option value="taichung">台中主題店</option>
+      <option value="kaohsiung">高雄概念店</option>
+    </select>
+    <div class="chpw-err" id="reg-err"></div>
+    <button class="btn-chpw" onclick="doRegister()">送出申請</button>
+    <div style="text-align:center;margin-top:10px;">
+      <button onclick="$('register-modal').classList.remove('open')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">返回登入</button>
+    </div>
   </div>
 </div>
 
@@ -621,6 +651,13 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       <span class="g-tile-count" id="g-wall-count"></span>
     </div>
   </div>
+  <!-- 帳號申請審核（店長限定）-->
+  <div id="gtile-requests-wrap" style="display:none;margin-bottom:14px;">
+    <div class="g-tile-btn g-tile-light" id="gtile-requests" onclick="toggleGPanel('requests')" style="width:100%;border-radius:12px;padding:12px 16px;text-align:left;display:flex;align-items:center;gap:12px;">
+      <i class="ti ti-user-check" style="font-size:24px;color:#B8963C;"></i>
+      <div><div style="font-size:13px;font-weight:500;color:#2C2C2C;">帳號申請審核</div><span class="g-tile-count-light" id="g-req-count" style="background:#FEF3E0;color:#B8963C;"></span></div>
+    </div>
+  </div>
 
   <!-- 各面板（點擊磁磚展開，再點收起）-->
   <div id="o-panel-announce" class="o-panel" style="display:none;">
@@ -673,6 +710,10 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       <div style="background:#1C2B1A;padding:12px 16px;color:#C8DBC0;font-size:13px;font-weight:500;">🎂 夥伴生日提醒</div>
       <div id="o-birthday-list"></div>
     </div>
+  </div>
+
+  <div id="o-panel-requests" class="o-panel" style="display:none;">
+    <div id="o-requests-list"></div>
   </div>
 
   <div id="o-panel-wall" class="o-panel" style="display:none;">
@@ -2018,6 +2059,109 @@ async function calcAdmRange(store){
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
+// ── 帳號申請系統 ────────────────────────────────────────
+function showRegister(){
+  $('register-modal').classList.add('open');
+  $('reg-username').value='';
+  $('reg-display').value='';
+  $('reg-pw').value='';
+  $('reg-pw2').value='';
+  $('reg-err').textContent='';
+}
+
+async function doRegister(){
+  const suffix=($('reg-username')?.value.trim()||'').toLowerCase();
+  const display=$('reg-display')?.value.trim();
+  const pw=$('reg-pw')?.value.trim();
+  const pw2=$('reg-pw2')?.value.trim();
+  const store=$('reg-store')?.value;
+  const username='uj-'+suffix;
+
+  // 驗證
+  if(!suffix){$('reg-err').textContent='請填入英文名稱';return;}
+  if(!/^[a-z0-9]+$/.test(suffix)){$('reg-err').textContent='帳號只能包含英文字母和數字';return;}
+  if(suffix.length<2||suffix.length>12){$('reg-err').textContent='英文名稱需 2-12 字元';return;}
+  if(!display){$('reg-err').textContent='請填入顯示名稱';return;}
+  if(pw.length<6){$('reg-err').textContent='密碼至少 6 字元';return;}
+  if(pw!==pw2){$('reg-err').textContent='兩次密碼不一致';return;}
+
+  // 檢查帳號是否已存在（內建帳號 + staff_accounts + account_requests）
+  const builtinKeys=Object.keys(BUILTIN);
+  if(builtinKeys.includes(username)){$('reg-err').textContent='此帳號名稱已被使用';return;}
+
+  showLoad();
+  try{
+    if(!db)await connectDB();
+    // 檢查 staff_accounts
+    const {data:existing}=await db.from('staff_accounts').select('username').eq('username',username).limit(1);
+    if(existing&&existing.length){hideLoad();$('reg-err').textContent='此帳號名稱已被使用';return;}
+    // 檢查 account_requests
+    const {data:pending}=await db.from('account_requests').select('username').eq('username',username).limit(1);
+    if(pending&&pending.length){hideLoad();$('reg-err').textContent='此帳號已有待審申請';return;}
+    // 送出申請
+    await db.from('account_requests').insert({username,display_name:display,password:pw,store,status:'pending'});
+    hideLoad();
+    $('register-modal').classList.remove('open');
+    toast('✓ 申請已送出，請等待店長審核');
+  }catch(e){hideLoad();$('reg-err').textContent='送出失敗：'+e.message;}
+}
+
+async function loadAccountRequests(){
+  if(!db)return;
+  try{
+    const {data}=await db.from('account_requests').select('*').eq('status','pending').order('created_at',{ascending:true});
+    return data||[];
+  }catch(e){return [];}
+}
+
+async function renderAccountRequests(){
+  const el=$('o-requests-list');if(!el)return;
+  const list=await loadAccountRequests();
+  if(!list.length){el.innerHTML='<div class="empty-hint">目前無待審帳號申請</div>';return;}
+  el.innerHTML=list.map(r=>`
+    <div class="o-card" style="margin-bottom:10px;">
+      <div class="o-card-hd">
+        <div>
+          <div class="o-card-title">${r.display_name} <span style="font-size:11px;color:#888;font-weight:400;">（${r.username}）</span></div>
+          <div class="o-card-meta">${STORES[r.store]?.name||r.store} · 申請時間：${(r.created_at||'').slice(0,10)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);">
+        <button onclick="approveRequest(${r.id},'${r.username}','${r.display_name}','${r.password}','${r.store}')" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 同意</button>
+        <button onclick="rejectRequest(${r.id})" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✗ 拒絕</button>
+      </div>
+    </div>`).join('');
+  // 更新計數
+  if($('g-req-count'))$('g-req-count').textContent=list.length?`${list.length} 件待審`:'';
+}
+
+async function approveRequest(id, username, displayName, password, store){
+  showLoad();
+  try{
+    // 寫入 staff_accounts
+    await db.from('staff_accounts').insert({
+      username, password, display_name:displayName,
+      role:'staff', store, active:true
+    });
+    // 更新申請狀態
+    await db.from('account_requests').update({status:'approved'}).eq('id',id);
+    hideLoad();
+    toast(`✓ 已同意 ${displayName} 的申請`);
+    await renderAccountRequests();
+    updateGTileCounts();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
+async function rejectRequest(id){
+  if(!confirm('確定拒絕此申請？'))return;
+  showLoad();
+  await db.from('account_requests').update({status:'rejected'}).eq('id',id);
+  hideLoad();
+  toast('✓ 已拒絕');
+  await renderAccountRequests();
+  updateGTileCounts();
+}
+
 // ── 跑馬燈通知系統 ────────────────────────────────────────
 let lastSeenCount={announces:0,memos:0,wall:0};
 let tickerItems=[];
@@ -2046,6 +2190,11 @@ function updateTicker(){
     if(diff===0)tickerItems.push({icon:'🎂',text:`今天是 ${s.name} 的生日！🎉`,panel:'birthday'});
     else if(diff>0&&diff<=7)tickerItems.push({icon:'🎂',text:`${s.name} 生日倒數 ${diff} 天`,panel:'birthday'});
   });
+  // 帳號申請提醒（店長）
+  if(!currentUser){
+    const reqCount=document.getElementById('g-req-count')?.textContent;
+    if(reqCount&&reqCount.includes('待審'))tickerItems.push({icon:'👤',text:`有 ${reqCount}帳號申請`,panel:'requests'});
+  }
   if(!tickerItems.length){bar.style.display='none';return;}
   bar.style.display='flex';
   const html=[...tickerItems,...tickerItems].map(t=>
@@ -2578,6 +2727,7 @@ async function toggleGPanel(panel){
   else if(panel==='memo')await renderMemos();
   else if(panel==='birthday')renderBirthdays();
   else if(panel==='wall')await renderWall();
+  else if(panel==='requests')await renderAccountRequests();
 }
 
 async function initOfficePage(){
@@ -2588,6 +2738,9 @@ async function initOfficePage(){
   document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
   const form=$('o-announce-form');
   if(form)form.style.display=canPostAnnounce()?'block':'none';
+  // 店長才顯示帳號申請審核磁磚
+  const reqWrap=$('gtile-requests-wrap');
+  if(reqWrap)reqWrap.style.display=(!currentUser)?'block':'none';
   updateGTileCounts();
   updateTicker();
   startNotifPolling();
@@ -2610,6 +2763,12 @@ function updateGTileCounts(){
   if($('g-memo-count'))$('g-memo-count').textContent=pending?`${pending} 待處理`:'';
   if($('g-birth-count'))$('g-birth-count').textContent=birthSoon?`${birthSoon} 位即將生日`:'';
   if($('g-wall-count'))$('g-wall-count').textContent=unreadWall?`${unreadWall} 則未讀`:'';
+  // 申請待審（非同步，不阻塞）
+  if(!currentUser){
+    loadAccountRequests().then(list=>{
+      if($('g-req-count'))$('g-req-count').textContent=list.length?`${list.length} 件待審`:'';
+    });
+  }
 }
 
 // ── Member Data ───────────────────────────────────────────
