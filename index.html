@@ -1010,6 +1010,7 @@ function doLogout(){
   incomes=[];expenses=[];cc={};prevPool=FUND;
   currentBuiltin=null;
   clearAutoSave();
+  localStorage.removeItem('uj_staff');
   $('main').style.display='none';
   $('admin-app').style.display='none';
   if($('member-app'))$('member-app').style.display='none';
@@ -2311,6 +2312,17 @@ function startNotifPolling(){
   if(_notifPollingStarted)return;
   _notifPollingStarted=true;
   setInterval(async()=>{
+    // 員工帳號：驗證是否還存在，被刪除則強制登出
+    if(currentUser){
+      try{
+        const {data}=await db.from('staff_accounts').select('id,active').eq('username',currentUser.username).limit(1);
+        if(!data||!data.length||data[0].active===false){
+          toast('⚠ 帳號已被停用，請重新登入');
+          setTimeout(()=>doLogout(),2000);
+          return;
+        }
+      }catch(e){}
+    }
     await loadOfficePostsMerge();
     updateTicker();
     updateGTileCounts();
