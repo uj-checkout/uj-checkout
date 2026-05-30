@@ -624,6 +624,25 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
         <input type="file" id="o-ann-img" accept="image/*" style="width:100%;font-size:13px;color:#555;" onchange="previewAnnImg(this)"/>
         <div id="o-ann-img-preview" style="margin-top:6px;"></div>
       </div>
+      <div style="margin-bottom:8px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;cursor:pointer;">
+          <input type="checkbox" id="o-ann-poll-toggle" onchange="togglePollForm()" style="width:16px;height:16px;"/>
+          開啟票選投票
+        </label>
+      </div>
+      <div id="o-poll-form" style="display:none;background:#F5F0E8;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="font-size:11px;color:#888;margin-bottom:6px;">票選設定</div>
+        <input id="o-poll-q" placeholder="票選問題（例：這週值班誰來？）" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;"/>
+        <div id="o-poll-options-wrap">
+          <input class="o-poll-opt" placeholder="選項 1" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;"/>
+          <input class="o-poll-opt" placeholder="選項 2" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;"/>
+        </div>
+        <button onclick="addPollOption()" style="background:none;border:1px dashed #C8C0B0;border-radius:8px;color:#888;padding:7px;font-size:12px;cursor:pointer;width:100%;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;">＋ 新增選項</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:12px;color:#888;white-space:nowrap;">截止日期</label>
+          <input type="date" id="o-poll-end" style="flex:1;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 10px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;font-family:'Noto Sans TC',sans-serif;"/>
+        </div>
+      </div>
       <button onclick="postAnnounce()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">📢 發布公告</button>
     </div>
   </div>
@@ -666,6 +685,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     </div>
     <div id="o-ann-modal-body" style="font-size:14px;color:#555;line-height:1.8;white-space:pre-wrap;"></div>
     <div id="o-ann-modal-img"></div>
+    <div id="o-ann-modal-poll"></div>
     <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #E0D8CC;text-align:center;">
       <span style="font-size:12px;color:#4A7C59;background:#E8F0E4;padding:4px 14px;border-radius:20px;">✓ 已標記已讀</span>
     </div>
@@ -2080,6 +2100,7 @@ function renderAnnounces(){
           <div class="o-card-meta">📢 ${a.by} · ${a.date}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
+          ${a.poll?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#E8F0E4;color:#4A7C59;">📊 票選</span>':''}
           <span class="o-badge ${isRead?'read':'unread'}">${isRead?'已讀':'未讀'}</span>
           <i class="ti ti-chevron-right" style="color:#C8C0B0;font-size:16px;"></i>
         </div>
@@ -2088,24 +2109,74 @@ function renderAnnounces(){
   }).join('');
 }
 
+let currentAnnIdx=-1;
 function openAnnounce(idx){
+  currentAnnIdx=idx;
   const a=officeData.announces[idx];
   const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
-  // 點開即標記已讀
   if(!a.readBy)a.readBy=[];
   if(!a.readBy.includes(myId)){a.readBy.push(myId);saveOfficeData();}
-  // 顯示詳細內容 modal
   const modal=$('o-ann-modal');
   if(!modal)return;
   $('o-ann-modal-title').textContent=a.title;
   $('o-ann-modal-meta').textContent=`📢 ${a.by} · ${a.date}`;
   $('o-ann-modal-body').textContent=a.body||'';
-  // 圖片
   const imgEl=$('o-ann-modal-img');
-  if(imgEl){imgEl.innerHTML=a.img?`<img src="${a.img}" style="width:100%;border-radius:8px;margin-top:10px;" />`:''}
+  if(imgEl)imgEl.innerHTML=a.img?`<img src="${a.img}" style="width:100%;border-radius:8px;margin-top:10px;"/>` :'';
+  // 票選
+  const pollEl=$('o-ann-modal-poll');
+  if(pollEl)pollEl.innerHTML=renderPollHTML(a,idx,myId);
   modal.style.display='flex';
   renderAnnounces();
   updateGTileCounts();
+}
+
+function renderPollHTML(a,idx,myId){
+  if(!a.poll)return '';
+  const p=a.poll;
+  const today=localDate();
+  const expired=p.endDate&&today>p.endDate;
+  const totalVotes=p.options.reduce((s,o)=>s+(o.votes||[]).length,0);
+  const hasVoted=p.options.some(o=>(o.votes||[]).includes(myId));
+  const optHTML=p.options.map((o,oi)=>{
+    const vCount=(o.votes||[]).length;
+    const pct=totalVotes?Math.round(vCount/totalVotes*100):0;
+    const voted=(o.votes||[]).includes(myId);
+    if(hasVoted||expired){
+      return`<div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+          <span style="color:${voted?'#1C2B1A':'#555'};font-weight:${voted?'500':'400'};">${voted?'✓ ':''} ${o.text}</span>
+          <span style="color:#888;font-size:12px;">${vCount} 票 (${pct}%)</span>
+        </div>
+        <div style="background:#E0D8CC;border-radius:20px;height:6px;"><div style="background:${voted?'#1C2B1A':'#4A7C59'};border-radius:20px;height:6px;width:${pct}%;transition:width .4s;"></div></div>
+      </div>`;
+    }
+    return`<button onclick="votePoll(${idx},${oi})" style="width:100%;text-align:left;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 14px;font-size:13px;background:#fff;color:#2C2C2C;cursor:pointer;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">${o.text}</button>`;
+  }).join('');
+  return`<div style="background:#F5F0E8;border-radius:10px;padding:12px;margin-top:12px;">
+    <div style="font-size:12px;color:#888;margin-bottom:8px;">📊 ${p.question}</div>
+    ${optHTML}
+    <div style="font-size:11px;color:#aaa;margin-top:6px;">截止：${p.endDate} · 共 ${totalVotes} 票${expired?' · 已截止':''}</div>
+  </div>`;
+}
+
+function votePoll(annIdx,optIdx){
+  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  const poll=officeData.announces[annIdx].poll;
+  if(!poll)return;
+  const today=localDate();
+  if(poll.endDate&&today>poll.endDate){toast('投票已截止');return;}
+  // 確認未投過
+  const hasVoted=poll.options.some(o=>(o.votes||[]).includes(myId));
+  if(hasVoted){toast('您已投過票');return;}
+  if(!poll.options[optIdx].votes)poll.options[optIdx].votes=[];
+  poll.options[optIdx].votes.push(myId);
+  saveOfficeData();
+  toast('✓ 投票成功');
+  // 重新渲染 modal 票選區
+  const myIdNow=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  const pollEl=$('o-ann-modal-poll');
+  if(pollEl)pollEl.innerHTML=renderPollHTML(officeData.announces[annIdx],annIdx,myIdNow);
 }
 
 function markRead(idx){
@@ -2130,16 +2201,50 @@ function previewAnnImg(input){
   reader.readAsDataURL(input.files[0]);
 }
 
+function togglePollForm(){
+  const cb=$('o-ann-poll-toggle');
+  const form=$('o-poll-form');
+  if(form)form.style.display=cb?.checked?'block':'none';
+}
+
+function addPollOption(){
+  const wrap=$('o-poll-options-wrap');
+  if(!wrap)return;
+  const count=wrap.querySelectorAll('.o-poll-opt').length+1;
+  const inp=document.createElement('input');
+  inp.className='o-poll-opt';
+  inp.placeholder=`選項 ${count}`;
+  inp.style.cssText='width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:Noto Sans TC,sans-serif;display:block;';
+  wrap.appendChild(inp);
+}
+
 function postAnnounce(){
   const title=$('o-ann-title')?.value.trim();
   const body=$('o-ann-body')?.value.trim();
   if(!title){toast('請輸入公告標題');return;}
   const byKey=localStorage.getItem('uj_builtin')||'';
   const byName=byKey==='uj-leon'?'Leon':byKey==='uj-ryan'?'Ryan':byKey==='uj-khh'?'高雄店長':'管理員';
-  officeData.announces.push({title,body,by:byName,date:localDate(),readBy:[byKey],img:annImgData||null});
+  // 票選資料
+  let poll=null;
+  if($('o-ann-poll-toggle')?.checked){
+    const q=$('o-poll-q')?.value.trim();
+    const opts=[...document.querySelectorAll('.o-poll-opt')].map(i=>i.value.trim()).filter(v=>v);
+    const endDate=$('o-poll-end')?.value;
+    if(!q){toast('請輸入票選問題');return;}
+    if(opts.length<2){toast('請至少填寫 2 個選項');return;}
+    if(!endDate){toast('請設定截止日期');return;}
+    poll={question:q,options:opts.map(o=>({text:o,votes:[]})),endDate,closed:false};
+  }
+  officeData.announces.push({title,body,by:byName,date:localDate(),readBy:[byKey],img:annImgData||null,poll});
   saveOfficeData();
   if($('o-ann-title'))$('o-ann-title').value='';
   if($('o-ann-body'))$('o-ann-body').value='';
+  if($('o-poll-q'))$('o-poll-q').value='';
+  if($('o-poll-end'))$('o-poll-end').value='';
+  if($('o-ann-poll-toggle'))$('o-ann-poll-toggle').checked=false;
+  const wrap=$('o-poll-options-wrap');
+  if(wrap)wrap.innerHTML=`<input class="o-poll-opt" placeholder="選項 1" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;"/><input class="o-poll-opt" placeholder="選項 2" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;"/>`;
+  if($('o-poll-form'))$('o-poll-form').style.display='none';
   annImgData=null;
   const prev=$('o-ann-img-preview');if(prev)prev.innerHTML='';
   const fileInp=$('o-ann-img');if(fileInp)fileInp.value='';
