@@ -368,6 +368,12 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .add-input:focus{border-color:var(--gs);}
 .btn-add-mem{width:calc(100% - 28px);margin:0 14px 14px;background:var(--gd);border:none;border-radius:10px;color:#fff;padding:12px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
 .enc-bar{background:#EAF3DE;border:1px solid #C8DBC0;border-radius:8px;padding:8px 12px;font-size:11px;color:var(--gs);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.mem-stat-btn{cursor:pointer;transition:background .15s;}
+.mem-stat-btn:hover{background:var(--pa);}
+.mem-stat-btn:active{background:var(--bd);}
+.mem-edit-bar{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);}
+.btn-renew{flex:1;background:var(--gs);border:none;border-radius:8px;color:#fff;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.btn-edit-mem{flex:1;background:none;border:1px solid var(--bd2);border-radius:8px;color:var(--t2);padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
 </style>
 </head>
 <body>
@@ -545,7 +551,6 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
 <!-- Member App -->
 <div id="member-app">
-  <div class="enc-bar"><i class="ti ti-lock" style="font-size:13px;"></i> 會員資料加密保護，僅限授權帳號查看</div>
 
   <!-- 搜尋主區 -->
   <div class="mem-search-hero">
@@ -563,30 +568,41 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     </div>
   </div>
 
-  <!-- 統計 -->
-  <div class="mem-stats">
-    <div class="mem-stat"><div class="msl">會員總數</div><div class="msv" id="ms-total">—</div></div>
-    <div class="mem-stat"><div class="msl">有效</div><div class="msv g" id="ms-ok">—</div></div>
-    <div class="mem-stat"><div class="msl">即將到期</div><div class="msv o" id="ms-soon">—</div></div>
+  <!-- 六張小卡 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('all')">
+      <div class="msl">會員總數</div><div class="msv" id="ms-total">—</div>
+    </div>
+    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('ok')">
+      <div class="msl">有效</div><div class="msv g" id="ms-ok">—</div>
+    </div>
+    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('soon')">
+      <div class="msl">即將到期</div><div class="msv o" id="ms-soon">—</div>
+    </div>
+    <div class="mem-stat mem-stat-btn" onclick="scrollToAddMem()">
+      <div class="msl">新增會員</div><div class="msv" style="font-size:22px;">＋</div>
+    </div>
+    <div class="mem-stat mem-stat-btn" onclick="toggleBirthdayPanel()">
+      <div class="msl">即將生日</div><div class="msv o" id="ms-birth">—</div>
+    </div>
+    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('exp')">
+      <div class="msl">已到期</div><div class="msv r" id="ms-exp">—</div>
+    </div>
   </div>
 
-  <!-- 生日提醒 -->
+  <!-- 生日提醒面板（點擊展開） -->
   <div id="birthday-alert" style="display:none;background:#FEF3E0;border:1px solid #F5C87A;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
-    <div style="font-size:12px;font-weight:500;color:#B8963C;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ti ti-cake" style="font-size:15px;"></i> 近期生日會員</div>
+    <div style="font-size:12px;font-weight:500;color:#B8963C;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ti ti-cake" style="font-size:15px;"></i> 近期生日會員（14天內）</div>
     <div id="birthday-list"></div>
   </div>
 
-  <!-- 快速功能 -->
-  <div class="quick-actions">
-    <div class="qa-btn" onclick="scrollToAddMem()"><i class="ti ti-user-plus"></i><span>新增會員</span></div>
-    <div class="qa-btn" id="btn-download-backup" onclick="downloadMemberBackup()" style="display:none;"><i class="ti ti-database-export"></i><span>下載備份</span></div>
-    <div class="qa-btn" onclick="setMemFilter('soon',null)"><i class="ti ti-calendar-due"></i><span>到期提醒</span></div>
-  </div>
+  <!-- 加密提示 -->
+  <div class="enc-bar"><i class="ti ti-lock" style="font-size:13px;"></i> 會員資料加密保護，僅限授權帳號查看</div>
 
-  <!-- 列表 -->
+  <!-- 會員列表 -->
   <div class="mem-list-hd">
-    <span class="mem-list-title">會員列表</span>
-    <span class="mem-list-count" id="mem-count">共 0 筆</span>
+    <span class="mem-list-title" id="mem-list-label">請輸入關鍵字或點選篩選</span>
+    <span class="mem-list-count" id="mem-count"></span>
   </div>
   <div id="mem-list"></div>
 
@@ -596,40 +612,36 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="add-mem-body">
       <div>
         <div class="add-label">會員編號（必填）</div>
-        <input class="add-input" id="am-id" placeholder="例：UJVIP00101 / UJHSZ00001…"/>
+        <input class="add-input" id="am-id" placeholder="例：UJVIP00385"/>
       </div>
       <div>
-        <div class="add-label">姓名</div>
-        <input class="add-input" id="am-name" placeholder="會員姓名（必填）"/>
+        <div class="add-label">姓名（必填）</div>
+        <input class="add-input" id="am-name" placeholder="會員姓名"/>
       </div>
       <div>
         <div class="add-label">電話</div>
         <input class="add-input" id="am-phone" placeholder="09XX-XXX-XXX"/>
       </div>
-      <div class="add-mem-row2">
-        <div>
-          <div class="add-label">分店</div>
-          <select class="add-input" id="am-store">
-            <option value="台北">台北旗艦店</option>
-            <option value="新竹">新竹形象店</option>
-            <option value="台中">台中主題店</option>
-            <option value="高雄">高雄概念店</option>
-          </select>
-        </div>
-        <div>
-          <div class="add-label">承辦人</div>
-          <input class="add-input" id="am-staff" placeholder="承辦人"/>
-        </div>
+      <div>
+        <div class="add-label">分店</div>
+        <select class="add-input" id="am-store">
+          <option value="台北">台北旗艦店</option>
+          <option value="新竹">新竹形象店</option>
+          <option value="台中">台中主題店</option>
+          <option value="高雄">高雄概念店</option>
+        </select>
       </div>
-      <div class="add-mem-row2">
-        <div>
-          <div class="add-label">入會日</div>
-          <input class="add-input" id="am-join" type="date"/>
-        </div>
-        <div>
-          <div class="add-label">到期日</div>
-          <input class="add-input" id="am-exp" type="date"/>
-        </div>
+      <div>
+        <div class="add-label">承辦人</div>
+        <input class="add-input" id="am-staff" placeholder="承辦人姓名"/>
+      </div>
+      <div>
+        <div class="add-label">入會日</div>
+        <input class="add-input" id="am-join" type="date"/>
+      </div>
+      <div>
+        <div class="add-label">到期日</div>
+        <input class="add-input" id="am-exp" type="date"/>
       </div>
       <div>
         <div class="add-label">生日</div>
@@ -646,6 +658,12 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     </div>
     <button class="btn-add-mem" onclick="addMember()">＋ 新增會員</button>
   </div>
+
+  <!-- 下載備份（店長/管理者限定） -->
+  <div id="btn-download-backup" style="display:none;margin-top:12px;">
+    <button onclick="downloadMemberBackup()" style="width:100%;background:none;border:1px solid var(--bd2);border-radius:10px;color:var(--t3);padding:10px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Noto Sans TC',sans-serif;"><i class="ti ti-database-export" style="font-size:15px;"></i> 下載完整會員備份</button>
+  </div>
+
 </div>
 
 <!-- Admin -->
@@ -2243,18 +2261,7 @@ function showBirthdayAlert(){
 
 function renderMembers(){
   const q=($('mem-search')?.value||'').toLowerCase().trim();
-  const allMem=[...MEMBER_DATA,...memNewMembers];
-  const storeMap={taipei:'台北',hsinchu:'新竹',taichung:'台中',kaohsiung:'高雄'};
-  
-  const filtered=allMem.filter(m=>{
-    const st=memStatus(m.expDate);
-    if(memFilter==='ok'&&st!=='ok')return false;
-    if(memFilter==='soon'&&st!=='soon')return false;
-    if(memFilter==='exp'&&st!=='exp')return false;
-    if(['taipei','hsinchu','taichung','kaohsiung'].includes(memFilter)&&m.store!==storeMap[memFilter])return false;
-    if(q&&!m.name.toLowerCase().includes(q)&&!m.phone.includes(q)&&!m.id.toLowerCase().includes(q)&&!(m.note||'').toLowerCase().includes(q))return false;
-    return true;
-  });
+  const filtered=getFilteredMembers();
   
   const q2=($('mem-search')?.value||'').toLowerCase().trim();
   const el=$('mem-list');
@@ -2307,9 +2314,71 @@ function renderMembers(){
         <div class="md-row"><span class="md-label">到期日</span><span class="md-val" style="${st==='exp'?'color:var(--red)':st==='soon'?'color:var(--gold)':''}">${fmtD(m.expDate)}</span></div>
         <div class="md-row"><span class="md-label">隨卡贈送</span><span class="md-val" style="color:var(--gs)">${m.gift||'—'}</span></div>
         <div class="md-row"><span class="md-label">附註</span><span class="md-val">${m.note||'—'}</span></div>
+        <div class="mem-edit-bar">
+          <button class="btn-renew" onclick="renewMember(${i},event)">🔄 續會（自當日延一年）</button>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function setMemFilterQuick(f){
+  memFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('on'));
+  const map={all:0,ok:1,soon:2,exp:3,taipei:4,hsinchu:5,taichung:6,kaohsiung:7};
+  const chips=document.querySelectorAll('.filter-chip');
+  if(chips[map[f]])chips[map[f]].classList.add('on');
+  if($('mem-search'))$('mem-search').value='';
+  renderMembers();
+  $('mem-list')?.scrollIntoView({behavior:'smooth'});
+}
+
+function toggleBirthdayPanel(){
+  const el=$('birthday-alert');
+  if(!el)return;
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function renewMember(i, e){
+  e.stopPropagation();
+  const allMem=[...MEMBER_DATA,...memNewMembers];
+  // 找出對應的篩選後索引
+  const filtered=getFilteredMembers();
+  const m=filtered[i];
+  if(!m){toast('找不到會員資料');return;}
+  // 計算新到期日：從今天起延一年
+  const today=new Date();
+  const newExp=new Date(today.getFullYear()+1,today.getMonth(),today.getDate());
+  const newExpStr=`${newExp.getFullYear()}-${String(newExp.getMonth()+1).padStart(2,'0')}-${String(newExp.getDate()).padStart(2,'0')}`;
+  // 在 memNewMembers 更新（或加入覆寫記錄）
+  const existing=memNewMembers.findIndex(r=>r.id===m.id);
+  if(existing>=0){
+    memNewMembers[existing]={...memNewMembers[existing],expDate:newExpStr};
+  } else {
+    // 從 MEMBER_DATA 複製並加入 memNewMembers 覆寫
+    memNewMembers.push({...m,expDate:newExpStr,_renewed:true});
+  }
+  toast(`✓ ${m.name} 已續會，到期日更新為 ${newExpStr.replace(/-/g,'/')}`);
+  renderMembers();updateMemStats();
+}
+
+function getFilteredMembers(){
+  const q=($('mem-search')?.value||'').toLowerCase().trim();
+  const allMem=[...MEMBER_DATA,...memNewMembers];
+  const storeMap={taipei:'台北',hsinchu:'新竹',taichung:'台中',kaohsiung:'高雄'};
+  // 合併覆寫：memNewMembers 中 _renewed 的優先
+  const merged=new Map();
+  allMem.forEach(m=>merged.set(m.id,m));
+  const mergedArr=[...merged.values()];
+  return mergedArr.filter(m=>{
+    const st=memStatus(m.expDate);
+    if(memFilter==='ok'&&st!=='ok')return false;
+    if(memFilter==='soon'&&st!=='soon')return false;
+    if(memFilter==='exp'&&st!=='exp')return false;
+    if(['taipei','hsinchu','taichung','kaohsiung'].includes(memFilter)&&m.store!==storeMap[memFilter])return false;
+    if(q&&!m.name.toLowerCase().includes(q)&&!m.phone.includes(q)&&!m.id.toLowerCase().includes(q)&&!(m.note||'').toLowerCase().includes(q))return false;
+    return true;
+  });
 }
 
 function toggleMemDetail(i){
@@ -2318,12 +2387,26 @@ function toggleMemDetail(i){
 }
 
 function updateMemStats(){
-  const all=[...MEMBER_DATA,...memNewMembers];
+  const merged=new Map();
+  [...MEMBER_DATA,...memNewMembers].forEach(m=>merged.set(m.id,m));
+  const all=[...merged.values()];
   const ok=all.filter(m=>memStatus(m.expDate)==='ok').length;
   const soon=all.filter(m=>memStatus(m.expDate)==='soon').length;
+  const exp=all.filter(m=>memStatus(m.expDate)==='exp').length;
+  const birthSoon=[...MEMBER_DATA,...memNewMembers].filter(m=>{
+    if(!m.birth)return false;
+    const parts=m.birth.slice(0,10).split('-');
+    if(parts.length<3)return false;
+    const today=new Date();
+    const bDay=new Date(today.getFullYear(),parseInt(parts[1])-1,parseInt(parts[2]));
+    const diff=Math.ceil((bDay-today)/(1000*60*60*24));
+    return diff>=0&&diff<=14;
+  }).length;
   if($('ms-total'))$('ms-total').textContent=all.length;
   if($('ms-ok'))$('ms-ok').textContent=ok;
   if($('ms-soon'))$('ms-soon').textContent=soon;
+  if($('ms-exp'))$('ms-exp').textContent=exp;
+  if($('ms-birth'))$('ms-birth').textContent=birthSoon||'—';
 }
 
 function scrollToAddMem(){
@@ -2356,7 +2439,9 @@ function addMember(){
 
 function downloadMemberBackup(){
   // 下載完整備份：所有會員資料（無論效期）
-  const all=[...MEMBER_DATA,...memNewMembers];
+  const merged=new Map();
+  [...MEMBER_DATA,...memNewMembers].forEach(m=>merged.set(m.id,m));
+  const all=[...merged.values()];
   const now=new Date();
   const dateStr=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
   const rows=[['會員編號','姓名','分店','承辦人','入會日','到期日','隨卡贈送','電話','生日','附註','狀態']];
