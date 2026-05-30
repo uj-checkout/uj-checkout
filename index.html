@@ -374,6 +374,33 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .mem-edit-bar{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);}
 .btn-renew{flex:1;background:var(--gs);border:none;border-radius:8px;color:#fff;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
 .btn-edit-mem{flex:1;background:none;border:1px solid var(--bd2);border-radius:8px;color:var(--t2);padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+
+/* ── Office ── */
+.o-tab{padding:8px 14px;border-radius:20px;border:0.5px solid #E0D8CC;background:#fff;font-size:13px;cursor:pointer;color:#888;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;}
+.o-tab.active{background:#1C2B1A;color:#C8DBC0;border-color:#1C2B1A;}
+.o-panel{}
+.o-card{background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.o-card-hd{padding:12px 14px;border-bottom:0.5px solid #E0D8CC;display:flex;justify-content:space-between;align-items:flex-start;}
+.o-card-title{font-size:14px;font-weight:500;color:#1C2B1A;}
+.o-card-meta{font-size:11px;color:#888;margin-top:2px;}
+.o-badge{font-size:10px;padding:3px 9px;border-radius:10px;white-space:nowrap;}
+.o-badge.unread{background:#FCEAEA;color:#B83030;}
+.o-badge.read{background:#E8F0E4;color:#4A7C59;}
+.o-badge.pending{background:#FCEAEA;color:#B83030;}
+.o-badge.done{background:#E8F0E4;color:#4A7C59;}
+.o-card-body{padding:10px 14px;font-size:13px;color:#555;line-height:1.6;}
+.o-msg{display:flex;gap:10px;margin-bottom:12px;}
+.o-av{width:32px;height:32px;border-radius:50%;background:#C8DBC0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#1C2B1A;flex-shrink:0;}
+.o-bubble{background:#fff;border:0.5px solid #E0D8CC;border-radius:0 12px 12px 12px;padding:10px 12px;flex:1;}
+.o-bubble-t{font-size:13px;color:#2C2C2C;line-height:1.6;}
+.o-bubble-s{font-size:11px;color:#aaa;margin-top:4px;display:flex;align-items:center;gap:8px;}
+.o-like{background:none;border:none;cursor:pointer;font-size:11px;color:#aaa;padding:0;font-family:'Noto Sans TC',sans-serif;}
+.o-like:hover{color:#4A7C59;}
+.o-status-btn{font-size:11px;padding:3px 10px;border-radius:8px;border:none;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.o-status-btn.pending{background:#FCEAEA;color:#B83030;}
+.o-status-btn.done{background:#E8F0E4;color:#4A7C59;}
+.o-birth-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:0.5px solid #E0D8CC;font-size:13px;}
+.o-birth-row:last-child{border:none;}
 </style>
 </head>
 <body>
@@ -549,6 +576,59 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   <div id="his-list"></div>
 </div>
 
+<!-- Office App -->
+<div id="office-app" style="display:none;max-width:680px;margin:0 auto;padding:14px 14px 80px;">
+
+  <!-- 頂部 tabs -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;">
+    <button class="o-tab active" onclick="switchOfficeTab('announce',this)"><i class="ti ti-speakerphone"></i> 公告</button>
+    <button class="o-tab" onclick="switchOfficeTab('memo',this)"><i class="ti ti-checklist"></i> 備忘錄</button>
+    <button class="o-tab" onclick="switchOfficeTab('birthday',this)"><i class="ti ti-cake"></i> 生日</button>
+    <button class="o-tab" onclick="switchOfficeTab('wall',this)"><i class="ti ti-mood-smile"></i> 舒壓牆</button>
+  </div>
+
+  <!-- 公告欄 -->
+  <div id="o-panel-announce" class="o-panel">
+    <div id="o-announce-list"></div>
+    <!-- 發布公告（leon/ryan/uj-khh 才看得到）-->
+    <div id="o-announce-form" style="display:none;background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;padding:14px;margin-top:10px;">
+      <div style="font-size:13px;font-weight:500;color:#1C2B1A;margin-bottom:10px;">發布新公告</div>
+      <input id="o-ann-title" placeholder="公告標題" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;"/>
+      <textarea id="o-ann-body" placeholder="公告內容…" rows="3" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;resize:none;font-family:'Noto Sans TC',sans-serif;"></textarea>
+      <button onclick="postAnnounce()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">📢 發布公告</button>
+    </div>
+  </div>
+
+  <!-- 交接備忘錄 -->
+  <div id="o-panel-memo" class="o-panel" style="display:none;">
+    <div id="o-memo-list"></div>
+    <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;padding:14px;margin-top:10px;">
+      <div style="font-size:13px;font-weight:500;color:#1C2B1A;margin-bottom:10px;">新增備忘事項</div>
+      <input id="o-memo-text" placeholder="備忘事項內容" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;"/>
+      <button onclick="addMemo()" style="width:100%;background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">＋ 新增備忘事項</button>
+    </div>
+  </div>
+
+  <!-- 夥伴生日 -->
+  <div id="o-panel-birthday" class="o-panel" style="display:none;">
+    <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;overflow:hidden;">
+      <div style="background:#1C2B1A;padding:12px 16px;color:#C8DBC0;font-size:13px;font-weight:500;">🎂 夥伴生日提醒</div>
+      <div id="o-birthday-list"></div>
+    </div>
+  </div>
+
+  <!-- 舒壓牆 -->
+  <div id="o-panel-wall" class="o-panel" style="display:none;">
+    <div style="text-align:center;font-size:11px;color:#888;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-lock" style="font-size:13px;"></i> 所有留言匿名顯示，發洩吧！</div>
+    <div id="o-wall-list"></div>
+    <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;padding:12px;margin-top:10px;">
+      <textarea id="o-wall-text" placeholder="說說今天遇到的事、壓力、或好笑的客人…" rows="3" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;resize:none;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;"></textarea>
+      <button onclick="postWall()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">匿名發布</button>
+    </div>
+  </div>
+
+</div>
+
 <!-- Member App -->
 <div id="member-app">
 
@@ -684,10 +764,13 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   <button class="nav-item active" id="nav-checkout" onclick="switchPage('checkout')">
     <i class="ti ti-receipt"></i><span>結帳</span>
   </button>
+  <button class="nav-item" id="nav-office" onclick="switchPage('office')">
+    <i class="ti ti-building"></i><span>行政</span>
+  </button>
   <button class="nav-item" id="nav-member" onclick="switchPage('member')">
     <i class="ti ti-users"></i><span>會員</span>
   </button>
-  <button class="nav-item" id="nav-admin" onclick="switchPage('admin')" style="display:none;" id="nav-admin-btn">
+  <button class="nav-item" id="nav-admin" onclick="switchPage('admin')" style="display:none;">
     <i class="ti ti-chart-bar"></i><span>總覽</span>
   </button>
 </div>
@@ -1846,6 +1929,193 @@ async function calcAdmRange(store){
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
+// ── Office ────────────────────────────────────────────────
+// 夥伴生日資料
+const STAFF_BIRTHDAYS=[
+  {name:'Ryan', date:'06-10', note:'高雄概念店'},
+];
+
+// 公告/備忘/舒壓牆 存在 localStorage（跨裝置需 Supabase，目前先用本地）
+let officeData={announces:[],memos:[],wall:[]};
+
+function loadOfficeData(){
+  try{
+    const saved=localStorage.getItem('uj_office');
+    if(saved)officeData=JSON.parse(saved);
+  }catch(e){}
+}
+function saveOfficeData(){
+  localStorage.setItem('uj_office',JSON.stringify(officeData));
+}
+
+// 判斷是否有發布公告的權限
+function canPostAnnounce(){
+  // leon, ryan, uj-khh 可以發布公告
+  if(!currentUser&&currentBuiltin){
+    const key=localStorage.getItem('uj_builtin')||'';
+    return ['uj-leon','uj-ryan','uj-khh'].includes(key);
+  }
+  return false;
+}
+
+function switchOfficeTab(tab, el){
+  document.querySelectorAll('.o-tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
+  $(`o-panel-${tab}`).style.display='block';
+  if(tab==='announce')renderAnnounces();
+  else if(tab==='memo')renderMemos();
+  else if(tab==='birthday')renderBirthdays();
+  else if(tab==='wall')renderWall();
+}
+
+function initOfficePage(){
+  loadOfficeData();
+  // 顯示/隱藏發布公告表單
+  const form=$('o-announce-form');
+  if(form)form.style.display=canPostAnnounce()?'block':'none';
+  switchOfficeTab('announce',document.querySelector('.o-tab'));
+}
+
+// ── 公告 ──
+function renderAnnounces(){
+  const el=$('o-announce-list');if(!el)return;
+  const list=officeData.announces||[];
+  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  if(!list.length){el.innerHTML='<div class="empty-hint">尚無公告</div>';return;}
+  el.innerHTML=[...list].reverse().map((a,i)=>{
+    const idx=list.length-1-i;
+    const isRead=(a.readBy||[]).includes(myId);
+    return`<div class="o-card">
+      <div class="o-card-hd">
+        <div><div class="o-card-title">${a.title}</div><div class="o-card-meta">📢 ${a.by} · ${a.date}</div></div>
+        <span class="o-badge ${isRead?'read':'unread'}">${isRead?'已讀':'未讀'}</span>
+      </div>
+      <div class="o-card-body">${a.body||''}
+        ${!isRead?`<div style="margin-top:8px;"><button onclick="markRead(${idx})" style="font-size:12px;background:#E8F0E4;border:none;border-radius:8px;color:#4A7C59;padding:5px 14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 標記已讀</button></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function markRead(idx){
+  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  if(!officeData.announces[idx].readBy)officeData.announces[idx].readBy=[];
+  if(!officeData.announces[idx].readBy.includes(myId)){
+    officeData.announces[idx].readBy.push(myId);
+    saveOfficeData();
+  }
+  renderAnnounces();
+}
+
+function postAnnounce(){
+  const title=$('o-ann-title')?.value.trim();
+  const body=$('o-ann-body')?.value.trim();
+  if(!title){toast('請輸入公告標題');return;}
+  const byKey=localStorage.getItem('uj_builtin')||'';
+  const byName=byKey==='uj-leon'?'Leon':byKey==='uj-ryan'?'Ryan':byKey==='uj-khh'?'高雄店長':'管理員';
+  officeData.announces.push({title,body,by:byName,date:localDate(),readBy:[byKey]});
+  saveOfficeData();
+  if($('o-ann-title'))$('o-ann-title').value='';
+  if($('o-ann-body'))$('o-ann-body').value='';
+  toast('✓ 公告已發布');
+  renderAnnounces();
+}
+
+// ── 備忘錄 ──
+function renderMemos(){
+  const el=$('o-memo-list');if(!el)return;
+  const list=(officeData.memos||[]).filter(m=>m.store===currentStore||(isAdmin&&!currentUser));
+  if(!list.length){el.innerHTML='<div class="empty-hint">本店尚無備忘事項</div>';return;}
+  el.innerHTML=[...list].reverse().map((m,i)=>{
+    const idx=list.length-1-i;
+    const realIdx=officeData.memos.indexOf(list[i]);// 找原始 index
+    const isDone=m.status==='done';
+    return`<div class="o-card">
+      <div class="o-card-hd">
+        <div><div class="o-card-title">${m.text}</div><div class="o-card-meta">${m.by} · ${m.date}</div></div>
+        <button class="o-status-btn ${isDone?'done':'pending'}" onclick="toggleMemoStatus(${realIdx})">${isDone?'✓ 已完成':'待處理'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMemoStatus(idx){
+  officeData.memos[idx].status=officeData.memos[idx].status==='done'?'pending':'done';
+  officeData.memos[idx].doneBy=userName();
+  saveOfficeData();
+  renderMemos();
+}
+
+function addMemo(){
+  const text=$('o-memo-text')?.value.trim();
+  if(!text){toast('請輸入備忘內容');return;}
+  officeData.memos.push({text,by:userName(),date:localDate(),store:currentStore,status:'pending'});
+  saveOfficeData();
+  if($('o-memo-text'))$('o-memo-text').value='';
+  toast('✓ 備忘事項已新增');
+  renderMemos();
+}
+
+// ── 生日 ──
+function renderBirthdays(){
+  const el=$('o-birthday-list');if(!el)return;
+  const today=new Date();
+  const rows=STAFF_BIRTHDAYS.map(s=>{
+    const parts=s.date.split('-');
+    const bDay=new Date(today.getFullYear(),parseInt(parts[0])-1,parseInt(parts[1]));
+    let diff=Math.ceil((bDay-today)/(1000*60*60*24));
+    if(diff<0){bDay.setFullYear(today.getFullYear()+1);diff=Math.ceil((bDay-today)/(1000*60*60*24));}
+    const soon=diff<=30;
+    return`<div class="o-birth-row">
+      <div>
+        <div style="font-size:14px;font-weight:500;color:#1C2B1A;">${s.name}</div>
+        <div style="font-size:11px;color:#888;">${s.note} · ${s.date.replace('-','/')}</div>
+      </div>
+      <span style="font-size:12px;padding:4px 10px;border-radius:10px;background:${diff===0?'#FCEAEA':soon?'#FEF3E0':'#F0EDE5'};color:${diff===0?'#B83030':soon?'#B8963C':'#888'};">${diff===0?'🎂 今天！':diff===1?'明天':''+diff+' 天後'}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML=rows||'<div class="empty-hint">尚無生日資料</div>';
+}
+
+// ── 舒壓牆 ──
+function renderWall(){
+  const el=$('o-wall-list');if(!el)return;
+  const list=officeData.wall||[];
+  if(!list.length){el.innerHTML='<div class="empty-hint" style="text-align:center;padding:20px;color:#888;">還沒有人分享，第一個說說吧！</div>';return;}
+  el.innerHTML=[...list].reverse().map((w,i)=>{
+    const idx=list.length-1-i;
+    return`<div class="o-msg">
+      <div class="o-av">?</div>
+      <div class="o-bubble">
+        <div class="o-bubble-t">${w.text}</div>
+        <div class="o-bubble-s">
+          <span>${w.date}</span>
+          <button class="o-like" onclick="likeWall(${idx})">👍 ${w.likes||0}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function postWall(){
+  const text=$('o-wall-text')?.value.trim();
+  if(!text){toast('請輸入內容');return;}
+  if(!officeData.wall)officeData.wall=[];
+  officeData.wall.push({text,date:localDate(),likes:0});
+  saveOfficeData();
+  if($('o-wall-text'))$('o-wall-text').value='';
+  toast('✓ 已匿名發布');
+  renderWall();
+}
+
+function likeWall(idx){
+  const realIdx=officeData.wall.length-1-idx;
+  officeData.wall[realIdx].likes=(officeData.wall[realIdx].likes||0)+1;
+  saveOfficeData();
+  renderWall();
+}
+
 // ── Member Data ───────────────────────────────────────────
 const MEMBER_DATA=[
 {"id":"UJVIP00001","name":"劉皓謙","store":"台北","staff":"Leon","joinDate":"2024-08-01","expDate":"2099-12-31","gift":"","phone":"0913328895","birth":"1994-08-22","note":""},
@@ -2141,15 +2411,18 @@ const MEMBER_DATA=[
 let memFilter='all', memNewMembers=[];
 
 function switchPage(page){
-  // 隱藏所有
   $('main') && ($('main').style.display='none');
   $('member-app') && ($('member-app').style.display='none');
   $('admin-app') && ($('admin-app').style.display='none');
-  // 重設 nav
+  $('office-app') && ($('office-app').style.display='none');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(page==='checkout'){
     $('main').style.display='block';
     $('nav-checkout').classList.add('active');
+  } else if(page==='office'){
+    $('office-app').style.display='block';
+    $('nav-office').classList.add('active');
+    initOfficePage();
   } else if(page==='member'){
     $('member-app').style.display='block';
     $('nav-member').classList.add('active');
