@@ -1077,8 +1077,7 @@ async function enterStaffApp(){
   hideLoad();
   updateMetrics();
   // 登入後立即載入行政資料並顯示跑馬燈
-  loadOfficeData();
-  initNotifBaseline();
+  await loadOfficePosts();
   updateTicker();
   startNotifPolling();
 }
@@ -2020,32 +2019,31 @@ function updateTicker(){
   const track=$('ticker-track');
   if(!bar||!track)return;
   tickerItems=[];
-  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  const myId=getCurrentId();
   // 未讀公告
-  const unreadAnns=(officeData.announces||[]).filter(a=>!(a.readBy||[]).includes(myId));
+  const unreadAnns=(officePostsCache.announces||[]).filter(a=>!(a.read_by||[]).includes(myId));
   unreadAnns.forEach(a=>tickerItems.push({icon:'📢',text:`新公告：${a.title}`,panel:'announce'}));
   // 待處理備忘
-  const pendingMemos=(officeData.memos||[]).filter(m=>m.store===currentStore&&m.status!=='done');
+  const pendingMemos=(officePostsCache.memos||[]).filter(m=>m.store===currentStore&&m.status==='pending');
   if(pendingMemos.length)tickerItems.push({icon:'📋',text:`${pendingMemos.length} 件備忘事項待處理`,panel:'memo'});
-  // 最新舒壓貼文
-  const wall=officeData.wall||[];
-  if(wall.length)tickerItems.push({icon:'😊',text:`舒壓牆有 ${wall.length} 則貼文`,panel:'wall'});
+  // 未讀舒壓
+  const unreadWall=(officePostsCache.wall||[]).filter(w=>!(w.read_by||[]).includes(myId));
+  if(unreadWall.length)tickerItems.push({icon:'😊',text:`舒壓牆有 ${unreadWall.length} 則未讀貼文`,panel:'wall'});
   // 生日
   const today=new Date();
   STAFF_BIRTHDAYS.forEach(s=>{
     const parts=s.date.split('-');
     const bDay=new Date(today.getFullYear(),parseInt(parts[0])-1,parseInt(parts[1]));
     const diff=Math.ceil((bDay-today)/(1000*60*60*24));
-    if(diff>=0&&diff<=7)tickerItems.push({icon:'🎂',text:`${s.name} 生日倒數 ${diff===0?'今天！':diff+'天'}`,panel:'birthday'});
+    if(diff===0)tickerItems.push({icon:'🎂',text:`今天是 ${s.name} 的生日！🎉`,panel:'birthday'});
+    else if(diff>0&&diff<=7)tickerItems.push({icon:'🎂',text:`${s.name} 生日倒數 ${diff} 天`,panel:'birthday'});
   });
   if(!tickerItems.length){bar.style.display='none';return;}
   bar.style.display='flex';
-  // 重複兩次讓跑馬燈無縫循環
-  const html=[...tickerItems,...tickerItems].map((t,i)=>
+  const html=[...tickerItems,...tickerItems].map(t=>
     `<span class="ticker-item" onclick="goToPanel('${t.panel}')">${t.icon} ${t.text}</span>`
   ).join('<span style="color:rgba(200,219,192,.3);padding:0 10px;">|</span>');
   track.innerHTML=html;
-  // 根據內容長度調整速度
   const speed=Math.max(15,tickerItems.length*8);
   track.style.animationDuration=speed+'s';
 }
@@ -2055,31 +2053,14 @@ function goToPanel(panel){
   setTimeout(()=>toggleGPanel(panel),200);
 }
 
-function checkNewNotif(){
-  const ann=(officeData.announces||[]).length;
-  const memo=(officeData.memos||[]).length;
-  const wall=(officeData.wall||[]).length;
-  lastSeenCount={announces:ann,memos:memo,wall:wall};
-  updateTicker();
-}
-
-function initNotifBaseline(){
-  lastSeenCount={
-    announces:(officeData.announces||[]).length,
-    memos:(officeData.memos||[]).length,
-    wall:(officeData.wall||[]).length
-  };
-}
-
-// ── Office ────────────────────────────────────────────────
-// 夥伴生日資料
-const STAFF_BIRTHDAYS=[
-  {name:'Ryan', date:'06-10', note:'高雄概念店'},
-];
-
-// 公告/備忘/舒壓牆 存在 localStorage（跨裝置需 Supabase，目前先用本地）
-let officeData={announces:[],memos:[],wall:[]};
+// ── Office Supabase ────────────────────────────────────────
+let officePostsCache={announces:[],memos:[],wall:[]};
 let wallSessionId=null;
+
+function getCurrentId(){
+  return localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+}
+
 function getWallSession(){
   if(!wallSessionId){
     wallSessionId=localStorage.getItem('uj_wall_sid');
@@ -2091,224 +2072,44 @@ function getWallSession(){
   return wallSessionId;
 }
 
-function loadOfficeData(){
-  try{
-    const saved=localStorage.getItem('uj_office');
-    if(saved)officeData=JSON.parse(saved);
-  }catch(e){}
+function canPostAnnounce(){
+  const key=localStorage.getItem('uj_builtin')||'';
+  return ['uj-leon','uj-ryan','uj-khh'].includes(key);
 }
+
+function getByName(){
+  const key=localStorage.getItem('uj_builtin')||'';
+  if(key==='uj-leon')return 'Leon';
+  if(key==='uj-ryan')return 'Ryan';
+  if(key==='uj-khh')return '高雄店長';
+  if(currentUser)return currentUser.display_name||currentUser.username;
+  return '同仁';
+}
+
+async function loadOfficePosts(){
+  if(!db)return;
+  try{
+    const {data}=await db.from('office_posts').select('*').order('created_at',{ascending:false});
+    officePostsCache={
+      announces:(data||[]).filter(p=>p.type==='announce'),
+      memos:(data||[]).filter(p=>p.type==='memo'),
+      wall:(data||[]).filter(p=>p.type==='wall'),
+    };
+    updateTicker();
+  }catch(e){console.error('loadOfficePosts:',e);}
+}
+
 let _notifPollingStarted=false;
 function startNotifPolling(){
   if(_notifPollingStarted)return;
   _notifPollingStarted=true;
-  setInterval(()=>{
-    const prev=JSON.stringify(officeData);
-    loadOfficeData();
-    const curr=JSON.stringify(officeData);
-    if(curr!==prev)checkNewNotif();
-  },15000);
-}
-function saveOfficeData(){
-  localStorage.setItem('uj_office',JSON.stringify(officeData));
-  updateTicker();
+  setInterval(async()=>{
+    await loadOfficePosts();
+    updateTicker();
+  },20000);
 }
 
-// 判斷是否有發布公告的權限
-function canPostAnnounce(){
-  // leon, ryan, uj-khh 可以發布公告
-  if(!currentUser&&currentBuiltin){
-    const key=localStorage.getItem('uj_builtin')||'';
-    return ['uj-leon','uj-ryan','uj-khh'].includes(key);
-  }
-  return false;
-}
-
-let gActivePanel=null;
-function toggleGPanel(panel){
-  // 同一個再點 → 收起
-  if(gActivePanel===panel){
-    document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
-    document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
-    gActivePanel=null;
-    return;
-  }
-  // 切換
-  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
-  document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
-  gActivePanel=panel;
-  const panelEl=$(`o-panel-${panel}`);
-  if(panelEl)panelEl.style.display='block';
-  document.getElementById(`gtile-${panel}`)?.classList.add('g-tile-active');
-  if(panel==='announce')renderAnnounces();
-  else if(panel==='memo')renderMemos();
-  else if(panel==='birthday')renderBirthdays();
-  else if(panel==='wall')renderWall();
-}
-
-function switchOfficeTab(tab, el){
-  document.querySelectorAll('.o-tab').forEach(t=>t.classList.remove('active'));
-  if(el)el.classList.add('active');
-  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
-  $(`o-panel-${tab}`).style.display='block';
-  if(tab==='announce')renderAnnounces();
-  else if(tab==='memo')renderMemos();
-  else if(tab==='birthday')renderBirthdays();
-  else if(tab==='wall')renderWall();
-}
-
-function initOfficePage(){
-  loadOfficeData();
-  initNotifBaseline();
-  startNotifPolling();
-  gActivePanel=null;
-  updateTicker();
-  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
-  document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
-  const form=$('o-announce-form');
-  if(form)form.style.display=canPostAnnounce()?'block':'none';
-  updateGTileCounts();
-}
-
-function updateGTileCounts(){
-  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
-  const unread=(officeData.announces||[]).filter(a=>!(a.readBy||[]).includes(myId)).length;
-  const pending=(officeData.memos||[]).filter(m=>m.store===currentStore&&m.status!=='done').length;
-  const wall=(officeData.wall||[]).length;
-  // 生日
-  const today=new Date();
-  const birthSoon=STAFF_BIRTHDAYS.filter(s=>{
-    const parts=s.date.split('-');
-    const bDay=new Date(today.getFullYear(),parseInt(parts[0])-1,parseInt(parts[1]));
-    let diff=Math.ceil((bDay-today)/(1000*60*60*24));
-    if(diff<0)diff+=365;
-    return diff<=30;
-  }).length;
-  if($('g-ann-count'))$('g-ann-count').textContent=unread?`${unread} 未讀`:'';
-  if($('g-memo-count'))$('g-memo-count').textContent=pending?`${pending} 待處理`:'';
-  if($('g-birth-count'))$('g-birth-count').textContent=birthSoon?`${birthSoon} 位即將生日`:'';
-  if($('g-wall-count'))$('g-wall-count').textContent=wall?`${wall} 則`:'';
-}
-
-// ── 公告 ──
-function renderAnnounces(){
-  const el=$('o-announce-list');if(!el)return;
-  const q=($('o-ann-search')?.value||'').toLowerCase().trim();
-  const rawList=officeData.announces||[];
-  const list=q?rawList.filter(a=>a.title.toLowerCase().includes(q)||(a.body||'').toLowerCase().includes(q)):rawList;
-  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
-  if(!rawList.length){el.innerHTML='<div class="empty-hint">尚無公告</div>';return;}
-  if(!list.length){el.innerHTML='<div class="empty-hint">找不到符合「'+q+'」的公告</div>';return;}
-  el.innerHTML=[...list].reverse().map((a,i)=>{
-    const idx=rawList.indexOf(list[list.length-1-i]);
-    const isRead=(a.readBy||[]).includes(myId);
-    return`<div class="o-card" style="cursor:pointer;" onclick="openAnnounce(${idx})">
-      <div class="o-card-hd">
-        <div style="flex:1;">
-          <div class="o-card-title">${a.title}</div>
-          <div class="o-card-meta">📢 ${a.by} · ${a.date}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          ${a.poll?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#E8F0E4;color:#4A7C59;">📊 票選</span>':''}
-          <span class="o-badge ${isRead?'read':'unread'}">${isRead?'已讀':'未讀'}</span>
-          <i class="ti ti-chevron-right" style="color:#C8C0B0;font-size:16px;"></i>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-let currentAnnIdx=-1;
-function openAnnounce(idx){
-  currentAnnIdx=idx;
-  const a=officeData.announces[idx];
-  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
-  if(!a.readBy)a.readBy=[];
-  if(!a.readBy.includes(myId)){a.readBy.push(myId);saveOfficeData();}
-  const modal=$('o-ann-modal');
-  if(!modal)return;
-  $('o-ann-modal-title').textContent=a.title;
-  $('o-ann-modal-meta').textContent=`📢 ${a.by} · ${a.date}`;
-  $('o-ann-modal-body').textContent=a.body||'';
-  const imgEl=$('o-ann-modal-img');
-  if(imgEl)imgEl.innerHTML=a.img?`<img src="${a.img}" style="width:100%;border-radius:8px;margin-top:10px;"/>` :'';
-  // 票選
-  const pollEl=$('o-ann-modal-poll');
-  if(pollEl)pollEl.innerHTML=renderPollHTML(a,idx,myId);
-  modal.style.display='flex';
-  renderAnnounces();
-  updateGTileCounts();
-}
-
-function renderPollHTML(a,idx,myId){
-  if(!a.poll)return '';
-  const p=a.poll;
-  const today=localDate();
-  const expired=p.endDate&&today>p.endDate;
-  const totalVotes=p.options.reduce((s,o)=>s+(o.votes||[]).length,0);
-  const hasVoted=p.options.some(o=>(o.votes||[]).includes(myId));
-  const optHTML=p.options.map((o,oi)=>{
-    const vCount=(o.votes||[]).length;
-    const pct=totalVotes?Math.round(vCount/totalVotes*100):0;
-    const voted=(o.votes||[]).includes(myId);
-    if(hasVoted||expired){
-      return`<div style="margin-bottom:8px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
-          <span style="color:${voted?'#1C2B1A':'#555'};font-weight:${voted?'500':'400'};">${voted?'✓ ':''} ${o.text}</span>
-          <span style="color:#888;font-size:12px;">${vCount} 票 (${pct}%)</span>
-        </div>
-        <div style="background:#E0D8CC;border-radius:20px;height:6px;"><div style="background:${voted?'#1C2B1A':'#4A7C59'};border-radius:20px;height:6px;width:${pct}%;transition:width .4s;"></div></div>
-      </div>`;
-    }
-    return`<button onclick="votePoll(${idx},${oi})" style="width:100%;text-align:left;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 14px;font-size:13px;background:#fff;color:#2C2C2C;cursor:pointer;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">${o.text}</button>`;
-  }).join('');
-  return`<div style="background:#F5F0E8;border-radius:10px;padding:12px;margin-top:12px;">
-    <div style="font-size:12px;color:#888;margin-bottom:8px;">📊 ${p.question}</div>
-    ${optHTML}
-    <div style="font-size:11px;color:#aaa;margin-top:6px;">截止：${p.endDate} · 共 ${totalVotes} 票${expired?' · 已截止':''}</div>
-  </div>`;
-}
-
-function votePoll(annIdx,optIdx){
-  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
-  const poll=officeData.announces[annIdx].poll;
-  if(!poll)return;
-  const today=localDate();
-  if(poll.endDate&&today>poll.endDate){toast('投票已截止');return;}
-  // 確認未投過
-  const hasVoted=poll.options.some(o=>(o.votes||[]).includes(myId));
-  if(hasVoted){toast('您已投過票');return;}
-  if(!poll.options[optIdx].votes)poll.options[optIdx].votes=[];
-  poll.options[optIdx].votes.push(myId);
-  saveOfficeData();
-  toast('✓ 投票成功');
-  // 重新渲染 modal 票選區
-  const myIdNow=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
-  const pollEl=$('o-ann-modal-poll');
-  if(pollEl)pollEl.innerHTML=renderPollHTML(officeData.announces[annIdx],annIdx,myIdNow);
-}
-
-function markRead(idx){
-  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
-  if(!officeData.announces[idx].readBy)officeData.announces[idx].readBy=[];
-  if(!officeData.announces[idx].readBy.includes(myId)){
-    officeData.announces[idx].readBy.push(myId);
-    saveOfficeData();
-  }
-  renderAnnounces();
-}
-
-let annImgData=null;
-function previewAnnImg(input){
-  if(!input.files||!input.files[0])return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    annImgData=e.target.result;
-    const prev=$('o-ann-img-preview');
-    if(prev)prev.innerHTML=`<img src="${annImgData}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;"/>`;
-  };
-  reader.readAsDataURL(input.files[0]);
-}
-
+// ── 公告 ──────────────────────────────────────────────────
 function togglePollForm(){
   const cb=$('o-ann-poll-toggle');
   const form=$('o-poll-form');
@@ -2326,13 +2127,22 @@ function addPollOption(){
   wrap.appendChild(inp);
 }
 
-function postAnnounce(){
+let annImgData=null;
+function previewAnnImg(input){
+  if(!input.files||!input.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    annImgData=e.target.result;
+    const prev=$('o-ann-img-preview');
+    if(prev)prev.innerHTML=`<img src="${annImgData}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;"/>`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function postAnnounce(){
   const title=$('o-ann-title')?.value.trim();
   const body=$('o-ann-body')?.value.trim();
   if(!title){toast('請輸入公告標題');return;}
-  const byKey=localStorage.getItem('uj_builtin')||'';
-  const byName=byKey==='uj-leon'?'Leon':byKey==='uj-ryan'?'Ryan':byKey==='uj-khh'?'高雄店長':'管理員';
-  // 票選資料
   let poll=null;
   if($('o-ann-poll-toggle')?.checked){
     const q=$('o-poll-q')?.value.trim();
@@ -2341,62 +2151,188 @@ function postAnnounce(){
     if(!q){toast('請輸入票選問題');return;}
     if(opts.length<2){toast('請至少填寫 2 個選項');return;}
     if(!endDate){toast('請設定截止日期');return;}
-    poll={question:q,options:opts.map(o=>({text:o,votes:[]})),endDate,closed:false};
+    poll={question:q,options:opts.map(o=>({text:o,votes:[]})),endDate};
   }
-  officeData.announces.push({title,body,by:byName,date:localDate(),readBy:[byKey],img:annImgData||null,poll});
-  saveOfficeData();
-  if($('o-ann-title'))$('o-ann-title').value='';
-  if($('o-ann-body'))$('o-ann-body').value='';
-  if($('o-poll-q'))$('o-poll-q').value='';
-  if($('o-poll-end'))$('o-poll-end').value='';
-  if($('o-ann-poll-toggle'))$('o-ann-poll-toggle').checked=false;
-  const wrap=$('o-poll-options-wrap');
-  if(wrap)wrap.innerHTML=`<input class="o-poll-opt" placeholder="選項 1" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;"/><input class="o-poll-opt" placeholder="選項 2" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 12px;font-size:13px;background:#fff;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;"/>`;
-  if($('o-poll-form'))$('o-poll-form').style.display='none';
-  annImgData=null;
-  const prev=$('o-ann-img-preview');if(prev)prev.innerHTML='';
-  const fileInp=$('o-ann-img');if(fileInp)fileInp.value='';
-  toast('✓ 公告已發布');
-  renderAnnounces();
-  updateGTileCounts();
+  showLoad();
+  try{
+    await db.from('office_posts').insert({
+      type:'announce',title,body,img:annImgData||null,
+      by_name:getByName(),by_account:getCurrentId(),
+      poll,read_by:[getCurrentId()],likes:[],replies:[]
+    });
+    hideLoad();
+    if($('o-ann-title'))$('o-ann-title').value='';
+    if($('o-ann-body'))$('o-ann-body').value='';
+    if($('o-poll-q'))$('o-poll-q').value='';
+    if($('o-poll-end'))$('o-poll-end').value='';
+    if($('o-ann-poll-toggle'))$('o-ann-poll-toggle').checked=false;
+    if($('o-poll-form'))$('o-poll-form').style.display='none';
+    annImgData=null;
+    const prev=$('o-ann-img-preview');if(prev)prev.innerHTML='';
+    const fileInp=$('o-ann-img');if(fileInp)fileInp.value='';
+    toast('✓ 公告已發布');
+    await loadOfficePosts();
+    renderAnnounces();
+    updateGTileCounts();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
-// ── 備忘錄 ──
-function renderMemos(){
-  const el=$('o-memo-list');if(!el)return;
-  const list=(officeData.memos||[]).filter(m=>m.store===currentStore||(isAdmin&&!currentUser));
-  if(!list.length){el.innerHTML='<div class="empty-hint">本店尚無備忘事項</div>';return;}
-  el.innerHTML=[...list].reverse().map((m,i)=>{
-    const idx=list.length-1-i;
-    const realIdx=officeData.memos.indexOf(list[i]);// 找原始 index
-    const isDone=m.status==='done';
-    return`<div class="o-card">
+function renderAnnounces(){
+  const el=$('o-announce-list');if(!el)return;
+  const q=($('o-ann-search')?.value||'').toLowerCase().trim();
+  const rawList=officePostsCache.announces||[];
+  const list=q?rawList.filter(a=>a.title?.toLowerCase().includes(q)||(a.body||'').toLowerCase().includes(q)):rawList;
+  const myId=getCurrentId();
+  if(!rawList.length){el.innerHTML='<div class="empty-hint">尚無公告</div>';return;}
+  if(!list.length){el.innerHTML=`<div class="empty-hint">找不到符合「${q}」的公告</div>`;return;}
+  el.innerHTML=list.map(a=>{
+    const isRead=(a.read_by||[]).includes(myId);
+    const isMine=a.by_account===myId;
+    return`<div class="o-card" style="cursor:pointer;" onclick="openAnnounce(${a.id})">
       <div class="o-card-hd">
-        <div><div class="o-card-title">${m.text}</div><div class="o-card-meta">${m.by} · ${m.date}</div></div>
-        <button class="o-status-btn ${isDone?'done':'pending'}" onclick="toggleMemoStatus(${realIdx})">${isDone?'✓ 已完成':'待處理'}</button>
+        <div style="flex:1;">
+          <div class="o-card-title">${a.title}</div>
+          <div class="o-card-meta">📢 ${a.by_name} · ${(a.created_at||'').slice(0,10)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          ${a.poll?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#E8F0E4;color:#4A7C59;">📊</span>':''}
+          <span class="o-badge ${isRead?'read':'unread'}">${isRead?'已讀':'未讀'}</span>
+          ${isMine?`<button onclick="event.stopPropagation();editAnnounce(${a.id})" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;">✏️</button>
+          <button onclick="event.stopPropagation();deleteAnnounce(${a.id})" style="background:none;border:none;color:#B83030;font-size:13px;cursor:pointer;">🗑</button>`:''}
+          <i class="ti ti-chevron-right" style="color:#C8C0B0;font-size:14px;"></i>
+        </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function toggleMemoStatus(idx){
-  officeData.memos[idx].status=officeData.memos[idx].status==='done'?'pending':'done';
-  officeData.memos[idx].doneBy=userName();
-  saveOfficeData();
-  renderMemos();
+let currentAnnId=-1;
+async function openAnnounce(id){
+  currentAnnId=id;
+  const myId=getCurrentId();
+  // 標記已讀
+  const ann=officePostsCache.announces.find(a=>a.id===id);
+  if(!ann)return;
+  if(!(ann.read_by||[]).includes(myId)){
+    const newReadBy=[...(ann.read_by||[]),myId];
+    await db.from('office_posts').update({read_by:newReadBy}).eq('id',id);
+    ann.read_by=newReadBy;
+    updateTicker();
+  }
+  const modal=$('o-ann-modal');
+  if(!modal)return;
+  $('o-ann-modal-title').textContent=ann.title;
+  $('o-ann-modal-meta').textContent=`📢 ${ann.by_name} · ${(ann.created_at||'').slice(0,10)}`;
+  $('o-ann-modal-body').textContent=ann.body||'';
+  const imgEl=$('o-ann-modal-img');
+  if(imgEl)imgEl.innerHTML=ann.img?`<img src="${ann.img}" style="width:100%;border-radius:8px;margin-top:10px;"/>` :'';
+  const pollEl=$('o-ann-modal-poll');
+  if(pollEl)pollEl.innerHTML=renderPollHTML(ann,myId);
+  modal.style.display='flex';
+  renderAnnounces();
+  updateGTileCounts();
 }
 
-function addMemo(){
+function renderPollHTML(ann,myId){
+  const p=ann.poll;
+  if(!p)return '';
+  const today=localDate();
+  const expired=p.endDate&&today>p.endDate;
+  const totalVotes=p.options.reduce((s,o)=>s+(o.votes||[]).length,0);
+  const hasVoted=p.options.some(o=>(o.votes||[]).includes(myId));
+  const optHTML=p.options.map((o,oi)=>{
+    const vCount=(o.votes||[]).length;
+    const pct=totalVotes?Math.round(vCount/totalVotes*100):0;
+    const voted=(o.votes||[]).includes(myId);
+    if(hasVoted||expired){
+      return`<div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+          <span style="color:${voted?'#1C2B1A':'#555'};font-weight:${voted?'500':'400'};">${voted?'✓ ':''} ${o.text}</span>
+          <span style="color:#888;font-size:12px;">${vCount} 票 (${pct}%)</span>
+        </div>
+        <div style="background:#E0D8CC;border-radius:20px;height:6px;"><div style="background:${voted?'#1C2B1A':'#4A7C59'};border-radius:20px;height:6px;width:${pct}%;"></div></div>
+      </div>`;
+    }
+    return`<button onclick="votePoll(${ann.id},${oi})" style="width:100%;text-align:left;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 14px;font-size:13px;background:#fff;color:#2C2C2C;cursor:pointer;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">${o.text}</button>`;
+  }).join('');
+  return`<div style="background:#F5F0E8;border-radius:10px;padding:12px;margin-top:12px;">
+    <div style="font-size:12px;color:#888;margin-bottom:8px;">📊 ${p.question}</div>
+    ${optHTML}
+    <div style="font-size:11px;color:#aaa;margin-top:6px;">截止：${p.endDate} · 共 ${totalVotes} 票${expired?' · 已截止':''}</div>
+  </div>`;
+}
+
+async function votePoll(annId,optIdx){
+  const myId=getCurrentId();
+  const ann=officePostsCache.announces.find(a=>a.id===annId);
+  if(!ann||!ann.poll)return;
+  const today=localDate();
+  if(ann.poll.endDate&&today>ann.poll.endDate){toast('投票已截止');return;}
+  const hasVoted=ann.poll.options.some(o=>(o.votes||[]).includes(myId));
+  if(hasVoted){toast('您已投過票');return;}
+  ann.poll.options[optIdx].votes=[...(ann.poll.options[optIdx].votes||[]),myId];
+  await db.from('office_posts').update({poll:ann.poll}).eq('id',annId);
+  const pollEl=$('o-ann-modal-poll');
+  if(pollEl)pollEl.innerHTML=renderPollHTML(ann,myId);
+  toast('✓ 投票成功');
+}
+
+async function deleteAnnounce(id){
+  if(!confirm('確定刪除這則公告？'))return;
+  showLoad();
+  await db.from('office_posts').delete().eq('id',id);
+  hideLoad();toast('✓ 已刪除');
+  await loadOfficePosts();renderAnnounces();updateGTileCounts();
+}
+
+async function editAnnounce(id){
+  const ann=officePostsCache.announces.find(a=>a.id===id);
+  if(!ann)return;
+  const newTitle=prompt('編輯標題：',ann.title);
+  if(newTitle===null)return;
+  const newBody=prompt('編輯內容：',ann.body||'');
+  if(newBody===null)return;
+  showLoad();
+  await db.from('office_posts').update({title:newTitle,body:newBody,updated_at:new Date().toISOString()}).eq('id',id);
+  hideLoad();toast('✓ 已更新');
+  await loadOfficePosts();renderAnnounces();
+}
+
+// ── 備忘錄 ──────────────────────────────────────────────
+async function renderMemos(){
+  const el=$('o-memo-list');if(!el)return;
+  const list=(officePostsCache.memos||[]).filter(m=>m.store===currentStore);
+  if(!list.length){el.innerHTML='<div class="empty-hint">本店尚無備忘事項</div>';return;}
+  el.innerHTML=list.map(m=>{
+    const isDone=m.status==='done';
+    return`<div class="o-card">
+      <div class="o-card-hd">
+        <div><div class="o-card-title">${m.body}</div><div class="o-card-meta">${m.by_name} · ${(m.created_at||'').slice(0,10)}${isDone&&m.done_by?' · 完成：'+m.done_by:''}</div></div>
+        <button class="o-status-btn ${isDone?'done':'pending'}" onclick="toggleMemoStatus(${m.id},'${isDone?'pending':'done'}')">${isDone?'✓ 已完成':'待處理'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleMemoStatus(id,newStatus){
+  showLoad();
+  await db.from('office_posts').update({status:newStatus,done_by:newStatus==='done'?getByName():null,updated_at:new Date().toISOString()}).eq('id',id);
+  hideLoad();
+  await loadOfficePosts();renderMemos();updateGTileCounts();
+}
+
+async function addMemo(){
   const text=$('o-memo-text')?.value.trim();
   if(!text){toast('請輸入備忘內容');return;}
-  officeData.memos.push({text,by:userName(),date:localDate(),store:currentStore,status:'pending'});
-  saveOfficeData();
+  showLoad();
+  await db.from('office_posts').insert({type:'memo',body:text,by_name:getByName(),by_account:getCurrentId(),store:currentStore,status:'pending',read_by:[],likes:[],replies:[]});
+  hideLoad();
   if($('o-memo-text'))$('o-memo-text').value='';
   toast('✓ 備忘事項已新增');
-  renderMemos();
+  await loadOfficePosts();renderMemos();updateGTileCounts();
 }
 
-// ── 生日 ──
+// ── 生日 ──────────────────────────────────────────────────
 function renderBirthdays(){
   const el=$('o-birthday-list');if(!el)return;
   const today=new Date();
@@ -2405,136 +2341,213 @@ function renderBirthdays(){
     const bDay=new Date(today.getFullYear(),parseInt(parts[0])-1,parseInt(parts[1]));
     let diff=Math.ceil((bDay-today)/(1000*60*60*24));
     if(diff<0){bDay.setFullYear(today.getFullYear()+1);diff=Math.ceil((bDay-today)/(1000*60*60*24));}
-    const soon=diff<=30;
     return`<div class="o-birth-row">
-      <div>
-        <div style="font-size:14px;font-weight:500;color:#1C2B1A;">${s.name}</div>
-        <div style="font-size:11px;color:#888;">${s.note} · ${s.date.replace('-','/')}</div>
-      </div>
-      <span style="font-size:12px;padding:4px 10px;border-radius:10px;background:${diff===0?'#FCEAEA':soon?'#FEF3E0':'#F0EDE5'};color:${diff===0?'#B83030':soon?'#B8963C':'#888'};">${diff===0?'🎂 今天！':diff===1?'明天':''+diff+' 天後'}</span>
+      <div><div style="font-size:14px;font-weight:500;color:#1C2B1A;">${s.name}</div><div style="font-size:11px;color:#888;">${s.note} · ${s.date.replace('-','/')}</div></div>
+      <span style="font-size:12px;padding:4px 10px;border-radius:10px;background:${diff===0?'#FCEAEA':diff<=7?'#FEF3E0':'#F0EDE5'};color:${diff===0?'#B83030':diff<=7?'#B8963C':'#888'};">${diff===0?'🎂 今天！':diff+' 天後'}</span>
     </div>`;
   }).join('');
   el.innerHTML=rows||'<div class="empty-hint">尚無生日資料</div>';
 }
 
-// ── 舒壓牆 ──
-function renderWall(){
+// ── 舒壓牆 ──────────────────────────────────────────────
+async function renderWall(){
   const el=$('o-wall-list');if(!el)return;
-  const list=officeData.wall||[];
-  if(!list.length){el.innerHTML='<div class="empty-hint" style="text-align:center;padding:20px;color:#888;">還沒有人分享，第一個說說吧！</div>';return;}
+  const list=officePostsCache.wall||[];
+  const myId=getCurrentId();
   const mySid=getWallSession();
-  el.innerHTML=[...list].reverse().map((w,i)=>{
-    const idx=list.length-1-i;
+  if(!list.length){el.innerHTML='<div class="empty-hint" style="text-align:center;padding:20px;color:#888;">還沒有人分享，第一個說說吧！</div>';return;}
+  el.innerHTML=list.map(w=>{
+    const isLiked=(w.likes||[]).includes(myId);
+    const isMine=w.by_account===mySid||w.by_account===myId;
     const replies=w.replies||[];
-    const isMine=w.sid&&w.sid===mySid;
     const replyHTML=replies.map(r=>`
       <div style="display:flex;gap:7px;margin-top:8px;padding-left:4px;border-left:2px solid #E0D8CC;">
         <div style="width:22px;height:22px;border-radius:50%;background:#E0D8CC;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888;flex-shrink:0;">?</div>
-        <div style="flex:1;font-size:12px;color:#555;">${r.text}<span style="font-size:10px;color:#aaa;margin-left:6px;">${r.date}</span></div>
+        <div style="flex:1;font-size:12px;color:#555;">${r.text}<span style="font-size:10px;color:#aaa;margin-left:6px;">${r.date||''}</span></div>
       </div>`).join('');
     const showReply=w._showReply?`
       <div style="display:flex;gap:6px;margin-top:8px;">
-        <input id="reply-inp-${idx}" placeholder="匿名回覆…" style="flex:1;border:1px solid #E0D8CC;border-radius:8px;padding:6px 10px;font-size:13px;background:#FAFAF8;outline:none;font-family:'Noto Sans TC',sans-serif;"/>
-        <button onclick="submitReply(${idx})" style="background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:6px 12px;font-size:12px;cursor:pointer;">送出</button>
-      </div>`:'';
-    const editBar=isMine?`
-      <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid #E0D8CC;">
-        <button onclick="editWall(${idx})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#555;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✏️ 編輯</button>
-        <button onclick="deleteWall(${idx})" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">🗑 刪除</button>
+        <input id="reply-inp-${w.id}" placeholder="匿名回覆…" style="flex:1;border:1px solid #E0D8CC;border-radius:8px;padding:6px 10px;font-size:13px;background:#FAFAF8;outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;min-width:0;"/>
+        <button onclick="submitReply(${w.id})" style="background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap;">送出</button>
       </div>`:'';
     const editMode=w._editing?`
       <div style="margin-top:8px;">
-        <textarea id="edit-wall-${idx}" rows="2" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 10px;font-size:13px;background:#FAFAF8;outline:none;box-sizing:border-box;resize:none;font-family:'Noto Sans TC',sans-serif;">${w.text}</textarea>
+        <textarea id="edit-wall-${w.id}" rows="2" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 10px;font-size:13px;background:#FAFAF8;outline:none;box-sizing:border-box;resize:none;font-family:'Noto Sans TC',sans-serif;">${w.body}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px;">
-          <button onclick="saveWallEdit(${idx})" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:7px;font-size:12px;cursor:pointer;">儲存</button>
-          <button onclick="cancelWallEdit(${idx})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#888;padding:7px;font-size:12px;cursor:pointer;">取消</button>
+          <button onclick="saveWallEdit(${w.id})" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:7px;font-size:12px;cursor:pointer;">儲存</button>
+          <button onclick="cancelWallEdit(${w.id})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#888;padding:7px;font-size:12px;cursor:pointer;">取消</button>
         </div>
       </div>`:'';
-    return`<div class="o-msg" style="flex-direction:column;gap:0;">
+    const editBar=isMine?`
+      <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid #E0D8CC;">
+        <button onclick="editWallPost(${w.id})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#555;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✏️ 編輯</button>
+        <button onclick="deleteWallPost(${w.id})" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">🗑 刪除</button>
+      </div>`:'';
+    return`<div class="o-msg" style="flex-direction:column;gap:0;margin-bottom:12px;" onclick="markWallRead(${w.id})">
       <div style="display:flex;gap:10px;">
         <div class="o-av">?</div>
         <div class="o-bubble" style="flex:1;">
-          ${w._editing?'':`<div class="o-bubble-t">${w.text}</div>`}
-          ${editMode}
-          <div class="o-bubble-s">
-            <span>${w.date}</span>
-            <button class="o-like" onclick="likeWall(${idx})">👍 ${w.likes||0}</button>
-            <button class="o-like" onclick="toggleReply(${idx})">💬 ${replies.length?replies.length+' 則':''} 回覆</button>
+          ${w._editing?editMode:`<div class="o-bubble-t">${w.body}</div>`}
+          ${w._editing?'':replyHTML}
+          ${w._editing?'':showReply}
+          <div class="o-bubble-s" style="margin-top:6px;">
+            <span>${(w.created_at||'').slice(0,10)}</span>
+            <button class="o-like" onclick="event.stopPropagation();likeWall(${w.id})" style="color:${isLiked?'#4A7C59':'#aaa'}">👍 ${(w.likes||[]).length}</button>
+            <button class="o-like" onclick="event.stopPropagation();toggleReply(${w.id})">💬 ${replies.length?replies.length+' 則':''} 回覆</button>
           </div>
-          ${replyHTML}
-          ${showReply}
-          ${editBar}
+          ${w._editing?'':editBar}
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function editWall(idx){
-  const realIdx=officeData.wall.length-1-idx;
-  officeData.wall[realIdx]._editing=true;
-  renderWall();
-  setTimeout(()=>document.getElementById(`edit-wall-${idx}`)?.focus(),100);
-}
-function cancelWallEdit(idx){
-  const realIdx=officeData.wall.length-1-idx;
-  officeData.wall[realIdx]._editing=false;
-  renderWall();
-}
-function saveWallEdit(idx){
-  const realIdx=officeData.wall.length-1-idx;
-  const text=document.getElementById(`edit-wall-${idx}`)?.value.trim();
-  if(!text){toast('內容不能為空');return;}
-  officeData.wall[realIdx].text=text;
-  officeData.wall[realIdx]._editing=false;
-  saveOfficeData();
-  toast('✓ 已更新');
-  renderWall();
-}
-function deleteWall(idx){
-  const realIdx=officeData.wall.length-1-idx;
-  if(!confirm('確定刪除這則貼文？'))return;
-  officeData.wall.splice(realIdx,1);
-  saveOfficeData();
-  toast('✓ 已刪除');
-  renderWall();
+async function markWallRead(id){
+  const myId=getCurrentId();
+  const post=officePostsCache.wall.find(w=>w.id===id);
+  if(!post||(post.read_by||[]).includes(myId))return;
+  const newReadBy=[...(post.read_by||[]),myId];
+  await db.from('office_posts').update({read_by:newReadBy}).eq('id',id);
+  post.read_by=newReadBy;
+  updateTicker();
 }
 
-function toggleReply(idx){
-  const realIdx=officeData.wall.length-1-idx;
-  officeData.wall[realIdx]._showReply=!officeData.wall[realIdx]._showReply;
-  renderWall();
-  setTimeout(()=>document.getElementById(`reply-inp-${idx}`)?.focus(),100);
-}
-
-function submitReply(idx){
-  const realIdx=officeData.wall.length-1-idx;
-  const inp=document.getElementById(`reply-inp-${idx}`);
-  const text=inp?.value.trim();
-  if(!text){toast('請輸入回覆內容');return;}
-  if(!officeData.wall[realIdx].replies)officeData.wall[realIdx].replies=[];
-  officeData.wall[realIdx].replies.push({text,date:localDate()});
-  officeData.wall[realIdx]._showReply=false;
-  saveOfficeData();
-  renderWall();
-}
-
-function postWall(){
+async function postWall(){
   const text=$('o-wall-text')?.value.trim();
   if(!text){toast('請輸入內容');return;}
-  if(!officeData.wall)officeData.wall=[];
-  officeData.wall.push({text,date:localDate(),likes:0,sid:getWallSession(),wid:'w_'+Date.now()});
-  saveOfficeData();
+  const sid=getWallSession();
+  showLoad();
+  await db.from('office_posts').insert({type:'wall',body:text,by_account:sid,by_name:'匿名',read_by:[sid],likes:[],replies:[]});
+  hideLoad();
   if($('o-wall-text'))$('o-wall-text').value='';
   toast('✓ 已匿名發布');
-  renderWall();
+  await loadOfficePosts();await renderWall();updateGTileCounts();
 }
 
-function likeWall(idx){
-  const realIdx=officeData.wall.length-1-idx;
-  officeData.wall[realIdx].likes=(officeData.wall[realIdx].likes||0)+1;
-  saveOfficeData();
-  renderWall();
+async function likeWall(id){
+  const myId=getCurrentId();
+  const post=officePostsCache.wall.find(w=>w.id===id);
+  if(!post)return;
+  const likes=post.likes||[];
+  const newLikes=likes.includes(myId)?likes.filter(l=>l!==myId):[...likes,myId];
+  await db.from('office_posts').update({likes:newLikes}).eq('id',id);
+  post.likes=newLikes;
+  await renderWall();
+}
+
+async function toggleReply(id){
+  const post=officePostsCache.wall.find(w=>w.id===id);
+  if(!post)return;
+  officePostsCache.wall.forEach(w=>{if(w.id!==id)w._showReply=false;});
+  post._showReply=!post._showReply;
+  await renderWall();
+  setTimeout(()=>document.getElementById(`reply-inp-${id}`)?.focus(),100);
+}
+
+async function submitReply(id){
+  const inp=document.getElementById(`reply-inp-${id}`);
+  const text=inp?.value.trim();
+  if(!text){toast('請輸入回覆內容');return;}
+  const post=officePostsCache.wall.find(w=>w.id===id);
+  if(!post)return;
+  const replies=[...(post.replies||[]),{text,date:localDate()}];
+  await db.from('office_posts').update({replies}).eq('id',id);
+  post.replies=replies;
+  post._showReply=false;
+  await renderWall();
+  toast('✓ 已回覆');
+}
+
+async function editWallPost(id){
+  const post=officePostsCache.wall.find(w=>w.id===id);
+  if(!post)return;
+  officePostsCache.wall.forEach(w=>w._editing=false);
+  post._editing=true;
+  await renderWall();
+  setTimeout(()=>document.getElementById(`edit-wall-${id}`)?.focus(),100);
+}
+
+async function cancelWallEdit(id){
+  const post=officePostsCache.wall.find(w=>w.id===id);
+  if(post)post._editing=false;
+  await renderWall();
+}
+
+async function saveWallEdit(id){
+  const text=document.getElementById(`edit-wall-${id}`)?.value.trim();
+  if(!text){toast('內容不能為空');return;}
+  showLoad();
+  await db.from('office_posts').update({body:text,updated_at:new Date().toISOString()}).eq('id',id);
+  hideLoad();
+  const post=officePostsCache.wall.find(w=>w.id===id);
+  if(post){post.body=text;post._editing=false;}
+  await renderWall();toast('✓ 已更新');
+}
+
+async function deleteWallPost(id){
+  if(!confirm('確定刪除這則貼文？'))return;
+  showLoad();
+  await db.from('office_posts').delete().eq('id',id);
+  hideLoad();toast('✓ 已刪除');
+  await loadOfficePosts();await renderWall();updateGTileCounts();
+}
+
+// ── Office 初始化 ──────────────────────────────────────────
+const STAFF_BIRTHDAYS=[
+  {name:'Ryan',date:'06-10',note:'高雄概念店'},
+];
+
+function switchOfficeTab(tab,el){}
+
+let gActivePanel=null;
+async function toggleGPanel(panel){
+  if(gActivePanel===panel){
+    document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
+    document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
+    gActivePanel=null;return;
+  }
+  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
+  gActivePanel=panel;
+  const panelEl=$(`o-panel-${panel}`);
+  if(panelEl)panelEl.style.display='block';
+  document.getElementById(`gtile-${panel}`)?.classList.add('g-tile-active');
+  if(panel==='announce')renderAnnounces();
+  else if(panel==='memo')await renderMemos();
+  else if(panel==='birthday')renderBirthdays();
+  else if(panel==='wall')await renderWall();
+}
+
+async function initOfficePage(){
+  if(!db)await connectDB();
+  await loadOfficePosts();
+  gActivePanel=null;
+  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
+  const form=$('o-announce-form');
+  if(form)form.style.display=canPostAnnounce()?'block':'none';
+  updateGTileCounts();
+  updateTicker();
+  startNotifPolling();
+}
+
+function updateGTileCounts(){
+  const myId=getCurrentId();
+  const unread=(officePostsCache.announces||[]).filter(a=>!(a.read_by||[]).includes(myId)).length;
+  const pending=(officePostsCache.memos||[]).filter(m=>m.store===currentStore&&m.status==='pending').length;
+  const unreadWall=(officePostsCache.wall||[]).filter(w=>!(w.read_by||[]).includes(myId)).length;
+  const today=new Date();
+  const birthSoon=STAFF_BIRTHDAYS.filter(s=>{
+    const parts=s.date.split('-');
+    const bDay=new Date(today.getFullYear(),parseInt(parts[0])-1,parseInt(parts[1]));
+    let diff=Math.ceil((bDay-today)/(1000*60*60*24));
+    if(diff<0)diff+=365;
+    return diff<=30;
+  }).length;
+  if($('g-ann-count'))$('g-ann-count').textContent=unread?`${unread} 未讀`:'';
+  if($('g-memo-count'))$('g-memo-count').textContent=pending?`${pending} 待處理`:'';
+  if($('g-birth-count'))$('g-birth-count').textContent=birthSoon?`${birthSoon} 位即將生日`:'';
+  if($('g-wall-count'))$('g-wall-count').textContent=unreadWall?`${unreadWall} 則未讀`:'';
 }
 
 // ── Member Data ───────────────────────────────────────────
@@ -2864,9 +2877,58 @@ function initMemberPage(){
   if(chips[0])chips[0].classList.add('on');
   updateMemStats();
   showBirthdayAlert();
+  initNewMemberMonthSel();
+  renderNewMembers();
   const canDownload=!currentUser||isAdmin;
   const dlBtn=$('btn-download-backup');
   if(dlBtn)dlBtn.style.display=canDownload?'block':'none';
+}
+
+function initNewMemberMonthSel(){
+  const sel=$('ms-new-monthsel');
+  if(!sel)return;
+  const now=new Date();
+  sel.innerHTML='';
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=`${d.getFullYear()}年${d.getMonth()+1}月`;
+    const opt=document.createElement('option');
+    opt.value=val;opt.textContent=label;
+    if(i===0)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
+function renderNewMembers(){
+  const sel=$('ms-new-monthsel');
+  const ym=sel?.value||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+  const allMem=getMergedMembers();
+  const filtered=allMem.filter(m=>{
+    if(!m.joinDate)return false;
+    return m.joinDate.slice(0,7)===ym;
+  });
+  if($('ms-new-count'))$('ms-new-count').textContent=`共 ${filtered.length} 筆`;
+  const el=$('ms-new-list');if(!el)return;
+  if(!filtered.length){el.innerHTML='<div style="font-size:12px;color:#888;text-align:center;padding:8px 0;">本月尚無新增會員</div>';return;}
+  el.innerHTML=filtered.map(m=>{
+    const st=memStatus(m.expDate);
+    const avCls=st==='ok'?'av-ok':st==='soon'?'av-soon':'av-exp';
+    return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid #E0D8CC;">
+      <div class="mem-av ${avCls}" style="width:32px;height:32px;font-size:12px;">${m.name.slice(0,1)}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;color:#1C2B1A;">${m.name} <span style="font-size:10px;color:#aaa;">${m.id}</span></div>
+        <div style="font-size:11px;color:#888;">${m.store} · ${m.staff||'—'} · 入會 ${m.joinDate||'—'}</div>
+      </div>
+      <span class="mbadge ${st==='ok'?'mb-ok':st==='soon'?'mb-soon':'mb-exp'}" style="font-size:10px;">${st==='ok'?'有效':st==='soon'?'即將到期':'已到期'}</span>
+    </div>`;
+  }).join('');
+}
+
+function getMergedMembers(){
+  const merged=new Map();
+  [...MEMBER_DATA,...memNewMembers].forEach(m=>merged.set(m.id,m));
+  return [...merged.values()];
 }
 
 function memStatus(expDate){
