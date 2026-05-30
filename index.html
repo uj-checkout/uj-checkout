@@ -2192,9 +2192,21 @@ function updateTicker(){
   });
   // 帳號申請提醒（店長）
   if(!currentUser){
-    const reqCount=document.getElementById('g-req-count')?.textContent;
-    if(reqCount&&reqCount.includes('待審'))tickerItems.push({icon:'👤',text:`有 ${reqCount}帳號申請`,panel:'requests'});
+    loadAccountRequests().then(list=>{
+      if(list.length){
+        if($('g-req-count'))$('g-req-count').textContent=`${list.length} 件待審`;
+        tickerItems.push({icon:'👤',text:`有 ${list.length} 件帳號申請待審核`,panel:'requests'});
+        updateTickerDOM();
+      }
+    });
   }
+  updateTickerDOM();
+}
+
+function updateTickerDOM(){
+  const bar=$('ticker-bar');
+  const track=$('ticker-track');
+  if(!bar||!track)return;
   if(!tickerItems.length){bar.style.display='none';return;}
   bar.style.display='flex';
   const html=[...tickerItems,...tickerItems].map(t=>
@@ -2290,10 +2302,14 @@ function startNotifPolling(){
     await loadOfficePostsMerge();
     updateTicker();
     updateGTileCounts();
-    // 如果目前在行政頁面，即時更新顯示
+    if(!currentUser){
+      const reqs=await loadAccountRequests();
+      if($('g-req-count'))$('g-req-count').textContent=reqs.length?`${reqs.length} 件待審`:'';
+    }
     if(gActivePanel==='announce')renderAnnounces();
     else if(gActivePanel==='memo')renderMemos();
     else if(gActivePanel==='wall')renderWall();
+    else if(gActivePanel==='requests')await renderAccountRequests();
   },15000);
 }
 
@@ -2741,6 +2757,10 @@ async function initOfficePage(){
   // 店長才顯示帳號申請審核磁磚
   const reqWrap=$('gtile-requests-wrap');
   if(reqWrap)reqWrap.style.display=(!currentUser)?'block':'none';
+  if(!currentUser){
+    const reqs=await loadAccountRequests();
+    if($('g-req-count'))$('g-req-count').textContent=reqs.length?`${reqs.length} 件待審`:'';
+  }
   updateGTileCounts();
   updateTicker();
   startNotifPolling();
