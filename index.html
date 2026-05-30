@@ -751,6 +751,15 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div id="birthday-list"></div>
   </div>
 
+  <!-- 本月新增會員（常態顯示）-->
+  <div style="background:#fff;border:1px solid #E0D8CC;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:500;color:#1C2B1A;">本月新增會員 <span id="ms-new-count" style="font-size:12px;color:#4A7C59;margin-left:6px;"></span></div>
+      <select id="ms-new-monthsel" onchange="renderNewMembers()" style="border:1px solid #E0D8CC;border-radius:8px;padding:4px 8px;font-size:12px;background:#FAFAF8;color:#555;outline:none;"></select>
+    </div>
+    <div id="ms-new-list"><div style="font-size:12px;color:#888;text-align:center;padding:8px 0;">載入中…</div></div>
+  </div>
+
   <!-- 加密提示 -->
   <div class="enc-bar"><i class="ti ti-lock" style="font-size:13px;"></i> 會員資料加密保護，僅限授權帳號查看</div>
 
