@@ -699,8 +699,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div id="o-ann-modal-body" style="font-size:14px;color:#555;line-height:1.8;white-space:pre-wrap;"></div>
     <div id="o-ann-modal-img"></div>
     <div id="o-ann-modal-poll"></div>
-    <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #E0D8CC;text-align:center;">
-      <span style="font-size:12px;color:#4A7C59;background:#E8F0E4;padding:4px 14px;border-radius:20px;">✓ 已標記已讀</span>
+    <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #E0D8CC;text-align:center;" id="o-ann-modal-read-bar">
     </div>
   </div>
 </div>
@@ -2213,12 +2212,7 @@ async function openAnnounce(id){
   // 標記已讀
   const ann=officePostsCache.announces.find(a=>a.id===id);
   if(!ann)return;
-  if(!(ann.read_by||[]).includes(myId)){
-    const newReadBy=[...(ann.read_by||[]),myId];
-    await db.from('office_posts').update({read_by:newReadBy}).eq('id',id);
-    ann.read_by=newReadBy;
-    updateTicker();
-  }
+  // 不自動已讀，由使用者手動點擊
   const modal=$('o-ann-modal');
   if(!modal)return;
   $('o-ann-modal-title').textContent=ann.title;
@@ -2228,9 +2222,31 @@ async function openAnnounce(id){
   if(imgEl)imgEl.innerHTML=ann.img?`<img src="${ann.img}" style="width:100%;border-radius:8px;margin-top:10px;"/>` :'';
   const pollEl=$('o-ann-modal-poll');
   if(pollEl)pollEl.innerHTML=renderPollHTML(ann,myId);
+  // 已讀狀態
+  const isRead=(ann.read_by||[]).includes(myId);
+  const readBar=$('o-ann-modal-read-bar');
+  if(readBar){
+    readBar.innerHTML=isRead
+      ?'<span style="font-size:12px;color:#4A7C59;background:#E8F0E4;padding:4px 14px;border-radius:20px;">✓ 已讀</span>'
+      :`<button onclick="markAnnRead(${ann.id})" style="background:#1C2B1A;border:none;border-radius:20px;color:#C8DBC0;padding:6px 20px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 標記已讀</button>`;
+  }
   modal.style.display='flex';
   renderAnnounces();
   updateGTileCounts();
+}
+
+async function markAnnRead(id){
+  const myId=getCurrentId();
+  const ann=officePostsCache.announces.find(a=>a.id===id);
+  if(!ann)return;
+  const newReadBy=[...(ann.read_by||[]),myId];
+  await db.from('office_posts').update({read_by:newReadBy}).eq('id',id);
+  ann.read_by=newReadBy;
+  const readBar=$('o-ann-modal-read-bar');
+  if(readBar)readBar.innerHTML='<span style="font-size:12px;color:#4A7C59;background:#E8F0E4;padding:4px 14px;border-radius:20px;">✓ 已讀</span>';
+  renderAnnounces();
+  updateGTileCounts();
+  updateTicker();
 }
 
 function renderPollHTML(ann,myId){
@@ -2383,7 +2399,8 @@ async function renderWall(){
         <button onclick="editWallPost(${w.id})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#555;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✏️ 編輯</button>
         <button onclick="deleteWallPost(${w.id})" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">🗑 刪除</button>
       </div>`:'';
-    return`<div class="o-msg" style="flex-direction:column;gap:0;margin-bottom:12px;" onclick="markWallRead(${w.id})">
+    const isRead2=(w.read_by||[]).includes(myId);
+    return`<div class="o-msg" style="flex-direction:column;gap:0;margin-bottom:12px;">
       <div style="display:flex;gap:10px;">
         <div class="o-av">?</div>
         <div class="o-bubble" style="flex:1;">
@@ -2392,8 +2409,9 @@ async function renderWall(){
           ${w._editing?'':showReply}
           <div class="o-bubble-s" style="margin-top:6px;">
             <span>${(w.created_at||'').slice(0,10)}</span>
-            <button class="o-like" onclick="event.stopPropagation();likeWall(${w.id})" style="color:${isLiked?'#4A7C59':'#aaa'}">👍 ${(w.likes||[]).length}</button>
-            <button class="o-like" onclick="event.stopPropagation();toggleReply(${w.id})">💬 ${replies.length?replies.length+' 則':''} 回覆</button>
+            <button class="o-like" onclick="likeWall(${w.id})" style="color:${isLiked?'#4A7C59':'#aaa'}">👍 ${(w.likes||[]).length}</button>
+            <button class="o-like" onclick="toggleReply(${w.id})">💬 ${replies.length?replies.length+' 則':''} 回覆</button>
+            ${!isRead2?`<button class="o-like" onclick="markWallRead(${w.id})" style="color:#4A7C59;font-size:11px;border:1px solid #C8DBC0;border-radius:8px;padding:2px 8px;">✓ 已讀</button>`:'<span style="font-size:10px;color:#bbb;">已讀</span>'}
           </div>
           ${w._editing?'':editBar}
         </div>
@@ -2847,7 +2865,7 @@ const MEMBER_DATA=[
 // ── Member State ──────────────────────────────────────────
 let memFilter='all', memNewMembers=[];
 
-function switchPage(page){
+async function switchPage(page){
   $('main') && ($('main').style.display='none');
   $('member-app') && ($('member-app').style.display='none');
   $('admin-app') && ($('admin-app').style.display='none');
@@ -2863,7 +2881,7 @@ function switchPage(page){
   } else if(page==='member'){
     $('member-app').style.display='block';
     $('nav-member').classList.add('active');
-    initMemberPage();
+    await initMemberPage();
   } else if(page==='admin'){
     $('admin-app').style.display='block';
     $('nav-admin').classList.add('active');
@@ -2920,8 +2938,11 @@ function initNewMemberMonthSel(){
 }
 
 function renderNewMembers(){
+  const now=new Date();
+  const defaultYm=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const sel=$('ms-new-monthsel');
-  const ym=sel?.value||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+  const ym=sel?.value||defaultYm;
+  const isManager=!currentUser;
   const allMem=getMergedMembers();
   const filtered=allMem.filter(m=>{
     if(!m.joinDate)return false;
@@ -2933,15 +2954,31 @@ function renderNewMembers(){
   el.innerHTML=filtered.map(m=>{
     const st=memStatus(m.expDate);
     const avCls=st==='ok'?'av-ok':st==='soon'?'av-soon':'av-exp';
+    const isInDB=memNewMembers.some(r=>r.id===m.id);
     return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid #E0D8CC;">
       <div class="mem-av ${avCls}" style="width:32px;height:32px;font-size:12px;">${m.name.slice(0,1)}</div>
       <div style="flex:1;">
         <div style="font-size:13px;font-weight:500;color:#1C2B1A;">${m.name} <span style="font-size:10px;color:#aaa;">${m.id}</span></div>
         <div style="font-size:11px;color:#888;">${m.store} · ${m.staff||'—'} · 入會 ${m.joinDate||'—'}</div>
       </div>
-      <span class="mbadge ${st==='ok'?'mb-ok':st==='soon'?'mb-soon':'mb-exp'}" style="font-size:10px;">${st==='ok'?'有效':st==='soon'?'即將到期':'已到期'}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="mbadge ${st==='ok'?'mb-ok':st==='soon'?'mb-soon':'mb-exp'}" style="font-size:10px;">${st==='ok'?'有效':st==='soon'?'即將到期':'已到期'}</span>
+        ${isManager&&isInDB?`<button onclick="deleteMember('${m.id}')" style="background:none;border:1px solid #f0c0c0;border-radius:6px;color:#B83030;padding:3px 8px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">🗑</button>`:''}
+      </div>
     </div>`;
   }).join('');
+}
+
+async function deleteMember(id){
+  if(!confirm(`確定刪除會員 ${id}？此操作無法復原。`))return;
+  showLoad();
+  try{
+    await db.from('members').delete().eq('id',id);
+    memNewMembers=memNewMembers.filter(m=>m.id!==id);
+    hideLoad();
+    toast('✓ 已刪除');
+    renderMembers();updateMemStats();renderNewMembers();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
 function getMergedMembers(){
@@ -3060,6 +3097,7 @@ function renderMembers(){
         <div class="md-row"><span class="md-label">附註</span><span class="md-val">${m.note||'—'}</span></div>
         <div class="mem-edit-bar">
           <button class="btn-renew" onclick="renewMember(${i},event)">🔄 續會（自當日延一年）</button>
+          ${(!currentUser&&memNewMembers.some(r=>r.id===m.id))?`<button class="btn-edit-mem" style="color:var(--red);border-color:#f0c0c0;" onclick="deleteMember('${m.id}');event.stopPropagation()">🗑 刪除</button>`:''}
         </div>
       </div>
     </div>`;
