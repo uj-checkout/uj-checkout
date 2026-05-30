@@ -619,6 +619,11 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       <div style="font-size:13px;font-weight:500;color:#1C2B1A;margin-bottom:10px;">發布新公告</div>
       <input id="o-ann-title" placeholder="公告標題" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;"/>
       <textarea id="o-ann-body" placeholder="公告內容…" rows="3" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;resize:none;font-family:'Noto Sans TC',sans-serif;"></textarea>
+      <div style="margin-bottom:8px;">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">附圖（選填）</label>
+        <input type="file" id="o-ann-img" accept="image/*" style="width:100%;font-size:13px;color:#555;" onchange="previewAnnImg(this)"/>
+        <div id="o-ann-img-preview" style="margin-top:6px;"></div>
+      </div>
       <button onclick="postAnnounce()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">📢 發布公告</button>
     </div>
   </div>
@@ -647,6 +652,24 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     </div>
   </div>
 
+</div>
+
+<!-- 公告詳細 Modal -->
+<div id="o-ann-modal" style="display:none;position:fixed;inset:0;background:rgba(28,43,26,.75);z-index:300;align-items:flex-end;justify-content:center;padding:0;">
+  <div style="background:#F5F0E8;border-radius:18px 18px 0 0;width:100%;max-width:680px;max-height:85vh;overflow-y:auto;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+      <div>
+        <div id="o-ann-modal-title" style="font-size:17px;font-weight:500;color:#1C2B1A;"></div>
+        <div id="o-ann-modal-meta" style="font-size:11px;color:#888;margin-top:3px;"></div>
+      </div>
+      <button onclick="$('o-ann-modal').style.display='none'" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 0 0 10px;">×</button>
+    </div>
+    <div id="o-ann-modal-body" style="font-size:14px;color:#555;line-height:1.8;white-space:pre-wrap;"></div>
+    <div id="o-ann-modal-img"></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:0.5px solid #E0D8CC;text-align:center;">
+      <span style="font-size:12px;color:#4A7C59;background:#E8F0E4;padding:4px 14px;border-radius:20px;">✓ 已標記已讀</span>
+    </div>
+  </div>
 </div>
 
 <!-- Member App -->
@@ -2050,16 +2073,39 @@ function renderAnnounces(){
   el.innerHTML=[...list].reverse().map((a,i)=>{
     const idx=list.length-1-i;
     const isRead=(a.readBy||[]).includes(myId);
-    return`<div class="o-card">
+    return`<div class="o-card" style="cursor:pointer;" onclick="openAnnounce(${idx})">
       <div class="o-card-hd">
-        <div><div class="o-card-title">${a.title}</div><div class="o-card-meta">📢 ${a.by} · ${a.date}</div></div>
-        <span class="o-badge ${isRead?'read':'unread'}">${isRead?'已讀':'未讀'}</span>
-      </div>
-      <div class="o-card-body">${a.body||''}
-        ${!isRead?`<div style="margin-top:8px;"><button onclick="markRead(${idx})" style="font-size:12px;background:#E8F0E4;border:none;border-radius:8px;color:#4A7C59;padding:5px 14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 標記已讀</button></div>`:''}
+        <div style="flex:1;">
+          <div class="o-card-title">${a.title}</div>
+          <div class="o-card-meta">📢 ${a.by} · ${a.date}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="o-badge ${isRead?'read':'unread'}">${isRead?'已讀':'未讀'}</span>
+          <i class="ti ti-chevron-right" style="color:#C8C0B0;font-size:16px;"></i>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function openAnnounce(idx){
+  const a=officeData.announces[idx];
+  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  // 點開即標記已讀
+  if(!a.readBy)a.readBy=[];
+  if(!a.readBy.includes(myId)){a.readBy.push(myId);saveOfficeData();}
+  // 顯示詳細內容 modal
+  const modal=$('o-ann-modal');
+  if(!modal)return;
+  $('o-ann-modal-title').textContent=a.title;
+  $('o-ann-modal-meta').textContent=`📢 ${a.by} · ${a.date}`;
+  $('o-ann-modal-body').textContent=a.body||'';
+  // 圖片
+  const imgEl=$('o-ann-modal-img');
+  if(imgEl){imgEl.innerHTML=a.img?`<img src="${a.img}" style="width:100%;border-radius:8px;margin-top:10px;" />`:''}
+  modal.style.display='flex';
+  renderAnnounces();
+  updateGTileCounts();
 }
 
 function markRead(idx){
@@ -2072,18 +2118,34 @@ function markRead(idx){
   renderAnnounces();
 }
 
+let annImgData=null;
+function previewAnnImg(input){
+  if(!input.files||!input.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    annImgData=e.target.result;
+    const prev=$('o-ann-img-preview');
+    if(prev)prev.innerHTML=`<img src="${annImgData}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;"/>`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
 function postAnnounce(){
   const title=$('o-ann-title')?.value.trim();
   const body=$('o-ann-body')?.value.trim();
   if(!title){toast('請輸入公告標題');return;}
   const byKey=localStorage.getItem('uj_builtin')||'';
   const byName=byKey==='uj-leon'?'Leon':byKey==='uj-ryan'?'Ryan':byKey==='uj-khh'?'高雄店長':'管理員';
-  officeData.announces.push({title,body,by:byName,date:localDate(),readBy:[byKey]});
+  officeData.announces.push({title,body,by:byName,date:localDate(),readBy:[byKey],img:annImgData||null});
   saveOfficeData();
   if($('o-ann-title'))$('o-ann-title').value='';
   if($('o-ann-body'))$('o-ann-body').value='';
+  annImgData=null;
+  const prev=$('o-ann-img-preview');if(prev)prev.innerHTML='';
+  const fileInp=$('o-ann-img');if(fileInp)fileInp.value='';
   toast('✓ 公告已發布');
   renderAnnounces();
+  updateGTileCounts();
 }
 
 // ── 備忘錄 ──
@@ -2149,17 +2211,52 @@ function renderWall(){
   if(!list.length){el.innerHTML='<div class="empty-hint" style="text-align:center;padding:20px;color:#888;">還沒有人分享，第一個說說吧！</div>';return;}
   el.innerHTML=[...list].reverse().map((w,i)=>{
     const idx=list.length-1-i;
-    return`<div class="o-msg">
-      <div class="o-av">?</div>
-      <div class="o-bubble">
-        <div class="o-bubble-t">${w.text}</div>
-        <div class="o-bubble-s">
-          <span>${w.date}</span>
-          <button class="o-like" onclick="likeWall(${idx})">👍 ${w.likes||0}</button>
+    const replies=w.replies||[];
+    const replyHTML=replies.map(r=>`
+      <div style="display:flex;gap:7px;margin-top:8px;padding-left:4px;border-left:2px solid #E0D8CC;">
+        <div style="width:22px;height:22px;border-radius:50%;background:#E0D8CC;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888;flex-shrink:0;">?</div>
+        <div style="flex:1;font-size:12px;color:#555;">${r.text}<span style="font-size:10px;color:#aaa;margin-left:6px;">${r.date}</span></div>
+      </div>`).join('');
+    const showReply=w._showReply?`
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <input id="reply-inp-${idx}" placeholder="匿名回覆…" style="flex:1;border:1px solid #E0D8CC;border-radius:8px;padding:6px 10px;font-size:13px;background:#FAFAF8;outline:none;font-family:'Noto Sans TC',sans-serif;"/>
+        <button onclick="submitReply(${idx})" style="background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:6px 12px;font-size:12px;cursor:pointer;">送出</button>
+      </div>`:'';
+    return`<div class="o-msg" style="flex-direction:column;gap:0;">
+      <div style="display:flex;gap:10px;">
+        <div class="o-av">?</div>
+        <div class="o-bubble" style="flex:1;">
+          <div class="o-bubble-t">${w.text}</div>
+          <div class="o-bubble-s">
+            <span>${w.date}</span>
+            <button class="o-like" onclick="likeWall(${idx})">👍 ${w.likes||0}</button>
+            <button class="o-like" onclick="toggleReply(${idx})">💬 ${replies.length?replies.length+' 則':''} 回覆</button>
+          </div>
+          ${replyHTML}
+          ${showReply}
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleReply(idx){
+  const realIdx=officeData.wall.length-1-idx;
+  officeData.wall[realIdx]._showReply=!officeData.wall[realIdx]._showReply;
+  renderWall();
+  setTimeout(()=>document.getElementById(`reply-inp-${idx}`)?.focus(),100);
+}
+
+function submitReply(idx){
+  const realIdx=officeData.wall.length-1-idx;
+  const inp=document.getElementById(`reply-inp-${idx}`);
+  const text=inp?.value.trim();
+  if(!text){toast('請輸入回覆內容');return;}
+  if(!officeData.wall[realIdx].replies)officeData.wall[realIdx].replies=[];
+  officeData.wall[realIdx].replies.push({text,date:localDate()});
+  officeData.wall[realIdx]._showReply=false;
+  saveOfficeData();
+  renderWall();
 }
 
 function postWall(){
