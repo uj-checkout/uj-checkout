@@ -411,14 +411,12 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .o-birth-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:0.5px solid #E0D8CC;font-size:13px;}
 .o-birth-row:last-child{border:none;}
 
-/* ── 通知提醒 ── */
-.notif-banner{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:999;background:#1C2B1A;color:#C8DBC0;border-radius:12px;padding:12px 18px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.25);cursor:pointer;max-width:360px;width:calc(100% - 32px);animation:slideDown .3s ease;}
-@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-12px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-.notif-icon{font-size:18px;flex-shrink:0;}
-.notif-text{flex:1;}
-.notif-title{font-weight:500;margin-bottom:1px;}
-.notif-sub{font-size:11px;opacity:.65;}
-.notif-close{font-size:18px;opacity:.5;flex-shrink:0;}
+/* ── 跑馬燈通知 ── */
+.ticker-bar{background:#2D4A28;height:28px;overflow:hidden;display:none;align-items:center;position:sticky;top:0;z-index:60;width:100%;}
+.ticker-track{display:flex;align-items:center;animation:ticker-scroll 20s linear infinite;white-space:nowrap;padding-left:100%;}
+.ticker-item{font-size:12px;color:#C8DBC0;padding:0 40px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.ticker-item:hover{color:#fff;}
+@keyframes ticker-scroll{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
 </style>
 </head>
 <body>
@@ -462,6 +460,9 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   </div>
 </div>
 
+<div class="ticker-bar" id="ticker-bar">
+  <div class="ticker-track" id="ticker-track"></div>
+</div>
 <div id="main">
   <div class="hero" id="hero">
     <div><div class="hero-name" id="hero-name"></div><div class="hero-addr" id="hero-addr"></div></div>
@@ -851,14 +852,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="notif-banner" id="notif-banner" style="display:none;" onclick="goToNotif()">
-  <span class="notif-icon" id="notif-icon">📢</span>
-  <div class="notif-text">
-    <div class="notif-title" id="notif-title">有新公告</div>
-    <div class="notif-sub" id="notif-sub">點擊前往查看</div>
-  </div>
-  <span class="notif-close" onclick="event.stopPropagation();hideNotif()">×</span>
-</div>
+
 <div class="load-ov" id="load-ov"><div class="spinner"></div></div>
 
 <script>
@@ -1082,6 +1076,11 @@ async function enterStaffApp(){
   if(currentStore==='taipei')await initLaundry();
   hideLoad();
   updateMetrics();
+  // 登入後立即載入行政資料並顯示跑馬燈
+  loadOfficeData();
+  initNotifBaseline();
+  updateTicker();
+  startNotifPolling();
 }
 
 
@@ -2012,60 +2011,64 @@ async function calcAdmRange(store){
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
-// ── 通知系統 ────────────────────────────────────────────────
-let notifTimer=null;
+// ── 跑馬燈通知系統 ────────────────────────────────────────
 let lastSeenCount={announces:0,memos:0,wall:0};
+let tickerItems=[];
 
-function showNotif(icon,title,sub,panel){
-  const banner=$('notif-banner');
-  if(!banner)return;
-  $('notif-icon').textContent=icon;
-  $('notif-title').textContent=title;
-  $('notif-sub').textContent=sub;
-  banner._panel=panel;
-  banner.style.display='flex';
-  clearTimeout(notifTimer);
-  notifTimer=setTimeout(hideNotif,5000);
+function updateTicker(){
+  const bar=$('ticker-bar');
+  const track=$('ticker-track');
+  if(!bar||!track)return;
+  tickerItems=[];
+  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  // 未讀公告
+  const unreadAnns=(officeData.announces||[]).filter(a=>!(a.readBy||[]).includes(myId));
+  unreadAnns.forEach(a=>tickerItems.push({icon:'📢',text:`新公告：${a.title}`,panel:'announce'}));
+  // 待處理備忘
+  const pendingMemos=(officeData.memos||[]).filter(m=>m.store===currentStore&&m.status!=='done');
+  if(pendingMemos.length)tickerItems.push({icon:'📋',text:`${pendingMemos.length} 件備忘事項待處理`,panel:'memo'});
+  // 最新舒壓貼文
+  const wall=officeData.wall||[];
+  if(wall.length)tickerItems.push({icon:'😊',text:`舒壓牆有 ${wall.length} 則貼文`,panel:'wall'});
+  // 生日
+  const today=new Date();
+  STAFF_BIRTHDAYS.forEach(s=>{
+    const parts=s.date.split('-');
+    const bDay=new Date(today.getFullYear(),parseInt(parts[0])-1,parseInt(parts[1]));
+    const diff=Math.ceil((bDay-today)/(1000*60*60*24));
+    if(diff>=0&&diff<=7)tickerItems.push({icon:'🎂',text:`${s.name} 生日倒數 ${diff===0?'今天！':diff+'天'}`,panel:'birthday'});
+  });
+  if(!tickerItems.length){bar.style.display='none';return;}
+  bar.style.display='flex';
+  // 重複兩次讓跑馬燈無縫循環
+  const html=[...tickerItems,...tickerItems].map((t,i)=>
+    `<span class="ticker-item" onclick="goToPanel('${t.panel}')">${t.icon} ${t.text}</span>`
+  ).join('<span style="color:rgba(200,219,192,.3);padding:0 10px;">|</span>');
+  track.innerHTML=html;
+  // 根據內容長度調整速度
+  const speed=Math.max(15,tickerItems.length*8);
+  track.style.animationDuration=speed+'s';
 }
 
-function hideNotif(){
-  const b=$('notif-banner');
-  if(b)b.style.display='none';
-}
-
-function goToNotif(){
-  const b=$('notif-banner');
-  const panel=b?b._panel:'announce';
-  hideNotif();
+function goToPanel(panel){
   switchPage('office');
   setTimeout(()=>toggleGPanel(panel),200);
 }
 
+function checkNewNotif(){
+  const ann=(officeData.announces||[]).length;
+  const memo=(officeData.memos||[]).length;
+  const wall=(officeData.wall||[]).length;
+  lastSeenCount={announces:ann,memos:memo,wall:wall};
+  updateTicker();
+}
+
 function initNotifBaseline(){
-  // 記錄目前各項目數量，作為基準
   lastSeenCount={
     announces:(officeData.announces||[]).length,
     memos:(officeData.memos||[]).length,
     wall:(officeData.wall||[]).length
   };
-}
-
-function checkNewNotif(){
-  // 比較目前數量與基準
-  const ann=(officeData.announces||[]).length;
-  const memo=(officeData.memos||[]).length;
-  const wall=(officeData.wall||[]).length;
-  if(ann>lastSeenCount.announces){
-    const latest=officeData.announces[ann-1];
-    showNotif('📢','有新公告',latest.title,'announce');
-    lastSeenCount.announces=ann;
-  } else if(wall>lastSeenCount.wall){
-    showNotif('😊','舒壓牆有新貼文','點擊前往查看','wall');
-    lastSeenCount.wall=wall;
-  } else if(memo>lastSeenCount.memos){
-    showNotif('📋','有新備忘事項','點擊前往查看','memo');
-    lastSeenCount.memos=memo;
-  }
 }
 
 // ── Office ────────────────────────────────────────────────
@@ -2076,6 +2079,17 @@ const STAFF_BIRTHDAYS=[
 
 // 公告/備忘/舒壓牆 存在 localStorage（跨裝置需 Supabase，目前先用本地）
 let officeData={announces:[],memos:[],wall:[]};
+let wallSessionId=null;
+function getWallSession(){
+  if(!wallSessionId){
+    wallSessionId=localStorage.getItem('uj_wall_sid');
+    if(!wallSessionId){
+      wallSessionId='ws_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+      localStorage.setItem('uj_wall_sid',wallSessionId);
+    }
+  }
+  return wallSessionId;
+}
 
 function loadOfficeData(){
   try{
@@ -2096,7 +2110,7 @@ function startNotifPolling(){
 }
 function saveOfficeData(){
   localStorage.setItem('uj_office',JSON.stringify(officeData));
-  checkNewNotif();
+  updateTicker();
 }
 
 // 判斷是否有發布公告的權限
@@ -2147,6 +2161,7 @@ function initOfficePage(){
   initNotifBaseline();
   startNotifPolling();
   gActivePanel=null;
+  updateTicker();
   document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
   document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
   const form=$('o-announce-form');
@@ -2407,9 +2422,11 @@ function renderWall(){
   const el=$('o-wall-list');if(!el)return;
   const list=officeData.wall||[];
   if(!list.length){el.innerHTML='<div class="empty-hint" style="text-align:center;padding:20px;color:#888;">還沒有人分享，第一個說說吧！</div>';return;}
+  const mySid=getWallSession();
   el.innerHTML=[...list].reverse().map((w,i)=>{
     const idx=list.length-1-i;
     const replies=w.replies||[];
+    const isMine=w.sid&&w.sid===mySid;
     const replyHTML=replies.map(r=>`
       <div style="display:flex;gap:7px;margin-top:8px;padding-left:4px;border-left:2px solid #E0D8CC;">
         <div style="width:22px;height:22px;border-radius:50%;background:#E0D8CC;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888;flex-shrink:0;">?</div>
@@ -2420,11 +2437,25 @@ function renderWall(){
         <input id="reply-inp-${idx}" placeholder="匿名回覆…" style="flex:1;border:1px solid #E0D8CC;border-radius:8px;padding:6px 10px;font-size:13px;background:#FAFAF8;outline:none;font-family:'Noto Sans TC',sans-serif;"/>
         <button onclick="submitReply(${idx})" style="background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:6px 12px;font-size:12px;cursor:pointer;">送出</button>
       </div>`:'';
+    const editBar=isMine?`
+      <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid #E0D8CC;">
+        <button onclick="editWall(${idx})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#555;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✏️ 編輯</button>
+        <button onclick="deleteWall(${idx})" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">🗑 刪除</button>
+      </div>`:'';
+    const editMode=w._editing?`
+      <div style="margin-top:8px;">
+        <textarea id="edit-wall-${idx}" rows="2" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 10px;font-size:13px;background:#FAFAF8;outline:none;box-sizing:border-box;resize:none;font-family:'Noto Sans TC',sans-serif;">${w.text}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button onclick="saveWallEdit(${idx})" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:7px;font-size:12px;cursor:pointer;">儲存</button>
+          <button onclick="cancelWallEdit(${idx})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#888;padding:7px;font-size:12px;cursor:pointer;">取消</button>
+        </div>
+      </div>`:'';
     return`<div class="o-msg" style="flex-direction:column;gap:0;">
       <div style="display:flex;gap:10px;">
         <div class="o-av">?</div>
         <div class="o-bubble" style="flex:1;">
-          <div class="o-bubble-t">${w.text}</div>
+          ${w._editing?'':`<div class="o-bubble-t">${w.text}</div>`}
+          ${editMode}
           <div class="o-bubble-s">
             <span>${w.date}</span>
             <button class="o-like" onclick="likeWall(${idx})">👍 ${w.likes||0}</button>
@@ -2432,10 +2463,41 @@ function renderWall(){
           </div>
           ${replyHTML}
           ${showReply}
+          ${editBar}
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function editWall(idx){
+  const realIdx=officeData.wall.length-1-idx;
+  officeData.wall[realIdx]._editing=true;
+  renderWall();
+  setTimeout(()=>document.getElementById(`edit-wall-${idx}`)?.focus(),100);
+}
+function cancelWallEdit(idx){
+  const realIdx=officeData.wall.length-1-idx;
+  officeData.wall[realIdx]._editing=false;
+  renderWall();
+}
+function saveWallEdit(idx){
+  const realIdx=officeData.wall.length-1-idx;
+  const text=document.getElementById(`edit-wall-${idx}`)?.value.trim();
+  if(!text){toast('內容不能為空');return;}
+  officeData.wall[realIdx].text=text;
+  officeData.wall[realIdx]._editing=false;
+  saveOfficeData();
+  toast('✓ 已更新');
+  renderWall();
+}
+function deleteWall(idx){
+  const realIdx=officeData.wall.length-1-idx;
+  if(!confirm('確定刪除這則貼文？'))return;
+  officeData.wall.splice(realIdx,1);
+  saveOfficeData();
+  toast('✓ 已刪除');
+  renderWall();
 }
 
 function toggleReply(idx){
@@ -2461,7 +2523,7 @@ function postWall(){
   const text=$('o-wall-text')?.value.trim();
   if(!text){toast('請輸入內容');return;}
   if(!officeData.wall)officeData.wall=[];
-  officeData.wall.push({text,date:localDate(),likes:0});
+  officeData.wall.push({text,date:localDate(),likes:0,sid:getWallSession(),wid:'w_'+Date.now()});
   saveOfficeData();
   if($('o-wall-text'))$('o-wall-text').value='';
   toast('✓ 已匿名發布');
