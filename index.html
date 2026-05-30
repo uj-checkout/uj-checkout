@@ -375,6 +375,15 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 .btn-renew{flex:1;background:var(--gs);border:none;border-radius:8px;color:#fff;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
 .btn-edit-mem{flex:1;background:none;border:1px solid var(--bd2);border-radius:8px;color:var(--t2);padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
 
+/* ── G-tile ── */
+.g-tile-btn{background:#1C2B1A;border-radius:14px;padding:16px;cursor:pointer;text-align:center;color:#C8DBC0;border:none;width:100%;transition:opacity .15s;position:relative;}
+.g-tile-btn:active{opacity:.8;}
+.g-tile-btn.g-tile-light{background:#fff;border:0.5px solid #E0D8CC;}
+.g-tile-btn.g-tile-active{outline:3px solid #4A7C59;}
+.g-tile-btn.g-tile-light.g-tile-active{outline:3px solid #4A7C59;}
+.g-tile-count{display:inline-block;font-size:10px;padding:2px 9px;border-radius:10px;background:rgba(255,255,255,.15);color:#C8DBC0;margin-top:4px;}
+.g-tile-count-light{display:inline-block;font-size:10px;padding:2px 9px;border-radius:10px;background:#E8F0E4;color:#4A7C59;margin-top:4px;}
+
 /* ── Office ── */
 .o-tab{padding:8px 14px;border-radius:20px;border:0.5px solid #E0D8CC;background:#fff;font-size:13px;cursor:pointer;color:#888;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;}
 .o-tab.active{background:#1C2B1A;color:#C8DBC0;border-color:#1C2B1A;}
@@ -579,37 +588,49 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 <!-- Office App -->
 <div id="office-app" style="display:none;max-width:680px;margin:0 auto;padding:14px 14px 80px;">
 
-  <!-- 頂部 tabs -->
-  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;">
-    <button class="o-tab active" onclick="switchOfficeTab('announce',this)"><i class="ti ti-speakerphone"></i> 公告</button>
-    <button class="o-tab" onclick="switchOfficeTab('memo',this)"><i class="ti ti-checklist"></i> 備忘錄</button>
-    <button class="o-tab" onclick="switchOfficeTab('birthday',this)"><i class="ti ti-cake"></i> 生日</button>
-    <button class="o-tab" onclick="switchOfficeTab('wall',this)"><i class="ti ti-mood-smile"></i> 舒壓牆</button>
+  <!-- G 款四磁磚 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+    <div class="g-tile-btn" id="gtile-announce" onclick="toggleGPanel('announce')">
+      <i class="ti ti-speakerphone" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+      <div style="font-size:13px;font-weight:500;">公告欄</div>
+      <span class="g-tile-count" id="g-ann-count"></span>
+    </div>
+    <div class="g-tile-btn g-tile-light" id="gtile-memo" onclick="toggleGPanel('memo')">
+      <i class="ti ti-checklist" style="font-size:24px;display:block;margin-bottom:6px;color:#4A7C59;"></i>
+      <div style="font-size:13px;font-weight:500;color:#2C2C2C;">交接備忘錄</div>
+      <span class="g-tile-count-light" id="g-memo-count"></span>
+    </div>
+    <div class="g-tile-btn g-tile-light" id="gtile-birthday" onclick="toggleGPanel('birthday')">
+      <i class="ti ti-cake" style="font-size:24px;display:block;margin-bottom:6px;color:#B8963C;"></i>
+      <div style="font-size:13px;font-weight:500;color:#2C2C2C;">夥伴生日</div>
+      <span class="g-tile-count-light" id="g-birth-count" style="background:#FEF3E0;color:#B8963C;"></span>
+    </div>
+    <div class="g-tile-btn" id="gtile-wall" onclick="toggleGPanel('wall')">
+      <i class="ti ti-mood-smile" style="font-size:24px;display:block;margin-bottom:6px;"></i>
+      <div style="font-size:13px;font-weight:500;">舒壓牆</div>
+      <span class="g-tile-count" id="g-wall-count"></span>
+    </div>
   </div>
 
-  <!-- 公告欄 -->
-  <div id="o-panel-announce" class="o-panel">
+  <!-- 各面板（點擊磁磚展開，再點收起）-->
+  <div id="o-panel-announce" class="o-panel" style="display:none;">
     <div id="o-announce-list"></div>
-    <!-- 發布公告（leon/ryan/uj-khh 才看得到）-->
     <div id="o-announce-form" style="display:none;background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;padding:14px;margin-top:10px;">
       <div style="font-size:13px;font-weight:500;color:#1C2B1A;margin-bottom:10px;">發布新公告</div>
       <input id="o-ann-title" placeholder="公告標題" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;"/>
       <textarea id="o-ann-body" placeholder="公告內容…" rows="3" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;resize:none;font-family:'Noto Sans TC',sans-serif;"></textarea>
-      <button onclick="postAnnounce()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">📢 發布公告</button>
+      <button onclick="postAnnounce()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">📢 發布公告</button>
     </div>
   </div>
 
-  <!-- 交接備忘錄 -->
   <div id="o-panel-memo" class="o-panel" style="display:none;">
     <div id="o-memo-list"></div>
     <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;padding:14px;margin-top:10px;">
-      <div style="font-size:13px;font-weight:500;color:#1C2B1A;margin-bottom:10px;">新增備忘事項</div>
       <input id="o-memo-text" placeholder="備忘事項內容" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;"/>
-      <button onclick="addMemo()" style="width:100%;background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">＋ 新增備忘事項</button>
+      <button onclick="addMemo()" style="width:100%;background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">＋ 新增備忘事項</button>
     </div>
   </div>
 
-  <!-- 夥伴生日 -->
   <div id="o-panel-birthday" class="o-panel" style="display:none;">
     <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;overflow:hidden;">
       <div style="background:#1C2B1A;padding:12px 16px;color:#C8DBC0;font-size:13px;font-weight:500;">🎂 夥伴生日提醒</div>
@@ -617,13 +638,12 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     </div>
   </div>
 
-  <!-- 舒壓牆 -->
   <div id="o-panel-wall" class="o-panel" style="display:none;">
     <div style="text-align:center;font-size:11px;color:#888;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-lock" style="font-size:13px;"></i> 所有留言匿名顯示，發洩吧！</div>
     <div id="o-wall-list"></div>
     <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;padding:12px;margin-top:10px;">
       <textarea id="o-wall-text" placeholder="說說今天遇到的事、壓力、或好笑的客人…" rows="3" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 12px;font-size:14px;background:#FAFAF8;color:#2C2C2C;outline:none;box-sizing:border-box;resize:none;margin-bottom:8px;font-family:'Noto Sans TC',sans-serif;"></textarea>
-      <button onclick="postWall()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">匿名發布</button>
+      <button onclick="postWall()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">匿名發布</button>
     </div>
   </div>
 
@@ -761,14 +781,14 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
 <!-- Bottom Nav -->
 <div class="bottom-nav" id="bottom-nav" style="display:none;">
-  <button class="nav-item active" id="nav-checkout" onclick="switchPage('checkout')">
-    <i class="ti ti-receipt"></i><span>結帳</span>
-  </button>
-  <button class="nav-item" id="nav-office" onclick="switchPage('office')">
-    <i class="ti ti-building"></i><span>行政</span>
-  </button>
   <button class="nav-item" id="nav-member" onclick="switchPage('member')">
     <i class="ti ti-users"></i><span>會員</span>
+  </button>
+  <button class="nav-item" id="nav-checkout" onclick="switchPage('checkout')">
+    <i class="ti ti-receipt"></i><span>結帳</span>
+  </button>
+  <button class="nav-item active" id="nav-office" onclick="switchPage('office')">
+    <i class="ti ti-building"></i><span>行政</span>
   </button>
   <button class="nav-item" id="nav-admin" onclick="switchPage('admin')" style="display:none;">
     <i class="ti ti-chart-bar"></i><span>總覽</span>
@@ -978,15 +998,15 @@ async function enterStaffApp(){
   const ub=$('user-badge');
   ub.style.display='flex';
   ub.textContent=currentUser.display_name;
-  $('main').style.display='block';
+  $('main').style.display='none';
+  $('office-app').style.display='block';
   $('hero-name').textContent=s.name;
   $('hero-addr').textContent=s.addr;
   $('m-user').textContent=currentUser.display_name;
-  // 員工也顯示底部導航（可切換到會員頁）
   if($('bottom-nav'))$('bottom-nav').style.display='flex';
   if($('nav-admin'))$('nav-admin').style.display='none';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if($('nav-checkout'))$('nav-checkout').classList.add('active');
+  if($('nav-office'))$('nav-office').classList.add('active');
   setDateBadge();
   renderCash();
   setDefaultDates();
@@ -1958,6 +1978,28 @@ function canPostAnnounce(){
   return false;
 }
 
+let gActivePanel=null;
+function toggleGPanel(panel){
+  // 同一個再點 → 收起
+  if(gActivePanel===panel){
+    document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
+    document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
+    gActivePanel=null;
+    return;
+  }
+  // 切換
+  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
+  gActivePanel=panel;
+  const panelEl=$(`o-panel-${panel}`);
+  if(panelEl)panelEl.style.display='block';
+  document.getElementById(`gtile-${panel}`)?.classList.add('g-tile-active');
+  if(panel==='announce')renderAnnounces();
+  else if(panel==='memo')renderMemos();
+  else if(panel==='birthday')renderBirthdays();
+  else if(panel==='wall')renderWall();
+}
+
 function switchOfficeTab(tab, el){
   document.querySelectorAll('.o-tab').forEach(t=>t.classList.remove('active'));
   if(el)el.classList.add('active');
@@ -1971,10 +2013,32 @@ function switchOfficeTab(tab, el){
 
 function initOfficePage(){
   loadOfficeData();
-  // 顯示/隱藏發布公告表單
+  gActivePanel=null;
+  document.querySelectorAll('.o-panel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.g-tile-btn').forEach(t=>t.classList.remove('g-tile-active'));
   const form=$('o-announce-form');
   if(form)form.style.display=canPostAnnounce()?'block':'none';
-  switchOfficeTab('announce',document.querySelector('.o-tab'));
+  updateGTileCounts();
+}
+
+function updateGTileCounts(){
+  const myId=localStorage.getItem('uj_builtin')||currentUser?.username||'guest';
+  const unread=(officeData.announces||[]).filter(a=>!(a.readBy||[]).includes(myId)).length;
+  const pending=(officeData.memos||[]).filter(m=>m.store===currentStore&&m.status!=='done').length;
+  const wall=(officeData.wall||[]).length;
+  // 生日
+  const today=new Date();
+  const birthSoon=STAFF_BIRTHDAYS.filter(s=>{
+    const parts=s.date.split('-');
+    const bDay=new Date(today.getFullYear(),parseInt(parts[0])-1,parseInt(parts[1]));
+    let diff=Math.ceil((bDay-today)/(1000*60*60*24));
+    if(diff<0)diff+=365;
+    return diff<=30;
+  }).length;
+  if($('g-ann-count'))$('g-ann-count').textContent=unread?`${unread} 未讀`:'';
+  if($('g-memo-count'))$('g-memo-count').textContent=pending?`${pending} 待處理`:'';
+  if($('g-birth-count'))$('g-birth-count').textContent=birthSoon?`${birthSoon} 位即將生日`:'';
+  if($('g-wall-count'))$('g-wall-count').textContent=wall?`${wall} 則`:'';
 }
 
 // ── 公告 ──
@@ -2783,7 +2847,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   }
   if(saved&&STORES[saved]){
     showLoad();const ok=await connectDB();hideLoad();
-    if(ok)await enterApp(saved);
+    if(ok){await enterApp(saved);setTimeout(()=>{initOfficePage();},100);}
   }
 });
 </script>
