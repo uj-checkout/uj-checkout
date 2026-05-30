@@ -552,11 +552,11 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 <!-- Member App -->
 <div id="member-app">
 
-  <!-- 搜尋主區 -->
+  <!-- 搜尋 -->
   <div class="mem-search-hero">
     <div class="msh-title">🔍 會員查詢</div>
-    <input class="msh-input" id="mem-search" placeholder="姓名、電話、會員編號…" oninput="renderMembers()"/>
-    <div class="msh-filters" id="mem-filters">
+    <input class="msh-input" id="mem-search" placeholder="姓名、電話、會員編號…" oninput="memPanelSearch()"/>
+    <div class="msh-filters">
       <button class="filter-chip on" onclick="setMemFilter('all',this)">全部</button>
       <button class="filter-chip" onclick="setMemFilter('ok',this)">有效</button>
       <button class="filter-chip" onclick="setMemFilter('soon',this)">即將到期</button>
@@ -570,98 +570,102 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
   <!-- 六張小卡 -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
-    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('all')">
+    <div class="mem-stat mem-stat-btn" onclick="toggleMemPanel('all')">
       <div class="msl">會員總數</div><div class="msv" id="ms-total">—</div>
     </div>
-    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('ok')">
+    <div class="mem-stat mem-stat-btn" onclick="toggleMemPanel('ok')">
       <div class="msl">有效</div><div class="msv g" id="ms-ok">—</div>
     </div>
-    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('soon')">
+    <div class="mem-stat mem-stat-btn" onclick="toggleMemPanel('soon')">
       <div class="msl">即將到期</div><div class="msv o" id="ms-soon">—</div>
     </div>
-    <div class="mem-stat mem-stat-btn" onclick="scrollToAddMem()">
-      <div class="msl">新增會員</div><div class="msv" style="font-size:22px;">＋</div>
+    <div class="mem-stat mem-stat-btn" onclick="toggleMemPanel('add')">
+      <div class="msl">新增會員</div><div class="msv" style="font-size:20px;">＋</div>
     </div>
-    <div class="mem-stat mem-stat-btn" onclick="toggleBirthdayPanel()">
+    <div class="mem-stat mem-stat-btn" onclick="toggleMemPanel('birth')">
       <div class="msl">即將生日</div><div class="msv o" id="ms-birth">—</div>
     </div>
-    <div class="mem-stat mem-stat-btn" onclick="setMemFilterQuick('exp')">
+    <div class="mem-stat mem-stat-btn" onclick="toggleMemPanel('exp')">
       <div class="msl">已到期</div><div class="msv r" id="ms-exp">—</div>
     </div>
   </div>
 
-  <!-- 生日提醒面板（點擊展開） -->
-  <div id="birthday-alert" style="display:none;background:#FEF3E0;border:1px solid #F5C87A;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
-    <div style="font-size:12px;font-weight:500;color:#B8963C;margin-bottom:6px;display:flex;align-items:center;gap:6px;"><i class="ti ti-cake" style="font-size:15px;"></i> 近期生日會員（14天內）</div>
+  <!-- 生日面板 -->
+  <div id="panel-birth" style="display:none;background:#FEF3E0;border:1px solid #F5C87A;border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:500;color:#B8963C;margin-bottom:6px;">🎂 近期生日（14天內）</div>
     <div id="birthday-list"></div>
   </div>
 
   <!-- 加密提示 -->
   <div class="enc-bar"><i class="ti ti-lock" style="font-size:13px;"></i> 會員資料加密保護，僅限授權帳號查看</div>
 
-  <!-- 會員列表 -->
-  <div class="mem-list-hd">
-    <span class="mem-list-title" id="mem-list-label">請輸入關鍵字或點選篩選</span>
-    <span class="mem-list-count" id="mem-count"></span>
-  </div>
-  <div id="mem-list"></div>
-
-  <!-- 新增會員 -->
-  <div class="add-mem-card" id="add-mem-section">
-    <div class="card-header"><span class="card-title">新增會員</span></div>
-    <div class="add-mem-body">
-      <div>
-        <div class="add-label">會員編號（必填）</div>
-        <input class="add-input" id="am-id" placeholder="例：UJVIP00385"/>
-      </div>
-      <div>
-        <div class="add-label">姓名（必填）</div>
-        <input class="add-input" id="am-name" placeholder="會員姓名"/>
-      </div>
-      <div>
-        <div class="add-label">電話</div>
-        <input class="add-input" id="am-phone" placeholder="09XX-XXX-XXX"/>
-      </div>
-      <div>
-        <div class="add-label">分店</div>
-        <select class="add-input" id="am-store">
-          <option value="台北">台北旗艦店</option>
-          <option value="新竹">新竹形象店</option>
-          <option value="台中">台中主題店</option>
-          <option value="高雄">高雄概念店</option>
-        </select>
-      </div>
-      <div>
-        <div class="add-label">承辦人</div>
-        <input class="add-input" id="am-staff" placeholder="承辦人姓名"/>
-      </div>
-      <div>
-        <div class="add-label">入會日</div>
-        <input class="add-input" id="am-join" type="date"/>
-      </div>
-      <div>
-        <div class="add-label">到期日</div>
-        <input class="add-input" id="am-exp" type="date"/>
-      </div>
-      <div>
-        <div class="add-label">生日</div>
-        <input class="add-input" id="am-birth" type="date"/>
-      </div>
-      <div>
-        <div class="add-label">隨卡贈送</div>
-        <input class="add-input" id="am-gift" placeholder="洋蘭乳 / 萊姆去…"/>
-      </div>
-      <div>
-        <div class="add-label">附註</div>
-        <input class="add-input" id="am-note" placeholder="備註說明"/>
-      </div>
+  <!-- 會員列表面板 -->
+  <div id="panel-mem-list" style="display:none;">
+    <div class="mem-list-hd">
+      <span class="mem-list-title" id="mem-list-label">會員列表</span>
+      <span class="mem-list-count" id="mem-count"></span>
     </div>
-    <button class="btn-add-mem" onclick="addMember()">＋ 新增會員</button>
+    <div id="mem-list"></div>
   </div>
 
-  <!-- 下載備份（店長/管理者限定） -->
+  <!-- 新增會員面板 -->
+  <div id="panel-add" style="display:none;">
+    <div class="add-mem-card" id="add-mem-section">
+      <div class="card-header"><span class="card-title">新增會員</span></div>
+      <div class="add-mem-body">
+        <div>
+          <div class="add-label">會員編號（必填）</div>
+          <input class="add-input" id="am-id" placeholder="例：UJVIP00385" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">姓名（必填）</div>
+          <input class="add-input" id="am-name" placeholder="會員姓名" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">電話</div>
+          <input class="add-input" id="am-phone" placeholder="09XX-XXX-XXX" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">分店</div>
+          <select class="add-input" id="am-store" style="width:100%;">
+            <option value="台北">台北旗艦店</option>
+            <option value="新竹">新竹形象店</option>
+            <option value="台中">台中主題店</option>
+            <option value="高雄">高雄概念店</option>
+          </select>
+        </div>
+        <div>
+          <div class="add-label">承辦人</div>
+          <input class="add-input" id="am-staff" placeholder="承辦人姓名" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">入會日</div>
+          <input class="add-input" id="am-join" type="date" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">到期日</div>
+          <input class="add-input" id="am-exp" type="date" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">生日</div>
+          <input class="add-input" id="am-birth" type="date" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">隨卡贈送</div>
+          <input class="add-input" id="am-gift" placeholder="洋蘭乳 / 萊姆去…" style="width:100%;"/>
+        </div>
+        <div>
+          <div class="add-label">附註</div>
+          <input class="add-input" id="am-note" placeholder="備註說明" style="width:100%;"/>
+        </div>
+      </div>
+      <button class="btn-add-mem" onclick="addMember()">＋ 新增會員</button>
+    </div>
+  </div>
+
+  <!-- 下載備份（店長/管理者） -->
   <div id="btn-download-backup" style="display:none;margin-top:12px;">
-    <button onclick="downloadMemberBackup()" style="width:100%;background:none;border:1px solid var(--bd2);border-radius:10px;color:var(--t3);padding:10px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Noto Sans TC',sans-serif;"><i class="ti ti-database-export" style="font-size:15px;"></i> 下載完整會員備份</button>
+    <button onclick="downloadMemberBackup()" style="width:100%;background:none;border:1px solid var(--bd2);border-radius:10px;color:var(--t3);padding:10px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"><i class="ti ti-database-export" style="font-size:15px;"></i> 下載完整會員備份</button>
   </div>
 
 </div>
@@ -2192,21 +2196,18 @@ function switchPage(page){
 }
 
 function initMemberPage(){
-  // 設定預設日期
-  const today=localDate();
-  if($('am-join'))$('am-join').value=today;
-  // 生日提醒（本月 + 未來7天）
+  hideMemberPanels();
+  memActivePanel=null;
+  if($('mem-search'))$('mem-search').value='';
+  memFilter='all';
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('on'));
+  const chips=document.querySelectorAll('.filter-chip');
+  if(chips[0])chips[0].classList.add('on');
+  updateMemStats();
   showBirthdayAlert();
-  // 下載備份只有店長（內建帳號）和 admin 可用
   const canDownload=!currentUser||isAdmin;
   const dlBtn=$('btn-download-backup');
-  if(dlBtn)dlBtn.style.display=canDownload?'flex':'none';
-  // 產生下一個編號
-  const allIds=[...MEMBER_DATA,...memNewMembers].map(m=>parseInt(m.id.replace('UJVIP','')||0)).filter(n=>!isNaN(n));
-  const nextNum=Math.max(...allIds,0)+1;
-  if($('add-mem-new-id'))$('add-mem-new-id').textContent=`下一個編號：UJVIP${String(nextNum).padStart(5,'0')}`;
-  renderMembers();
-  updateMemStats();
+  if(dlBtn)dlBtn.style.display=canDownload?'block':'none';
 }
 
 function memStatus(expDate){
@@ -2333,11 +2334,6 @@ function setMemFilterQuick(f){
   $('mem-list')?.scrollIntoView({behavior:'smooth'});
 }
 
-function toggleBirthdayPanel(){
-  const el=$('birthday-alert');
-  if(!el)return;
-  el.style.display=el.style.display==='none'?'block':'none';
-}
 
 function renewMember(i, e){
   e.stopPropagation();
@@ -2381,6 +2377,71 @@ function getFilteredMembers(){
   });
 }
 
+let memActivePanel=null;
+
+function toggleMemPanel(panel){
+  // 同一個再點一次 → 收起
+  if(memActivePanel===panel){
+    hideMemberPanels();
+    memActivePanel=null;
+    return;
+  }
+  hideMemberPanels();
+  memActivePanel=panel;
+  if(panel==='birth'){
+    const el=$('panel-birth');
+    if(el){el.style.display='block';showBirthdayAlert();}
+  } else if(panel==='add'){
+    const el=$('panel-add');
+    if(el)el.style.display='block';
+    if($('am-join'))$('am-join').value=localDate();
+  } else {
+    // all / ok / soon / exp → 篩選後顯示列表
+    memFilter=panel;
+    document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('on'));
+    const filterMap={all:0,ok:1,soon:2,exp:3};
+    const chips=document.querySelectorAll('.filter-chip');
+    if(filterMap[panel]!==undefined&&chips[filterMap[panel]])chips[filterMap[panel]].classList.add('on');
+    if($('mem-search'))$('mem-search').value='';
+    const listPanel=$('panel-mem-list');
+    if(listPanel)listPanel.style.display='block';
+    renderMembers();
+  }
+}
+
+function hideMemberPanels(){
+  ['panel-birth','panel-mem-list','panel-add'].forEach(id=>{
+    const el=$(id);if(el)el.style.display='none';
+  });
+}
+
+function memPanelSearch(){
+  const q=($('mem-search')?.value||'').trim();
+  if(q){
+    memFilter='all';
+    hideMemberPanels();
+    const listPanel=$('panel-mem-list');
+    if(listPanel)listPanel.style.display='block';
+    memActivePanel='search';
+    renderMembers();
+  } else {
+    if(memActivePanel==='search'){
+      hideMemberPanels();
+      memActivePanel=null;
+    }
+  }
+}
+
+function toggleBirthdayPanel(){
+  toggleMemPanel('birth');
+}
+
+
+
+function scrollToAddMem(){
+  toggleMemPanel('add');
+}
+
 function toggleMemDetail(i){
   const d=$(`md-${i}`);
   if(d)d.classList.toggle('open');
@@ -2409,9 +2470,7 @@ function updateMemStats(){
   if($('ms-birth'))$('ms-birth').textContent=birthSoon||'—';
 }
 
-function scrollToAddMem(){
-  $('add-mem-section')?.scrollIntoView({behavior:'smooth'});
-}
+
 
 function addMember(){
   const newId=($('am-id')?.value.trim()||'').toUpperCase();
