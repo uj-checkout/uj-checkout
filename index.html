@@ -2098,14 +2098,45 @@ async function loadOfficePosts(){
   }catch(e){console.error('loadOfficePosts:',e);}
 }
 
+// 載入 DB 資料，但保留本地已讀狀態（避免洗掉）
+async function loadOfficePostsMerge(){
+  if(!db)return;
+  try{
+    const {data}=await db.from('office_posts').select('*').order('created_at',{ascending:false});
+    const myId=getCurrentId();
+    // 保留本地已讀狀態
+    const mergeReadBy=(newPost,oldCache)=>{
+      const old=oldCache.find(p=>p.id===newPost.id);
+      if(!old)return newPost;
+      // 合併已讀列表
+      const merged=[...new Set([...(newPost.read_by||[]),...(old.read_by||[])])];
+      return {...newPost,read_by:merged,_showReply:old._showReply,_editing:old._editing};
+    };
+    const oldAnn=officePostsCache.announces||[];
+    const oldWall=officePostsCache.wall||[];
+    const oldMemo=officePostsCache.memos||[];
+    officePostsCache={
+      announces:(data||[]).filter(p=>p.type==='announce').map(p=>mergeReadBy(p,oldAnn)),
+      memos:(data||[]).filter(p=>p.type==='memo').map(p=>mergeReadBy(p,oldMemo)),
+      wall:(data||[]).filter(p=>p.type==='wall').map(p=>mergeReadBy(p,oldWall)),
+    };
+    updateTicker();
+  }catch(e){console.error('loadOfficePostsMerge:',e);}
+}
+
 let _notifPollingStarted=false;
 function startNotifPolling(){
   if(_notifPollingStarted)return;
   _notifPollingStarted=true;
   setInterval(async()=>{
-    await loadOfficePosts();
+    await loadOfficePostsMerge();
     updateTicker();
-  },20000);
+    updateGTileCounts();
+    // 如果目前在行政頁面，即時更新顯示
+    if(gActivePanel==='announce')renderAnnounces();
+    else if(gActivePanel==='memo')renderMemos();
+    else if(gActivePanel==='wall')renderWall();
+  },15000);
 }
 
 // ── 公告 ──────────────────────────────────────────────────
@@ -2530,8 +2561,9 @@ async function toggleGPanel(panel){
   const panelEl=$(`o-panel-${panel}`);
   if(panelEl)panelEl.style.display='block';
   document.getElementById(`gtile-${panel}`)?.classList.add('g-tile-active');
+  // 每次開啟面板重新從 DB 載入，但保留本地已讀狀態合併
   showLoad();
-  await loadOfficePosts();
+  await loadOfficePostsMerge();
   hideLoad();
   if(panel==='announce')renderAnnounces();
   else if(panel==='memo')await renderMemos();
@@ -2891,15 +2923,14 @@ async function switchPage(page){
 async function loadMembersFromDB(){
   if(!db)return;
   try{
-    const {data}=await db.from('members').select('*').order('created_at',{ascending:false});
-    if(data&&data.length){
-      // 轉換欄位名稱對應
-      memNewMembers=(data||[]).map(r=>({
-        id:r.id,name:r.name,store:r.store,staff:r.staff,
-        joinDate:r.join_date,expDate:r.exp_date,
-        gift:r.gift,phone:r.phone,birth:r.birth,note:r.note
-      }));
-    }
+    const {data,error}=await db.from('members').select('*').order('created_at',{ascending:false});
+    if(error){console.error('loadMembersFromDB error:',error);return;}
+    memNewMembers=(data||[]).map(r=>({
+      id:r.id,name:r.name,store:r.store,staff:r.staff,
+      joinDate:r.join_date,expDate:r.exp_date,
+      gift:r.gift||'',phone:r.phone||'',birth:r.birth||'',note:r.note||''
+    }));
+    console.log('從DB載入會員:', memNewMembers.length, '筆');
   }catch(e){console.error('loadMembersFromDB:',e);}
 }
 
@@ -2916,6 +2947,7 @@ async function initMemberPage(){
   showBirthdayAlert();
   initNewMemberMonthSel();
   renderNewMembers();
+  console.log('memNewMembers count:', memNewMembers.length);
   const canDownload=!currentUser||isAdmin;
   const dlBtn=$('btn-download-backup');
   if(dlBtn)dlBtn.style.display=canDownload?'block':'none';
