@@ -562,6 +562,10 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
         <div><div class="lnd-pts-label">點數卡剩餘點數</div><div class="lnd-pts-val" id="lnd-pts">—</div></div>
         <button class="btn-topup" onclick="openTopup()">+ 充值</button>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--bd);">
+        <span style="font-size:12px;color:var(--t3);">查看月份</span>
+        <select id="lnd-month-sel" onchange="loadLaundry()" style="border:1px solid var(--bd2);border-radius:8px;padding:4px 8px;font-size:12px;background:var(--pa);color:var(--t2);outline:none;"></select>
+      </div>
       <div id="lnd-list"><div class="empty-hint">尚無記錄</div></div>
       <div style="padding:12px 14px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:10px;">
         <div style="display:flex;gap:8px;">
@@ -1718,7 +1722,7 @@ function openAddDateModal(){
   $('edit-modal-title').textContent='新增日期紀錄';
   $('edit-modal-body').innerHTML=`
     <div style="font-size:13px;color:var(--t2);margin-bottom:10px;">選擇要新增的日期，預設為空白紀錄，新增後可再點「編輯」填寫明細。</div>
-    <input id="new-date-input" type="date" value="${localDate()}" style="width:100%;${inputStyle}padding:10px 12px;font-size:15px;"/>`;
+    <input id="new-date-input" type="date" value="${localDate()}" style="width:100%;${inputStyle}padding:10px 12px;font-size:16px;margin-bottom:280px;"/>`;
   document.querySelector('#edit-modal .btn-finish').textContent='確認新增';
   document.querySelector('#edit-modal .btn-finish').onclick=addDateRecord;
   document.querySelector('#edit-modal .btn-finish').style.display='block';
@@ -1755,25 +1759,47 @@ async function initLaundry(){
   if($('lnd-staff')&&currentUser)$('lnd-staff').value=currentUser.display_name||'';
   await loadLaundry();
 }
+function initLndMonthSel(){
+  const sel=$('lnd-month-sel');
+  if(!sel||sel.options.length>0)return;
+  const now=new Date();
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=`${d.getFullYear()}年${d.getMonth()+1}月`;
+    const opt=document.createElement('option');
+    opt.value=val; opt.textContent=label;
+    if(i===0)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
 async function loadLaundry(){
   if(!db)return;
+  initLndMonthSel();
+  const sel=$('lnd-month-sel');
+  const ym=sel?.value||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+  const from=`${ym}-01`;
+  const lastDay=new Date(parseInt(ym.split('-')[0]),parseInt(ym.split('-')[1]),0).getDate();
+  const to=`${ym}-${String(lastDay).padStart(2,'0')}`;
   try{
-    const {data}=await db.from('laundry_records').select('*').order('done_at',{ascending:false}).limit(20);
+    // 全部記錄用來算剩餘點數
+    const {data:allData}=await db.from('laundry_records').select('deduct,remain_pts').order('done_at',{ascending:false});
     const {data:topup}=await db.from('laundry_topups').select('pts').order('created_at',{ascending:false});
     const totalPts=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
-    const usedPts=(data||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    const usedPts=(allData||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
     const remPts=totalPts-usedPts;
     $('lnd-pts').textContent=remPts.toLocaleString()+'pts';
+    // 依月份篩選顯示
+    const {data}=await db.from('laundry_records').select('*').gte('done_at',from+'T00:00:00').lte('done_at',to+'T23:59:59').order('done_at',{ascending:false});
     const el=$('lnd-list');
-    if(!data||!data.length){el.innerHTML='<div class="empty-hint">尚無記錄</div>';return;}
-    let running=totalPts;
-    const rows=[...data].reverse().map(r=>{running-=Number(r.deduct||0);return{...r,_rem:running};}).reverse();
-    el.innerHTML=rows.map(r=>{
+    if(!data||!data.length){el.innerHTML='<div class="empty-hint">本月尚無洗浴巾記錄</div>';return;}
+    el.innerHTML=data.map(r=>{
       const d=new Date(r.done_at||r.created_at);
       const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
       return`<div class="lnd-item">
         <div class="lnd-item-left"><div class="lnd-name">${r.who||'—'}</div><div class="lnd-date">${ds}</div></div>
-        <div class="lnd-item-right"><div class="lnd-qty">浴巾 ${r.qty} 條</div><div class="lnd-pts-used">扣 ${r.deduct||0}pts・餘 ${r.remain_pts!=null?r.remain_pts:r._rem}pts</div></div>
+        <div class="lnd-item-right"><div class="lnd-qty">浴巾 ${r.qty} 條</div><div class="lnd-pts-used">扣 ${r.deduct||0}pts・餘 ${r.remain_pts!=null?r.remain_pts:'—'}pts</div></div>
       </div>`;
     }).join('');
   }catch(e){console.error(e);}
