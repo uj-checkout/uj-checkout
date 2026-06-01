@@ -1725,9 +1725,9 @@ async function deleteDateRecord(id,date){
 function openAddDateModal(){
   $('edit-modal-title').textContent='新增日期紀錄';
   $('edit-modal-body').innerHTML=`
-    <div style="font-size:13px;color:var(--t2);margin-bottom:10px;">選擇要新增的日期，預設為空白紀錄，新增後可再點「編輯」填寫明細。</div>
-    <button onclick="addDateRecord()" style="width:100%;background:var(--gd);border:none;border-radius:10px;color:#fff;padding:13px;font-size:15px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;margin-bottom:12px;">確認新增</button>
-    <input id="new-date-input" type="date" value="${localDate()}" style="width:100%;${inputStyle}padding:10px 12px;font-size:16px;"/>`;
+    <div style="font-size:13px;color:var(--t2);margin-bottom:10px;">輸入要新增的日期（格式：YYYY-MM-DD），新增後可再點「編輯」填寫明細。</div>
+    <input id="new-date-input" type="text" value="${localDate()}" placeholder="例：2026-06-01" style="width:100%;${inputStyle}padding:10px 12px;font-size:16px;margin-bottom:12px;"/>
+    <button onclick="addDateRecord()" style="width:100%;background:var(--gd);border:none;border-radius:10px;color:#fff;padding:13px;font-size:15px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">確認新增</button>`;
   document.querySelector('#edit-modal .btn-finish').style.display='none';
   $('edit-modal').classList.add('open');
 }
