@@ -1479,7 +1479,25 @@ async function uploadTransferImg(id, input){
     try{
       await db.from('transfer_records').update({img:imgData}).eq('id',id);
       hideLoad();toast('✓ 憑證已上傳');
-      await loadTransfers();
+      // 直接在原地更新圖片，不重新整理列表（避免收合）
+      const detail=$(`tr-detail-${id}`);
+      if(detail){
+        // 找到「尚未上傳憑證」的提示，換成圖片
+        const placeholder=detail.querySelector('div[style*="font-size:12px"]');
+        if(placeholder)placeholder.remove();
+        const existImg=detail.querySelector('img');
+        if(existImg){existImg.src=imgData;}
+        else{
+          const img=document.createElement('img');
+          img.src=imgData;
+          img.style.cssText='width:100%;border-radius:8px;margin-top:6px;';
+          img.onclick=e=>e.stopPropagation();
+          detail.appendChild(img);
+        }
+      }
+      // 更新 cache
+      const tr=transfers.find(r=>r.id===id);
+      if(tr)tr.img=imgData;
     }catch(err){hideLoad();toast('✗ '+err.message);}
   };
   reader.readAsDataURL(input.files[0]);
