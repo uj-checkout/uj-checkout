@@ -1479,23 +1479,19 @@ async function uploadTransferImg(id, input){
     try{
       await db.from('transfer_records').update({img:imgData}).eq('id',id);
       hideLoad();toast('✓ 憑證已上傳');
-      // 直接在原地更新圖片，不重新整理列表（避免收合）
-      const detail=$(`tr-detail-${id}`);
+      // 找到 detail div，直接插入圖片
+      const detailId='tr-detail-'+id;
+      const detail=document.getElementById(detailId);
       if(detail){
-        // 找到「尚未上傳憑證」的提示，換成圖片
-        const placeholder=detail.querySelector('div[style*="font-size:12px"]');
-        if(placeholder)placeholder.remove();
-        const existImg=detail.querySelector('img');
-        if(existImg){existImg.src=imgData;}
-        else{
-          const img=document.createElement('img');
-          img.src=imgData;
-          img.style.cssText='width:100%;border-radius:8px;margin-top:6px;';
-          img.onclick=e=>e.stopPropagation();
-          detail.appendChild(img);
-        }
+        detail.style.display='block';
+        // 移除舊內容，重新寫入
+        detail.innerHTML=`
+          <div style="margin-bottom:8px;">
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px;">上傳匯款憑證</label>
+            <input type="file" accept="image/*" onchange="uploadTransferImg(${id},this)" style="font-size:12px;width:100%;"/>
+          </div>
+          <img src="${imgData}" style="width:100%;border-radius:8px;margin-top:6px;"/>`;
       }
-      // 更新 cache
       const tr=transfers.find(r=>r.id===id);
       if(tr)tr.img=imgData;
     }catch(err){hideLoad();toast('✗ '+err.message);}
