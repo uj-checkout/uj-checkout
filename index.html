@@ -1438,13 +1438,51 @@ function renderTransfers(){
   const el=$('tr-list');if(!el)return;
   if(!transfers.length){el.innerHTML='<div class="empty-hint">尚無匯款記錄</div>';return;}
   el.innerHTML=transfers.map(r=>`
-    <div class="tr-row">
-      <div><div>${r.date_from} ～ ${r.date_to}</div><div class="tr-date">應收 ${fmt(r.range_income)}　差額 ${r.diff>=0?'+':''}${fmt(r.diff)}</div></div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="tr-amt">${fmt(r.transfer_amt)}</span>
-        <button class="tr-del" onclick="delTransfer(${r.id})"><i class="ti ti-trash"></i></button>
+    <div class="tr-row" style="flex-direction:column;align-items:stretch;padding:0;cursor:pointer;" onclick="toggleTransfer(${r.id})">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
+        <div>
+          <div>${r.date_from} ～ ${r.date_to}</div>
+          <div class="tr-date">應收 ${fmt(r.range_income)}　差額 ${r.diff>=0?'+':''}${fmt(r.diff)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="tr-amt">${fmt(r.transfer_amt)}</span>
+          ${r.img?'<i class="ti ti-photo" style="color:var(--gs);font-size:14px;"></i>':''}
+          <i class="ti ti-chevron-down" style="color:var(--t3);font-size:14px;" id="tr-chev-${r.id}"></i>
+          <button class="tr-del" onclick="event.stopPropagation();delTransfer(${r.id})"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div id="tr-detail-${r.id}" style="display:none;border-top:1px solid var(--bd);padding:12px 14px;">
+        <div style="margin-bottom:8px;">
+          <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px;">上傳匯款憑證</label>
+          <input type="file" accept="image/*" onchange="uploadTransferImg(${r.id},this)" style="font-size:12px;width:100%;"/>
+        </div>
+        ${r.img?`<img src="${r.img}" style="width:100%;border-radius:8px;margin-top:6px;" onclick="event.stopPropagation()"/>`:'<div style="font-size:12px;color:var(--t3);">尚未上傳憑證</div>'}
       </div>
     </div>`).join('');
+}
+
+function toggleTransfer(id){
+  const detail=$(`tr-detail-${id}`);
+  const chev=$(`tr-chev-${id}`);
+  if(!detail)return;
+  const isOpen=detail.style.display!=='none';
+  detail.style.display=isOpen?'none':'block';
+  if(chev)chev.style.transform=isOpen?'':'rotate(180deg)';
+}
+
+async function uploadTransferImg(id, input){
+  if(!input.files||!input.files[0])return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const imgData=e.target.result;
+    showLoad();
+    try{
+      await db.from('transfer_records').update({img:imgData}).eq('id',id);
+      hideLoad();toast('✓ 憑證已上傳');
+      await loadTransfers();
+    }catch(err){hideLoad();toast('✗ '+err.message);}
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 async function calcTransferPreview(){
   if(!db||!currentStore)return;
@@ -1896,8 +1934,44 @@ async function loadAdminData(){
     stores.forEach(s=>admData[s].forEach(r=>{ti+=Number(r.income||0);te+=Number(r.total_expense||0);tr+=Number(r.return_amount||0);}));
     $('adm-ti').textContent=fmt(ti);$('adm-te').textContent=fmt(te);$('adm-tr').textContent=fmt(tr);
     stores.forEach(s=>renderAdmPanel(s));
+    // 台北浴巾資料
+    loadAdmLaundry();
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
+async function loadAdmLaundry(){
+  try{
+    const {data:records}=await db.from('laundry_records').select('*').order('done_at',{ascending:false}).limit(50);
+    const {data:topups}=await db.from('laundry_topups').select('*').order('created_at',{ascending:false});
+    const totalPts=(topups||[]).reduce((s,r)=>s+Number(r.pts||0),0);
+    const usedPts=(records||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    const remPts=totalPts-usedPts;
+    const ptsEl=$('adm-lnd-pts-taipei');
+    if(ptsEl)ptsEl.textContent=`剩餘 ${remPts.toLocaleString()} pts`;
+    const listEl=$('adm-lnd-list-taipei');
+    if(!listEl)return;
+    if(!records||!records.length){listEl.innerHTML='<div class="empty-hint">尚無記錄</div>';return;}
+    // 充值記錄
+    const topupRows=(topups||[]).map(r=>{
+      const d=new Date(r.created_at);
+      const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+      return`<div class="adm-detail-row"><span>＋充值<span class="adm-detail-by"> · ${ds}</span></span><span style="color:var(--gs);">+${Number(r.pts).toLocaleString()} pts</span></div>`;
+    }).join('');
+    // 使用記錄
+    const useRows=records.map(r=>{
+      const d=new Date(r.done_at||r.created_at);
+      const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return`<div class="adm-detail-row"><span>${r.who||'—'}・浴巾${r.qty}條<span class="adm-detail-by"> · ${ds}</span></span><span style="color:var(--red);">-${r.deduct||0} pts</span></div>`;
+    }).join('');
+    listEl.innerHTML=`
+      ${topupRows?`<div class="adm-detail-title">充值記錄</div>${topupRows}`:''}
+      <div class="adm-detail-title">使用記錄</div>${useRows}
+      <div style="border-top:1px solid var(--bd);padding:8px 14px;font-size:12px;display:flex;justify-content:space-between;">
+        <span style="color:var(--t3);">累計充值 ${totalPts.toLocaleString()} pts・已用 ${usedPts.toLocaleString()} pts</span>
+        <span style="color:var(--gs);font-weight:500;">餘 ${remPts.toLocaleString()} pts</span>
+      </div>`;
+  }catch(e){console.error('loadAdmLaundry:',e);}
+}
+
 function renderAdmPanel(store){
   const recs=admData[store]||[];
   const trs=admTransfers[store]||[];
@@ -1932,9 +2006,23 @@ function renderAdmPanel(store){
   }).join(''):'<div class="empty-hint">本月尚無紀錄</div>';
 
   const trRows=trs.filter(r=>r.store===store).length?trs.filter(r=>r.store===store).map(r=>`
-    <div class="adm-tr-row">
-      <div><div>${r.date_from} ～ ${r.date_to}</div><div class="adm-tr-range">應收 ${fmt(r.range_income)}　差額 ${r.diff>=0?'+':''}${fmt(r.diff)}</div></div>
-      <span class="adm-tr-amt">${fmt(r.transfer_amt)}</span>
+    <div class="adm-tr-row" style="flex-direction:column;padding:0;cursor:pointer;" onclick="toggleAdmTransfer('${store}',${r.id})">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
+        <div>
+          <div>${r.date_from} ～ ${r.date_to}</div>
+          <div class="adm-tr-range">應收 ${fmt(r.range_income)}　差額 ${r.diff>=0?'+':''}${fmt(r.diff)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="adm-tr-amt">${fmt(r.transfer_amt)}</span>
+          ${r.img?'<i class="ti ti-photo" style="color:var(--gs);font-size:13px;"></i>':''}
+          <i class="ti ti-chevron-down" style="color:var(--t3);font-size:13px;" id="adm-tr-chev-${r.id}"></i>
+        </div>
+      </div>
+      <div id="adm-tr-detail-${r.id}" style="display:none;border-top:1px solid var(--bd);padding:12px 14px;">
+        ${r.img
+          ?`<img src="${r.img}" style="width:100%;border-radius:8px;" onclick="event.stopPropagation()"/>`
+          :'<div style="font-size:12px;color:var(--t3);">尚未上傳憑證</div>'}
+      </div>
     </div>`).join(''):'<div class="empty-hint">尚無匯款記錄</div>';
 
   const today=new Date();
@@ -1966,6 +2054,14 @@ function renderAdmPanel(store){
       </div>
       <div class="adm-range-result" id="adm-rr-${store}"></div>
     </div>
+    ${store==='taipei'?`
+    <div class="adm-card" id="adm-laundry-card-${store}">
+      <div class="adm-card-hd">
+        <span class="adm-card-hd-title">🧺 浴巾點數帳務</span>
+        <span class="adm-card-hd-sub" id="adm-lnd-pts-${store}">載入中…</span>
+      </div>
+      <div id="adm-lnd-list-${store}"><div class="empty-hint">載入中…</div></div>
+    </div>`:''}
     <div class="adm-card">
       <div class="adm-card-hd">
         <span class="adm-card-hd-title">下載月份明細</span>
