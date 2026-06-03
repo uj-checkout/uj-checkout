@@ -1417,10 +1417,20 @@ async function finishCheckout(){
 function setDefaultDates(){
   const today=localDate();
   if($('tr-from')){
-    const lastMonth=new Date();lastMonth.setDate(0);
-    const lastDay=`${lastMonth.getFullYear()}-${String(lastMonth.getMonth()+1).padStart(2,'0')}-${String(lastMonth.getDate()).padStart(2,'0')}`;
-    $('tr-from').value=lastDay;
+    // 起始日：上次匯款的 date_to 隔天，無記錄則空白
+    if(transfers&&transfers.length){
+      const lastTr=transfers[0]; // 已按 created_at DESC 排序
+      const lastDate=new Date(lastTr.date_to+'T00:00:00');
+      lastDate.setDate(lastDate.getDate()+1);
+      const nextDay=`${lastDate.getFullYear()}-${String(lastDate.getMonth()+1).padStart(2,'0')}-${String(lastDate.getDate()).padStart(2,'0')}`;
+      $('tr-from').value=nextDay;
+    } else {
+      $('tr-from').value='';
+    }
     $('tr-to').value=today;
+    // 日期變更才計算，不自動觸發
+    $('tr-from').removeEventListener('change',calcTransferPreview);
+    $('tr-to').removeEventListener('change',calcTransferPreview);
     $('tr-from').addEventListener('change',calcTransferPreview);
     $('tr-to').addEventListener('change',calcTransferPreview);
   }
@@ -1431,7 +1441,9 @@ async function loadTransfers(){
     const {data}=await db.from('transfer_records').select('*').eq('store',currentStore).order('created_at',{ascending:false});
     transfers=data||[];
     renderTransfers();
-    calcTransferPreview();
+    setDefaultDates(); // 重設日期（帶入上次匯款隔天）
+    // 不自動計算，等用戶選完日期才顯示
+    if($('tr-preview'))$('tr-preview').style.display='none';
   }catch(e){console.error(e);}
 }
 function renderTransfers(){
