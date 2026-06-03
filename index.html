@@ -1605,7 +1605,9 @@ function renderHistory(rs){
       return`<div class="adm-detail-row"><span>${l.note}<span class="adm-detail-by"> · ${l.by}</span></span><span style="font-size:11px;color:var(--t3);">${ds}</span></div>`;
     }).join(''):'';
     const isManager=!currentUser;
-    const editBtn=isManager?`<div style="display:flex;gap:8px;margin-top:10px;">
+    const finishDraftBtn=isManager&&!isFinal?`
+      <button class="his-edit-btn" style="background:var(--gd);color:#fff;border-color:var(--gd);" onclick="finishDraftRecord(${r.id},'${r.date}')"><i class="ti ti-check"></i> 完成結帳</button>`:'';    const editBtn=isManager?`<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      ${finishDraftBtn}
       <button class="his-edit-btn" onclick="openEditModal(${idx})"><i class="ti ti-edit"></i> 編輯</button>
       <button class="his-edit-btn" style="color:var(--red);border-color:#f0c0c0;" onclick="deleteDateRecord(${r.id},'${r.date}')"><i class="ti ti-trash"></i> 刪除</button>
     </div>`:'';
@@ -1628,6 +1630,24 @@ function renderHistory(rs){
     </div>`;
   }).join('');
 }
+async function finishDraftRecord(id, date){
+  if(!confirm(`確定將 ${date} 標記為「完成結帳」？`))return;
+  showLoad();
+  try{
+    const logEntry={by:userName(),at:new Date().toISOString(),note:'手動完成結帳'};
+    const rec=historyRecords.find(r=>r.id===id);
+    const prevLog=(rec?.edit_log)||[];
+    await db.from('daily_records').update({
+      status:'final',
+      edit_log:[...prevLog,logEntry]
+    }).eq('id',id);
+    hideLoad();toast('✓ 已完成結帳');
+    await loadHistory();
+    await loadPrevPool();
+    updateMetrics();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
 function toggleHis(idx){
   const b=$(`his-body-${idx}`);
   if(b)b.classList.toggle('open');
