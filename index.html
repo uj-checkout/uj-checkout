@@ -1751,7 +1751,10 @@ async function saveEdit(){
       cash_counts:editCashCounts,cash_total:cashTotal,
       edit_log:[...prevLog,logEntry]
     }).eq('id',r.id);
-    hideLoad();toast('✓ 已儲存');closeEditModal();await loadHistory();
+    hideLoad();toast('✓ 已儲存');closeEditModal();
+    await loadHistory();
+    await loadPrevPool();
+    updateMetrics();
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
@@ -2893,6 +2896,10 @@ async function deleteWallPost(id){
 // ── Office 初始化 ──────────────────────────────────────────
 const STAFF_BIRTHDAYS=[
   {name:'Ryan',date:'06-10',note:'高雄概念店'},
+  {name:'Leon',date:'08-22',note:'管理帳號'},
+  {name:'Frank',date:'05-23',note:'台北旗艦店'},
+  {name:'Roy',date:'07-01',note:''},
+  {name:'Yang',date:'12-15',note:'高雄概念店'},
 ];
 
 function switchOfficeTab(tab,el){}
