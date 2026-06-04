@@ -655,6 +655,20 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       <span class="g-tile-count" id="g-wall-count"></span>
     </div>
   </div>
+  <!-- 小遊戲磁磚 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+    <div class="g-tile-btn g-tile-light" id="gtile-snake" onclick="toggleGPanel('snake')" style="text-align:center;padding:14px 12px;">
+      <div style="font-size:26px;margin-bottom:6px;">🐍</div>
+      <div style="font-size:13px;font-weight:500;color:#2C2C2C;">貪食蛇</div>
+      <span class="g-tile-count-light" id="g-snake-best" style="margin-top:4px;"></span>
+    </div>
+    <div class="g-tile-btn g-tile-light" id="gtile-mole" onclick="toggleGPanel('mole')" style="text-align:center;padding:14px 12px;">
+      <div style="font-size:26px;margin-bottom:6px;">🦔</div>
+      <div style="font-size:13px;font-weight:500;color:#2C2C2C;">打地鼠</div>
+      <span class="g-tile-count-light" id="g-mole-best" style="margin-top:4px;"></span>
+    </div>
+  </div>
+
   <!-- 帳號申請審核（店長限定）-->
   <div id="gtile-requests-wrap" style="display:none;margin-bottom:14px;">
     <div class="g-tile-btn g-tile-light" id="gtile-requests" onclick="toggleGPanel('requests')" style="width:100%;border-radius:12px;padding:12px 16px;text-align:left;display:flex;align-items:center;gap:12px;">
@@ -713,6 +727,65 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:12px;overflow:hidden;">
       <div style="background:#1C2B1A;padding:12px 16px;color:#C8DBC0;font-size:13px;font-weight:500;">🎂 夥伴生日提醒</div>
       <div id="o-birthday-list"></div>
+    </div>
+  </div>
+
+  <!-- 貪食蛇面板 -->
+  <div id="o-panel-snake" class="o-panel" style="display:none;">
+    <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:14px;overflow:hidden;">
+      <div style="background:#1C2B1A;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#C8DBC0;font-size:13px;font-weight:500;">🐍 貪食蛇</span>
+        <div style="display:flex;gap:12px;font-size:12px;">
+          <span style="color:rgba(255,255,255,.6);">分數 <span id="snake-score" style="color:#C8DBC0;font-weight:500;">0</span></span>
+          <span style="color:rgba(255,255,255,.6);">最高 <span id="snake-best-score" style="color:#C8DBC0;font-weight:500;">0</span></span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:center;padding:12px;background:#F5F0E8;">
+        <canvas id="snake-canvas" width="280" height="280" style="border-radius:8px;display:block;touch-action:none;"></canvas>
+      </div>
+      <div style="padding:10px 14px;display:flex;gap:8px;flex-direction:column;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;max-width:200px;margin:0 auto;">
+          <div></div>
+          <button onclick="snakeDir('up')" style="background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:10px;font-size:16px;cursor:pointer;">▲</button>
+          <div></div>
+          <button onclick="snakeDir('left')" style="background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:10px;font-size:16px;cursor:pointer;">◀</button>
+          <button onclick="startSnake()" style="background:#4A7C59;border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;cursor:pointer;">開始</button>
+          <button onclick="snakeDir('right')" style="background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:10px;font-size:16px;cursor:pointer;">▶</button>
+          <div></div>
+          <button onclick="snakeDir('down')" style="background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:10px;font-size:16px;cursor:pointer;">▼</button>
+          <div></div>
+        </div>
+      </div>
+      <!-- 排行榜 -->
+      <div style="border-top:1px solid #E0D8CC;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:500;color:#1C2B1A;margin-bottom:8px;">🏆 排行榜</div>
+        <div id="snake-leaderboard"><div class="empty-hint">載入中…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 打地鼠面板 -->
+  <div id="o-panel-mole" class="o-panel" style="display:none;">
+    <div style="background:#fff;border:0.5px solid #E0D8CC;border-radius:14px;overflow:hidden;">
+      <div style="background:#1C2B1A;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#C8DBC0;font-size:13px;font-weight:500;">🦔 打地鼠</span>
+        <div style="display:flex;gap:12px;font-size:12px;">
+          <span style="color:rgba(255,255,255,.6);">分數 <span id="mole-score" style="color:#C8DBC0;font-weight:500;">0</span></span>
+          <span style="color:rgba(255,255,255,.6);">最高 <span id="mole-best-score" style="color:#C8DBC0;font-weight:500;">0</span></span>
+          <span style="color:rgba(255,255,255,.6);">時間 <span id="mole-timer" style="color:#f08080;font-weight:500;">30</span></span>
+        </div>
+      </div>
+      <div style="padding:14px;background:#F5F0E8;">
+        <div id="mole-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto;"></div>
+      </div>
+      <div style="padding:10px 14px;text-align:center;">
+        <button onclick="startMole()" style="background:#1C2B1A;border:none;border-radius:10px;color:#C8DBC0;padding:10px 30px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">開始遊戲</button>
+      </div>
+      <!-- 排行榜 -->
+      <div style="border-top:1px solid #E0D8CC;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:500;color:#1C2B1A;margin-bottom:8px;">🏆 排行榜</div>
+        <div id="mole-leaderboard"><div class="empty-hint">載入中…</div></div>
+      </div>
     </div>
   </div>
 
@@ -2924,6 +2997,231 @@ const STAFF_BIRTHDAYS=[
 
 function switchOfficeTab(tab,el){}
 
+// ── 貪食蛇 ─────────────────────────────────────────────────
+let snakeGame={running:false,loop:null,snake:[],dir:{x:1,y:0},nextDir:{x:1,y:0},food:{x:0,y:0},score:0,speed:150};
+const SNAKE_COLS=14, SNAKE_ROWS=14, SNAKE_CELL=20;
+
+function initSnakeCanvas(){
+  const c=document.getElementById('snake-canvas');
+  if(!c)return null;
+  c.width=SNAKE_COLS*SNAKE_CELL; c.height=SNAKE_ROWS*SNAKE_CELL;
+  // 滑動控制
+  let tx=0,ty=0;
+  c.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+  c.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>Math.abs(dy)){snakeDir(dx>0?'right':'left');}
+    else{snakeDir(dy>0?'down':'up');}
+  },{passive:true});
+  return c;
+}
+
+function startSnake(){
+  const c=initSnakeCanvas();if(!c)return;
+  clearInterval(snakeGame.loop);
+  const mid=Math.floor(SNAKE_COLS/2);
+  snakeGame={...snakeGame,running:true,score:0,
+    snake:[{x:mid,y:mid},{x:mid-1,y:mid},{x:mid-2,y:mid}],
+    dir:{x:1,y:0},nextDir:{x:1,y:0}};
+  placeSnakeFood();
+  document.getElementById('snake-score').textContent='0';
+  snakeGame.loop=setInterval(snakeTick,snakeGame.speed);
+}
+
+function placeSnakeFood(){
+  let f;
+  do{f={x:Math.floor(Math.random()*SNAKE_COLS),y:Math.floor(Math.random()*SNAKE_ROWS)};}
+  while(snakeGame.snake.some(s=>s.x===f.x&&s.y===f.y));
+  snakeGame.food=f;
+}
+
+function snakeDir(d){
+  const map={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+  const nd=map[d];
+  // 不能反向
+  if(nd.x===-snakeGame.dir.x&&nd.y===-snakeGame.dir.y)return;
+  snakeGame.nextDir=nd;
+}
+
+function snakeTick(){
+  const g=snakeGame;
+  g.dir=g.nextDir;
+  const head={x:(g.snake[0].x+g.dir.x+SNAKE_COLS)%SNAKE_COLS, y:(g.snake[0].y+g.dir.y+SNAKE_ROWS)%SNAKE_ROWS};
+  // 撞自己
+  if(g.snake.some(s=>s.x===head.x&&s.y===head.y)){
+    clearInterval(g.loop); g.running=false;
+    const best=parseInt(localStorage.getItem('snake_best')||'0');
+    if(g.score>best){localStorage.setItem('snake_best',g.score);document.getElementById('snake-best-score').textContent=g.score;document.getElementById('g-snake-best').textContent='最高 '+g.score;}
+    drawSnake('Game Over!');
+    saveGameScore('snake',g.score);
+    return;
+  }
+  g.snake.unshift(head);
+  if(head.x===g.food.x&&head.y===g.food.y){
+    g.score++;
+    document.getElementById('snake-score').textContent=g.score;
+    placeSnakeFood();
+    // 每5分加速
+    if(g.score%5===0&&g.speed>60){g.speed-=10;clearInterval(g.loop);g.loop=setInterval(snakeTick,g.speed);}
+  }else{g.snake.pop();}
+  drawSnake();
+}
+
+function drawSnake(msg){
+  const c=document.getElementById('snake-canvas');if(!c)return;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#1C2B1A'; ctx.fillRect(0,0,c.width,c.height);
+  // 格線
+  ctx.strokeStyle='rgba(255,255,255,.05)';
+  for(let i=0;i<=SNAKE_COLS;i++){ctx.beginPath();ctx.moveTo(i*SNAKE_CELL,0);ctx.lineTo(i*SNAKE_CELL,c.height);ctx.stroke();}
+  for(let i=0;i<=SNAKE_ROWS;i++){ctx.beginPath();ctx.moveTo(0,i*SNAKE_CELL);ctx.lineTo(c.width,i*SNAKE_CELL);ctx.stroke();}
+  // 食物
+  ctx.fillStyle='#f08080';
+  ctx.beginPath();ctx.arc(snakeGame.food.x*SNAKE_CELL+SNAKE_CELL/2,snakeGame.food.y*SNAKE_CELL+SNAKE_CELL/2,SNAKE_CELL/2-2,0,Math.PI*2);ctx.fill();
+  // 蛇
+  snakeGame.snake.forEach((s,i)=>{
+    ctx.fillStyle=i===0?'#C8DBC0':'#4A7C59';
+    ctx.beginPath();ctx.roundRect(s.x*SNAKE_CELL+1,s.y*SNAKE_CELL+1,SNAKE_CELL-2,SNAKE_CELL-2,3);ctx.fill();
+  });
+  if(msg){
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,c.width,c.height);
+    ctx.fillStyle='#fff';ctx.font='bold 22px Arial';ctx.textAlign='center';
+    ctx.fillText(msg,c.width/2,c.height/2-10);
+    ctx.font='14px Arial';ctx.fillStyle='#C8DBC0';
+    ctx.fillText(`得分：${snakeGame.score}`,c.width/2,c.height/2+18);
+    ctx.fillText('點「開始」再玩一次',c.width/2,c.height/2+40);
+  }
+}
+
+// 鍵盤控制
+document.addEventListener('keydown',e=>{
+  const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
+  if(map[e.key]){e.preventDefault();snakeDir(map[e.key]);}
+});
+
+// 初始化最高分
+(()=>{
+  const best=localStorage.getItem('snake_best')||'0';
+  setTimeout(()=>{
+    const el=document.getElementById('snake-best-score');if(el)el.textContent=best;
+    const g=document.getElementById('g-snake-best');if(g&&best!=='0')g.textContent='最高 '+best;
+  },500);
+})();
+
+// ── 打地鼠 ─────────────────────────────────────────────────
+let moleGame={running:false,score:0,timer:30,interval:null,timerInt:null,speed:800};
+
+async function saveGameScore(game, score){
+  if(!db||score===0)return;
+  const playerName=currentUser?.display_name||currentBuiltin?.display||userName()||'匿名';
+  try{
+    // 查詢該玩家現有最高分
+    const {data:existing}=await db.from('office_posts').select('id,poll').eq('type','game_score').eq('by_account',getCurrentId()+'_'+game).limit(1);
+    const prevBest=existing&&existing.length?Number(existing[0].poll?.score||0):0;
+    if(score<=prevBest)return; // 未破紀錄不更新
+    if(existing&&existing.length){
+      await db.from('office_posts').update({body:String(score),poll:{score,game},by_name:playerName,updated_at:new Date().toISOString()}).eq('id',existing[0].id);
+    }else{
+      await db.from('office_posts').insert({type:'game_score',title:game,body:String(score),by_name:playerName,by_account:getCurrentId()+'_'+game,poll:{score,game},read_by:[],likes:[],replies:[]});
+    }
+    // 刷新排行榜
+    loadLeaderboard(game);
+  }catch(e){console.error('saveGameScore:',e);}
+}
+
+async function loadLeaderboard(game){
+  if(!db)return;
+  const elId=game==='snake'?'snake-leaderboard':'mole-leaderboard';
+  const el=document.getElementById(elId);if(!el)return;
+  try{
+    const {data}=await db.from('office_posts').select('by_name,body,updated_at').eq('type','game_score').eq('title',game).order('body',{ascending:false}).limit(10);
+    if(!data||!data.length){el.innerHTML='<div class="empty-hint">還沒有紀錄，快來挑戰！</div>';return;}
+    const medals=['🥇','🥈','🥉'];
+    el.innerHTML=data.map((r,i)=>{
+      const d=new Date(r.updated_at||'');
+      const ds=`${d.getMonth()+1}/${d.getDate()}`;
+      return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #E0D8CC;font-size:13px;">
+        <span style="width:20px;text-align:center;">${medals[i]||i+1}</span>
+        <span style="flex:1;font-weight:${i<3?'500':'400'};color:#1C2B1A;">${r.by_name}</span>
+        <span style="color:#4A7C59;font-weight:500;">${Number(r.body).toLocaleString()}</span>
+        <span style="font-size:10px;color:#aaa;">${ds}</span>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<div class="empty-hint">載入失敗</div>';}
+}
+
+function initMoleGrid(){
+  const grid=document.getElementById('mole-grid');if(!grid)return;
+  grid.innerHTML='';
+  for(let i=0;i<9;i++){
+    const hole=document.createElement('div');
+    hole.style.cssText='background:#2D4A28;border-radius:50%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;transition:background .15s;user-select:none;';
+    hole.innerHTML='🕳️';
+    hole.dataset.idx=i;
+    hole.addEventListener('click',()=>whackMole(i));
+    grid.appendChild(hole);
+  }
+}
+
+function startMole(){
+  initMoleGrid();
+  moleGame={running:true,score:0,timer:30,speed:800,interval:null,timerInt:null};
+  document.getElementById('mole-score').textContent='0';
+  document.getElementById('mole-timer').textContent='30';
+  clearInterval(moleGame.interval);clearInterval(moleGame.timerInt);
+  moleGame.interval=setInterval(showMole,moleGame.speed);
+  moleGame.timerInt=setInterval(()=>{
+    moleGame.timer--;
+    document.getElementById('mole-timer').textContent=moleGame.timer;
+    if(moleGame.timer<=0){
+      clearInterval(moleGame.interval);clearInterval(moleGame.timerInt);
+      moleGame.running=false;
+      const best=parseInt(localStorage.getItem('mole_best')||'0');
+      if(moleGame.score>best){localStorage.setItem('mole_best',moleGame.score);document.getElementById('mole-best-score').textContent=moleGame.score;document.getElementById('g-mole-best').textContent='最高 '+moleGame.score;}
+      saveGameScore('mole',moleGame.score);
+      // 顯示結束
+      const grid=document.getElementById('mole-grid');
+      if(grid){
+        const all=grid.querySelectorAll('div');
+        all.forEach(h=>{h.innerHTML='🕳️';h.style.background='#2D4A28';});
+      }
+      toast(`🦔 遊戲結束！得分 ${moleGame.score}`);
+    }
+    // 每10秒加速
+    if(moleGame.timer%10===0&&moleGame.speed>400){moleGame.speed-=100;clearInterval(moleGame.interval);moleGame.interval=setInterval(showMole,moleGame.speed);}
+  },1000);
+}
+
+let activeMole=-1;
+function showMole(){
+  const grid=document.getElementById('mole-grid');if(!grid)return;
+  const holes=grid.querySelectorAll('div');
+  // 隱藏上一隻
+  if(activeMole>=0&&holes[activeMole]){holes[activeMole].innerHTML='🕳️';holes[activeMole].style.background='#2D4A28';}
+  // 隨機新地鼠
+  activeMole=Math.floor(Math.random()*9);
+  if(holes[activeMole]){holes[activeMole].innerHTML='🦔';holes[activeMole].style.background='#4A7C59';}
+}
+
+function whackMole(idx){
+  if(!moleGame.running||idx!==activeMole)return;
+  const grid=document.getElementById('mole-grid');if(!grid)return;
+  const holes=grid.querySelectorAll('div');
+  if(holes[idx]){holes[idx].innerHTML='💥';holes[idx].style.background='#B83030';}
+  moleGame.score++;
+  document.getElementById('mole-score').textContent=moleGame.score;
+  activeMole=-1;
+}
+
+// 初始化最高分
+(()=>{
+  setTimeout(()=>{
+    const mb=localStorage.getItem('mole_best')||'0';
+    const ms=document.getElementById('mole-best-score');if(ms)ms.textContent=mb;
+    const gm=document.getElementById('g-mole-best');if(gm&&mb!=='0')gm.textContent='最高 '+mb;
+  },500);
+})();
+
 let gActivePanel=null;
 async function toggleGPanel(panel){
   if(gActivePanel===panel){
@@ -2946,6 +3244,8 @@ async function toggleGPanel(panel){
   else if(panel==='birthday')renderBirthdays();
   else if(panel==='wall')await renderWall();
   else if(panel==='requests')await renderAccountRequests();
+  else if(panel==='snake'){initSnakeCanvas();drawSnake();loadLeaderboard('snake');}
+  else if(panel==='mole'){initMoleGrid();loadLeaderboard('mole');}
 }
 
 async function initOfficePage(){
