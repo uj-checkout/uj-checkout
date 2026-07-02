@@ -1981,7 +1981,7 @@ async function loadLaundry(){
     const totalPts=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
     const usedPts=(allData||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
     const remPts=totalPts-usedPts;
-    $('lnd-pts').textContent=remPts.toLocaleString()+'pts';
+    const ptsEl=$('lnd-pts');if(ptsEl){ptsEl.innerHTML=remPts.toLocaleString()+'<small>pts</small>';}
     // 依月份篩選顯示
     const {data}=await db.from('laundry_records').select('*').gte('done_at',from+'T00:00:00').lte('done_at',to+'T23:59:59').order('done_at',{ascending:false});
     const el=$('lnd-list');
@@ -2026,15 +2026,11 @@ async function openTopup(){
   showLoad();
   try{
     await db.from('laundry_topups').insert({pts:n});
-    const {data:topup}=await db.from('laundry_topups').select('pts');
-    const {data:recs}=await db.from('laundry_records').select('deduct');
-    const total=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
-    const used=(recs||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
-    const rem=total-used;
-    const el=$('lnd-pts');
-    if(el){el.textContent=rem.toLocaleString()+'pts';}
     if($('topup-input'))$('topup-input').value='';
-    hideLoad();toast(`✓ 充值成功，剩餘 ${rem.toLocaleString()} pts`);
+    hideLoad();
+    // 重新載入整個浴巾區塊（包含點數顯示）
+    await loadLaundry();
+    toast('✓ 充值成功');
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
