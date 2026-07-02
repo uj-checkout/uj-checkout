@@ -1981,7 +1981,13 @@ async function loadLaundry(){
     const totalPts=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
     const usedPts=(allData||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
     const remPts=totalPts-usedPts;
-    const ptsEl=$('lnd-pts');if(ptsEl)ptsEl.textContent=remPts.toLocaleString()+'pts';
+    console.log('loadLaundry: remPts='+remPts+' ptsEl='+$('lnd-pts'));
+    const ptsEl=$('lnd-pts');
+    if(ptsEl){
+      ptsEl.textContent=remPts.toLocaleString()+'pts';
+    } else {
+      console.error('lnd-pts element NOT FOUND');
+    }
     // 依月份篩選顯示
     const {data}=await db.from('laundry_records').select('*').gte('done_at',from+'T00:00:00').lte('done_at',to+'T23:59:59').order('done_at',{ascending:false});
     const el=$('lnd-list');
@@ -2027,13 +2033,9 @@ async function openTopup(){
   try{
     await db.from('laundry_topups').insert({pts:n});
     document.getElementById('topup-input').value='';
-    // 從目前顯示的數字直接加上去
-    const ptsEl=document.getElementById('lnd-pts');
-    const cur=parseInt((ptsEl.textContent||'0').replace(/[^0-9]/g,''))||0;
-    const newVal=cur+n;
-    ptsEl.textContent=newVal.toLocaleString()+'pts';
     hideLoad();
-    toast('✓ 充值 '+n+' pts，剩餘 '+newVal.toLocaleString()+' pts');
+    await loadLaundry();
+    toast('✓ 充值成功');
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
