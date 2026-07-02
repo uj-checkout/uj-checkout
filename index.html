@@ -2024,8 +2024,14 @@ async function openTopup(){
   showLoad();
   try{
     await db.from('laundry_topups').insert({pts:n});
-    hideLoad();toast('✓ 充值成功');
-    await loadLaundry();
+    // 直接重算點數並更新顯示
+    const {data:topup}=await db.from('laundry_topups').select('pts');
+    const {data:recs}=await db.from('laundry_records').select('deduct');
+    const total=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
+    const used=(recs||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    const rem=total-used;
+    if($('lnd-pts'))$('lnd-pts').textContent=rem.toLocaleString()+'pts';
+    hideLoad();toast(`✓ 充值成功，剩餘 ${rem.toLocaleString()} pts`);
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
