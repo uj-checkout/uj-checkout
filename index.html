@@ -1513,16 +1513,42 @@ async function loadTransfers(){
   try{
     const {data}=await db.from('transfer_records').select('*').eq('store',currentStore).order('created_at',{ascending:false});
     transfers=data||[];
+    initTrMonthSel();
     renderTransfers();
     setDefaultDates(); // 重設日期（帶入上次匯款隔天）
     // 不自動計算，等用戶選完日期才顯示
     if($('tr-preview'))$('tr-preview').style.display='none';
   }catch(e){console.error(e);}
 }
+function initTrMonthSel(){
+  const sel=$('tr-month-sel');if(!sel)return;
+  sel.innerHTML='<option value="">全部</option>';
+  const months=new Set();
+  (transfers||[]).forEach(r=>{
+    if(r.date_to)months.add(r.date_to.slice(0,7));
+    if(r.date_from)months.add(r.date_from.slice(0,7));
+  });
+  const sorted=[...months].sort().reverse();
+  sorted.forEach(m=>{
+    const [y,mo]=m.split('-');
+    const opt=document.createElement('option');
+    opt.value=m;opt.textContent=`${y}年${parseInt(mo)}月`;
+    sel.appendChild(opt);
+  });
+  // 預設選最新月份
+  if(sorted.length&&sel.options.length>1)sel.options[1].selected=true;
+}
+
+function filterTransfersByMonth(){
+  renderTransfers();
+}
+
 function renderTransfers(){
   const el=$('tr-list');if(!el)return;
-  if(!transfers.length){el.innerHTML='<div class="empty-hint">尚無匯款記錄</div>';return;}
-  el.innerHTML=transfers.map(r=>`
+  const ym=$('tr-month-sel')?.value||'';
+  const filtered=ym?transfers.filter(r=>r.date_to?.startsWith(ym)||r.date_from?.startsWith(ym)):transfers;
+  if(!filtered.length){el.innerHTML='<div class="empty-hint">此月份尚無匯款記錄</div>';return;}
+  el.innerHTML=filtered.map(r=>`
     <div class="tr-row" style="flex-direction:column;align-items:stretch;padding:0;cursor:pointer;" onclick="toggleTransfer(${r.id})">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
         <div>
@@ -1998,7 +2024,8 @@ async function openTopup(){
   showLoad();
   try{
     await db.from('laundry_topups').insert({pts:n});
-    hideLoad();toast('✓ 充值成功');await loadLaundry();
+    hideLoad();toast('✓ 充值成功');
+    await loadLaundry();
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
@@ -3691,6 +3718,27 @@ function renderNewMembers(){
   }).join('');
 }
 
+async function setVVIP(id, name, e){
+  e.stopPropagation();
+  if(!confirm(`確定將 ${name} 設為 VVIP（永久會員，到期日 2099/12/31）？`))return;
+  const newExpStr='2099-12-31';
+  showLoad();
+  try{
+    const {data:existing}=await db.from('members').select('id').eq('id',id).limit(1);
+    if(existing&&existing.length){
+      await db.from('members').update({exp_date:newExpStr,note:'VVIP 永久會員',updated_at:new Date().toISOString()}).eq('id',id);
+    }else{
+      const m=getMergedMembers().find(r=>r.id===id);
+      if(m)await db.from('members').insert({...m,exp_date:newExpStr,note:'VVIP 永久會員',join_date:m.joinDate,id:m.id});
+    }
+    const idx=memNewMembers.findIndex(r=>r.id===id);
+    if(idx>=0){memNewMembers[idx]={...memNewMembers[idx],expDate:newExpStr,note:'VVIP 永久會員'};}
+    else{const m=getMergedMembers().find(r=>r.id===id);if(m)memNewMembers.push({...m,expDate:newExpStr,note:'VVIP 永久會員'});}
+    hideLoad();toast(`⭐ ${name} 已設為 VVIP 永久會員`);
+    renderMembers();updateMemStats();renderNewMembers();
+  }catch(e2){hideLoad();toast('✗ '+e2.message);}
+}
+
 async function deleteMember(id){
   if(!confirm(`確定刪除會員 ${id}？此操作無法復原。`))return;
   showLoad();
@@ -3818,7 +3866,8 @@ function renderMembers(){
         <div class="md-row"><span class="md-label">隨卡贈送</span><span class="md-val" style="color:var(--gs)">${m.gift||'—'}</span></div>
         <div class="md-row"><span class="md-label">附註</span><span class="md-val">${m.note||'—'}</span></div>
         <div class="mem-edit-bar">
-          <button class="btn-renew" onclick="renewMember(${i},event)">🔄 續會（自當日延一年）</button>
+          <button class="btn-renew" onclick="renewMember(${i},event)">🔄 續會</button>
+          ${!currentUser?`<button class="btn-edit-mem" style="color:#B8963C;border-color:#F5C87A;" onclick="setVVIP('${m.id}','${m.name}',event)">⭐ VVIP</button>`:''}
           ${(!currentUser&&memNewMembers.some(r=>r.id===m.id))?`<button class="btn-edit-mem" style="color:var(--red);border-color:#f0c0c0;" onclick="deleteMember('${m.id}');event.stopPropagation()">🗑 刪除</button>`:''}
         </div>
       </div>
