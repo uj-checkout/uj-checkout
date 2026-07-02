@@ -2021,19 +2021,19 @@ async function addLaundry(){
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 async function openTopup(){
-  const n=parseInt($('topup-input')?.value)||0;
+  const n=parseInt(document.getElementById('topup-input')?.value)||0;
   if(n<=0){toast('請輸入充值點數');return;}
   showLoad();
   try{
     await db.from('laundry_topups').insert({pts:n});
-    if($('topup-input'))$('topup-input').value='';
-    // 直接計算並強制更新
-    const {data:t}=await db.from('laundry_topups').select('pts');
-    const {data:r}=await db.from('laundry_records').select('deduct');
-    const rem=(t||[]).reduce((s,x)=>s+Number(x.pts||0),0)-(r||[]).reduce((s,x)=>s+Number(x.deduct||0),0);
-    document.getElementById('lnd-pts').textContent=rem.toLocaleString()+'pts';
+    document.getElementById('topup-input').value='';
+    // 從目前顯示的數字直接加上去
+    const ptsEl=document.getElementById('lnd-pts');
+    const cur=parseInt((ptsEl.textContent||'0').replace(/[^0-9]/g,''))||0;
+    const newVal=cur+n;
+    ptsEl.textContent=newVal.toLocaleString()+'pts';
     hideLoad();
-    toast('✓ 充值成功 現在剩餘 '+rem.toLocaleString()+' pts');
+    toast('✓ 充值 '+n+' pts，剩餘 '+newVal.toLocaleString()+' pts');
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
