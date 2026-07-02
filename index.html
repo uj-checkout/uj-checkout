@@ -560,7 +560,10 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
     <div class="card">
       <div class="lnd-pts">
         <div><div class="lnd-pts-label">點數卡剩餘點數</div><div class="lnd-pts-val" id="lnd-pts">—</div></div>
-        <button class="btn-topup" onclick="openTopup()">+ 充值</button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input id="topup-input" type="number" placeholder="點數" style="width:80px;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 8px;font-size:13px;background:rgba(255,255,255,.15);color:#fff;outline:none;text-align:center;" min="1"/>
+          <button class="btn-topup" onclick="openTopup()">+ 充值</button>
+        </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--bd);">
         <span style="font-size:12px;color:var(--t3);">查看月份</span>
@@ -2018,19 +2021,19 @@ async function addLaundry(){
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 async function openTopup(){
-  const pts=prompt('充值點數：');
-  const n=parseInt(pts)||0;
-  if(n<=0)return;
+  const n=parseInt($('topup-input')?.value)||0;
+  if(n<=0){toast('請輸入充值點數');return;}
   showLoad();
   try{
     await db.from('laundry_topups').insert({pts:n});
-    // 直接重算點數並更新顯示
     const {data:topup}=await db.from('laundry_topups').select('pts');
     const {data:recs}=await db.from('laundry_records').select('deduct');
     const total=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
     const used=(recs||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
     const rem=total-used;
-    if($('lnd-pts'))$('lnd-pts').textContent=rem.toLocaleString()+'pts';
+    const el=$('lnd-pts');
+    if(el){el.textContent=rem.toLocaleString()+'pts';}
+    if($('topup-input'))$('topup-input').value='';
     hideLoad();toast(`✓ 充值成功，剩餘 ${rem.toLocaleString()} pts`);
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
