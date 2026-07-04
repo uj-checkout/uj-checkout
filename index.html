@@ -583,9 +583,9 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
         <input id="lnd-date-new" type="date" style="flex:1;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
         <input id="lnd-time-new" type="time" style="width:100px;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <input id="lnd-qty-new" type="number" placeholder="浴巾數量" min="1" style="flex:1;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
-        <input id="lnd-deduct-new" type="number" placeholder="扣除點數" style="flex:1;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input id="lnd-qty-new" type="number" placeholder="浴巾數量" min="1" style="width:100%;box-sizing:border-box;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
+        <input id="lnd-deduct-new" type="number" placeholder="扣除點數" style="width:100%;box-sizing:border-box;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
       </div>
       <input id="lnd-who-new" placeholder="負責人" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;box-sizing:border-box;"/>
       <button onclick="lndAdd()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">+ 新增洗浴巾記錄</button>
@@ -606,7 +606,10 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   </div>
 
   <!-- 區間匯款 -->
-  <div class="sh"><span class="st">區間營收匯款</span><div class="sl"></div></div>
+  <div class="sh" style="display:flex;align-items:center;justify-content:space-between;">
+    <span class="st">區間營收匯款</span>
+    <select id="tr-month-sel" onchange="filterTransfersByMonth()" style="border:1px solid var(--bd2);border-radius:8px;padding:4px 10px;font-size:12px;background:var(--pa);color:var(--t2);outline:none;"></select>
+  </div>
   <div class="card">
     <div class="tr-date-row">
       <input type="date" id="tr-from"/>
