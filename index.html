@@ -566,7 +566,7 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
       <!-- 充值 -->
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <input id="lnd-topup-val" type="number" placeholder="充值點數" min="1"
-          style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;font-size:14px;color:#fff;outline:none;font-family:'Noto Sans TC',sans-serif;"/>
+          style="flex:1;min-width:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;font-size:14px;color:#fff;outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
         <button onclick="lndTopup()"
           style="background:#4A7C59;border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;">+ 充值</button>
       </div>
@@ -1984,8 +1984,8 @@ async function lndLoad(){
   const to=ym+'-'+String(lastDay).padStart(2,'0');
   try{
     const [{data:allRecs},{data:topups}]=await Promise.all([
-      db.from('laundry_records').select('deduct').order('done_at',{ascending:false}),
-      db.from('laundry_topups').select('pts').order('created_at',{ascending:false})
+      db.from('laundry_records').select('deduct').eq('store','taipei').order('done_at',{ascending:false}),
+      db.from('laundry_topups').select('pts').eq('store','taipei').order('created_at',{ascending:false})
     ]);
     const totalPts=(topups||[]).reduce((s,r)=>s+Number(r.pts||0),0);
     const usedPts=(allRecs||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
@@ -2019,14 +2019,19 @@ async function lndLoad(){
 async function lndTopup(){
   const n=parseInt($('lnd-topup-val')?.value)||0;
   if(n<=0){toast('請輸入充值點數');return;}
+  const now=new Date().toISOString();
+  const who=currentUser?.display_name||currentBuiltin?.display||'';
   showLoad();
   try{
-    await db.from('laundry_topups').insert({pts:n,created_at:new Date().toISOString()});
+    const {error:insErr}=await db.from('laundry_topups').insert({
+      pts:n, store:'taipei', topup_at:now, who:who, created_at:now
+    });
+    if(insErr)throw insErr;
     if($('lnd-topup-val'))$('lnd-topup-val').value='';
     // 重算並更新
     const [{data:t},{data:r}]=await Promise.all([
-      db.from('laundry_topups').select('pts'),
-      db.from('laundry_records').select('deduct')
+      db.from('laundry_topups').select('pts').eq('store','taipei'),
+      db.from('laundry_records').select('deduct').eq('store','taipei')
     ]);
     const rem=(t||[]).reduce((s,x)=>s+Number(x.pts||0),0)-(r||[]).reduce((s,x)=>s+Number(x.deduct||0),0);
     if($('lnd-pts-new'))$('lnd-pts-new').textContent=rem.toLocaleString()+'pts';
