@@ -2031,11 +2031,16 @@ async function openTopup(){
   if(n<=0){toast('請輸入充值點數');return;}
   showLoad();
   try{
-    await db.from('laundry_topups').insert({pts:n});
+    await db.from('laundry_topups').insert({pts:n,created_at:new Date().toISOString()});
     document.getElementById('topup-input').value='';
+    // 重算點數
+    const {data:t2}=await db.from('laundry_topups').select('pts');
+    const {data:r2}=await db.from('laundry_records').select('deduct');
+    const rem=(t2||[]).reduce((s,x)=>s+Number(x.pts||0),0)-(r2||[]).reduce((s,x)=>s+Number(x.deduct||0),0);
+    const el=document.getElementById('lnd-pts');
+    if(el)el.textContent=rem.toLocaleString()+'pts';
     hideLoad();
-    await loadLaundry();
-    toast('✓ 充值成功');
+    toast('✓ 充值成功，剩餘 '+rem.toLocaleString()+' pts');
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
 
