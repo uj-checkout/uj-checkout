@@ -557,29 +557,38 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
   <!-- 浴巾（台北限定） -->
   <div id="laundry-section" style="display:none;">
     <div class="sh"><span class="st">🧺 洗浴巾記錄</span><div class="sl"></div></div>
-    <div class="card">
-      <div class="lnd-pts">
-        <div><div class="lnd-pts-label">點數卡剩餘點數</div><div class="lnd-pts-val" id="lnd-pts">—</div></div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input id="topup-input" type="number" placeholder="點數" style="width:80px;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 8px;font-size:13px;background:rgba(255,255,255,.15);color:#fff;outline:none;text-align:center;" min="1"/>
-          <button class="btn-topup" onclick="openTopup()">+ 充值</button>
-        </div>
+    <div style="background:#1C2B1A;border-radius:14px;padding:16px;margin-bottom:10px;">
+      <!-- 點數顯示 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px;">點數卡剩餘點數</div>
+        <div id="lnd-pts-new" style="font-size:32px;font-weight:600;font-family:'Cormorant Garamond',serif;color:#fff;">—</div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--bd);">
-        <span style="font-size:12px;color:var(--t3);">查看月份</span>
-        <select id="lnd-month-sel" onchange="loadLaundry()" style="border:1px solid var(--bd2);border-radius:8px;padding:4px 8px;font-size:12px;background:var(--pa);color:var(--t2);outline:none;"></select>
+      <!-- 充值 -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <input id="lnd-topup-val" type="number" placeholder="充值點數" min="1"
+          style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;font-size:14px;color:#fff;outline:none;font-family:'Noto Sans TC',sans-serif;"/>
+        <button onclick="lndTopup()"
+          style="background:#4A7C59;border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;">+ 充值</button>
       </div>
-      <div id="lnd-list"><div class="empty-hint">尚無記錄</div></div>
-      <div style="padding:12px 14px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:8px;">
-          <input id="lnd-date" type="date" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;flex:1;"/>
-          <input id="lnd-time-only" type="time" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;width:110px;flex:none;"/>
-        </div>
-        <input id="lnd-qty" type="number" placeholder="浴巾數量" min="1" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
-        <input id="lnd-pts-use" type="number" placeholder="扣除點數" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
-        <input id="lnd-staff" placeholder="負責人" style="width:100%;border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px;font-size:15px;background:var(--pa);color:var(--t1);outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;"/>
-        <button class="btn-lnd-add" onclick="addLaundry()">+ 新增洗浴巾記錄</button>
+      <!-- 月份選擇 -->
+      <select id="lnd-month-new" onchange="lndLoad()"
+        style="width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 10px;font-size:12px;color:#fff;outline:none;margin-bottom:12px;font-family:'Noto Sans TC',sans-serif;"></select>
+      <!-- 記錄列表 -->
+      <div id="lnd-list-new"></div>
+    </div>
+    <!-- 新增表單 -->
+    <div style="background:#fff;border:1px solid #E0D8CC;border-radius:14px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:12px;color:#888;margin-bottom:10px;">新增洗浴巾記錄</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input id="lnd-date-new" type="date" style="flex:1;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
+        <input id="lnd-time-new" type="time" style="width:100px;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
       </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input id="lnd-qty-new" type="number" placeholder="浴巾數量" min="1" style="flex:1;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
+        <input id="lnd-deduct-new" type="number" placeholder="扣除點數" style="flex:1;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;"/>
+      </div>
+      <input id="lnd-who-new" placeholder="負責人" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:9px 10px;font-size:14px;color:#2C2C2C;outline:none;background:#FAFAF8;font-family:'Noto Sans TC',sans-serif;margin-bottom:8px;box-sizing:border-box;"/>
+      <button onclick="lndAdd()" style="width:100%;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:11px;font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">+ 新增洗浴巾記錄</button>
     </div>
   </div>
 
@@ -1943,106 +1952,107 @@ async function exportExcel(){
 async function initLaundry(){
   $('laundry-section').style.display='block';
   const now=new Date();
-  const lndDate=$('lnd-date'), lndTimeOnly=$('lnd-time-only');
-  const dateStr=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const timeStr=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  if(lndDate)lndDate.value=dateStr;
-  if(lndTimeOnly)lndTimeOnly.value=timeStr;
-  if($('lnd-staff')&&currentUser)$('lnd-staff').value=currentUser.display_name||'';
-  await loadLaundry();
+  const d=$('lnd-date-new'), t=$('lnd-time-new');
+  if(d)d.value=localDate();
+  if(t)t.value=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  if($('lnd-who-new')&&currentUser)$('lnd-who-new').value=currentUser.display_name||'';
+  lndInitMonths();
+  await lndLoad();
 }
-function initLndMonthSel(){
-  const sel=$('lnd-month-sel');
+
+function lndInitMonths(){
+  const sel=$('lnd-month-new');
   if(!sel||sel.options.length>0)return;
   const now=new Date();
   for(let i=0;i<12;i++){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1);
     const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const label=`${d.getFullYear()}年${d.getMonth()+1}月`;
     const opt=document.createElement('option');
-    opt.value=val; opt.textContent=label;
+    opt.value=val;
+    opt.textContent=`${d.getFullYear()}年${d.getMonth()+1}月`;
     if(i===0)opt.selected=true;
     sel.appendChild(opt);
   }
 }
 
-async function loadLaundry(){
+async function lndLoad(){
   if(!db)return;
-  initLndMonthSel();
-  const sel=$('lnd-month-sel');
-  const ym=sel?.value||`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
-  const from=`${ym}-01`;
+  const sel=$('lnd-month-new');
+  const ym=sel?.value||localDate().slice(0,7);
+  const from=ym+'-01';
   const lastDay=new Date(parseInt(ym.split('-')[0]),parseInt(ym.split('-')[1]),0).getDate();
-  const to=`${ym}-${String(lastDay).padStart(2,'0')}`;
+  const to=ym+'-'+String(lastDay).padStart(2,'0');
   try{
-    // 全部記錄用來算剩餘點數
-    const {data:allData}=await db.from('laundry_records').select('deduct,remain_pts').order('done_at',{ascending:false});
-    const {data:topup}=await db.from('laundry_topups').select('pts').order('created_at',{ascending:false});
-    const totalPts=(topup||[]).reduce((s,r)=>s+Number(r.pts||0),0);
-    const usedPts=(allData||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
-    const remPts=totalPts-usedPts;
-    console.log('loadLaundry: remPts='+remPts+' ptsEl='+$('lnd-pts'));
-    const ptsEl=$('lnd-pts');
-    if(ptsEl){
-      ptsEl.textContent=remPts.toLocaleString()+'pts';
-    } else {
-      console.error('lnd-pts element NOT FOUND');
+    const [{data:allRecs},{data:topups}]=await Promise.all([
+      db.from('laundry_records').select('deduct').order('done_at',{ascending:false}),
+      db.from('laundry_topups').select('pts').order('created_at',{ascending:false})
+    ]);
+    const totalPts=(topups||[]).reduce((s,r)=>s+Number(r.pts||0),0);
+    const usedPts=(allRecs||[]).reduce((s,r)=>s+Number(r.deduct||0),0);
+    const rem=totalPts-usedPts;
+    const ptsEl=$('lnd-pts-new');
+    if(ptsEl)ptsEl.textContent=rem.toLocaleString()+'pts';
+    // 月份記錄
+    const {data:monthRecs}=await db.from('laundry_records').select('*')
+      .gte('done_at',from+'T00:00:00').lte('done_at',to+'T23:59:59')
+      .order('done_at',{ascending:false});
+    const el=$('lnd-list-new');
+    if(!el)return;
+    if(!monthRecs||!monthRecs.length){
+      el.innerHTML='<div style="text-align:center;padding:16px;font-size:13px;color:rgba(255,255,255,.4);">本月尚無記錄</div>';
+      return;
     }
-    // 依月份篩選顯示
-    const {data}=await db.from('laundry_records').select('*').gte('done_at',from+'T00:00:00').lte('done_at',to+'T23:59:59').order('done_at',{ascending:false});
-    const el=$('lnd-list');
-    if(!data||!data.length){el.innerHTML='<div class="empty-hint">本月尚無洗浴巾記錄</div>';return;}
-    el.innerHTML=data.map(r=>{
+    el.innerHTML=monthRecs.map(r=>{
       const d=new Date(r.done_at||r.created_at);
-      const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      return`<div class="lnd-item">
-        <div class="lnd-item-left"><div class="lnd-name">${r.who||'—'}</div><div class="lnd-date">${ds}</div></div>
-        <div class="lnd-item-right"><div class="lnd-qty">浴巾 ${r.qty} 條</div><div class="lnd-pts-used">扣 ${r.deduct||0}pts・餘 ${r.remain_pts!=null?r.remain_pts:'—'}pts</div></div>
+      const ds=`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+        <div>
+          <div style="font-size:13px;color:#fff;font-weight:500;">${r.who||'—'}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;">浴巾 ${r.qty} 條・${ds}</div>
+        </div>
+        <div style="font-size:13px;color:#7AAB85;font-weight:500;">-${r.deduct||0}pts</div>
       </div>`;
     }).join('');
-  }catch(e){console.error(e);}
+  }catch(e){console.error('lndLoad:',e);}
 }
-async function addLaundry(){
-  const qty=parseInt($('lnd-qty')?.value)||0;
-  const pts=parseInt($('lnd-pts-use')?.value)||0;
-  const staff=$('lnd-staff')?.value.trim();
-  const dateVal=$('lnd-date')?.value||localDate();
-  const timeVal=$('lnd-time-only')?.value||'00:00';
-  const time=`${dateVal}T${timeVal}`;
-  if(qty<=0){toast('請輸入浴巾數量');return;}
-  showLoad();
-  try{
-    // 先算剩餘點數
-    const {data:latestR}=await db.from('laundry_records').select('remain_pts').order('done_at',{ascending:false}).limit(1);
-    const {data:topupR}=await db.from('laundry_topups').select('pts');
-    const totalPtsNow=(topupR||[]).reduce((s,r)=>s+Number(r.pts||0),0);
-    const usedPtsNow=(await db.from('laundry_records').select('deduct')).data?.reduce((s,r)=>s+Number(r.deduct||0),0)||0;
-    const remainNow=totalPtsNow-usedPtsNow-pts;
-    await db.from('laundry_records').insert({qty,deduct:pts,who:staff,done_at:time?new Date(time).toISOString():new Date().toISOString(),remain_pts:remainNow});
-    hideLoad();toast('✓ 已新增');
-    if($('lnd-qty'))$('lnd-qty').value='';
-    if($('lnd-pts-use'))$('lnd-pts-use').value='';
-    if($('lnd-staff'))$('lnd-staff').value='';
-    await loadLaundry();
-  }catch(e){hideLoad();toast('✗ '+e.message);}
-}
-async function openTopup(){
-  const n=parseInt(document.getElementById('topup-input')?.value)||0;
+
+async function lndTopup(){
+  const n=parseInt($('lnd-topup-val')?.value)||0;
   if(n<=0){toast('請輸入充值點數');return;}
   showLoad();
   try{
     await db.from('laundry_topups').insert({pts:n,created_at:new Date().toISOString()});
-    document.getElementById('topup-input').value='';
-    // 重算點數
-    const {data:t2}=await db.from('laundry_topups').select('pts');
-    const {data:r2}=await db.from('laundry_records').select('deduct');
-    const rem=(t2||[]).reduce((s,x)=>s+Number(x.pts||0),0)-(r2||[]).reduce((s,x)=>s+Number(x.deduct||0),0);
-    const el=document.getElementById('lnd-pts');
-    if(el)el.textContent=rem.toLocaleString()+'pts';
+    if($('lnd-topup-val'))$('lnd-topup-val').value='';
+    // 重算並更新
+    const [{data:t},{data:r}]=await Promise.all([
+      db.from('laundry_topups').select('pts'),
+      db.from('laundry_records').select('deduct')
+    ]);
+    const rem=(t||[]).reduce((s,x)=>s+Number(x.pts||0),0)-(r||[]).reduce((s,x)=>s+Number(x.deduct||0),0);
+    if($('lnd-pts-new'))$('lnd-pts-new').textContent=rem.toLocaleString()+'pts';
     hideLoad();
-    toast('✓ 充值成功，剩餘 '+rem.toLocaleString()+' pts');
+    toast('✓ 充值 '+n+' pts，剩餘 '+rem.toLocaleString()+' pts');
   }catch(e){hideLoad();toast('✗ '+e.message);}
 }
+
+async function lndAdd(){
+  const qty=parseInt($('lnd-qty-new')?.value)||0;
+  const deduct=parseInt($('lnd-deduct-new')?.value)||0;
+  const who=$('lnd-who-new')?.value.trim();
+  const date=$('lnd-date-new')?.value||localDate();
+  const time=$('lnd-time-new')?.value||'00:00';
+  if(qty<=0){toast('請輸入浴巾數量');return;}
+  showLoad();
+  try{
+    const done_at=new Date(date+'T'+time).toISOString();
+    await db.from('laundry_records').insert({qty,deduct,who,done_at});
+    if($('lnd-qty-new'))$('lnd-qty-new').value='';
+    if($('lnd-deduct-new'))$('lnd-deduct-new').value='';
+    hideLoad();toast('✓ 已新增');
+    await lndLoad();
+  }catch(e){hideLoad();toast('✗ '+e.message);}
+}
+
 
 // ── Admin ──────────────────────────────────────────────────
 function enterAdminApp(){
