@@ -4,7 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Urban Jungle · 店務系統 4.0</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -998,8 +1000,14 @@ body{background:var(--cr);font-family:'Noto Sans TC',sans-serif;color:var(--t1);
 
 <script>
 // ── Constants ──────────────────────────────────────────────
-const SB_URL='https://ofsoahkcixerwawgmtwb.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mc29haGtjaXhlcndhd2dtdHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NzM3MjIsImV4cCI6MjA5NDA0OTcyMn0.CR1sSq93aM_-9th8ErhKB5Wv6nvDv46XXyo4JX4v_QQ';
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyAov6NVGmwoMm6MW0WfPvTG0oUGK5_yhag",
+  authDomain:"uj-checkout.firebaseapp.com",
+  projectId:"uj-checkout",
+  storageBucket:"uj-checkout.firebasestorage.app",
+  messagingSenderId:"386730594541",
+  appId:"1:386730594541:web:bf69ab2fec4de7b6393ce4"
+};
 const FUND=3000;
 const STORES={
   taipei:   {name:'台北旗艦店',addr:'台北市萬華區中華路一段 160 號 2 樓'},
@@ -1044,17 +1052,159 @@ function hideLoad(){const o=$('load-ov');if(o)o.classList.remove('on');}
 let toastT=null;
 function toast(msg,dur=2500){const t=$('toast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),dur);}
 
-// ── DB ─────────────────────────────────────────────────────
+// ── DB（Firestore：包一層 Supabase 風格的 query builder，讓下面幾千行商業邏輯不用大改）──
+// FQ = "Firestore Query"：模擬 supabase-js 的 .from().select().eq().order().limit()... 鏈式語法
+// 設計取捨：整個 collection 讀回來後在瀏覽器端做篩選/排序/裁切，不用 Firestore 複合索引。
+// 這對日結帳/會員/公告這種單店數百~數千筆等級的資料量來說沒有效能問題，換來的是幾乎不用改動既有頁面邏輯。
+class FQ{
+  constructor(fs,table){this.fs=fs;this.table=table;this.filters=[];this._order=null;this._limit=null;this._mode='select';this._payload=null;this._upsertOpts=null;}
+  select(){return this;} // Firestore 一律整份文件讀回，忽略欄位投影（不影響功能，只是多帶一點資料）
+  eq(f,v){this.filters.push({f,op:'eq',v});return this;}
+  neq(f,v){this.filters.push({f,op:'neq',v});return this;}
+  gte(f,v){this.filters.push({f,op:'gte',v});return this;}
+  lte(f,v){this.filters.push({f,op:'lte',v});return this;}
+  gt(f,v){this.filters.push({f,op:'gt',v});return this;}
+  lt(f,v){this.filters.push({f,op:'lt',v});return this;}
+  order(f,opt){this._order={f,asc:opt?!!opt.ascending:true};return this;}
+  limit(n){this._limit=n;return this;}
+  insert(payload){this._mode='insert';this._payload=payload;return this;}
+  update(payload){this._mode='update';this._payload=payload;return this;}
+  upsert(payload,opts){this._mode='upsert';this._payload=payload;this._upsertOpts=opts;return this;}
+  delete(){this._mode='delete';return this;}
+  async _fetchAll(){
+    const snap=await this.fs.collection(this.table).get();
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+  _matchOne(r,f,op,v){
+    const rv=r[f];
+    switch(op){
+      case 'eq': return rv===v||(rv==null&&v==null);
+      case 'neq': return rv!==v;
+      case 'gte': return rv>=v;
+      case 'lte': return rv<=v;
+      case 'gt': return rv>v;
+      case 'lt': return rv<v;
+      default: return true;
+    }
+  }
+  _applyFilters(rows){return rows.filter(r=>this.filters.every(({f,op,v})=>this._matchOne(r,f,op,v)));}
+  _applyOrder(rows){
+    if(!this._order)return rows;
+    const {f,asc}=this._order;
+    rows.sort((a,b)=>{
+      let av=a[f],bv=b[f];
+      const an=Number(av),bn=Number(bv);
+      let cmp;
+      if(av!=null&&bv!=null&&av!==''&&bv!==''&&!isNaN(an)&&!isNaN(bn)){cmp=an-bn;}
+      else{av=av??'';bv=bv??'';cmp=av<bv?-1:(av>bv?1:0);}
+      return asc?cmp:-cmp;
+    });
+    return rows;
+  }
+  then(resolve,reject){this._exec().then(resolve,reject);}
+  async _exec(){
+    try{
+      const col=this.fs.collection(this.table);
+      if(this._mode==='select'){
+        let rows=await this._fetchAll();
+        rows=this._applyFilters(rows);
+        rows=this._applyOrder(rows);
+        if(this._limit!=null)rows=rows.slice(0,this._limit);
+        return {data:rows,error:null};
+      }
+      if(this._mode==='insert'){
+        const items=Array.isArray(this._payload)?this._payload:[this._payload];
+        const inserted=[];
+        for(const item of items){
+          const body={...item};
+          if(body.created_at===undefined)body.created_at=new Date().toISOString();
+          if(body.id!==undefined&&body.id!==null&&body.id!==''){
+            const explicitId=String(body.id);delete body.id;
+            await col.doc(explicitId).set(body);
+            inserted.push({id:explicitId,...body});
+          }else{
+            const ref=await col.add(body);
+            inserted.push({id:ref.id,...body});
+          }
+        }
+        return {data:inserted,error:null};
+      }
+      if(this._mode==='update'){
+        let rows=await this._fetchAll();
+        rows=this._applyFilters(rows);
+        for(const r of rows)await col.doc(r.id).update(this._payload);
+        return {data:rows.map(r=>({...r,...this._payload})),error:null};
+      }
+      if(this._mode==='delete'){
+        let rows=await this._fetchAll();
+        rows=this._applyFilters(rows);
+        for(const r of rows)await col.doc(r.id).delete();
+        return {data:rows,error:null};
+      }
+      if(this._mode==='upsert'){
+        const conflictFields=(this._upsertOpts&&this._upsertOpts.onConflict)?this._upsertOpts.onConflict.split(','):['id'];
+        const rows=await this._fetchAll();
+        const match=rows.find(r=>conflictFields.every(f=>r[f]===this._payload[f]));
+        const body={...this._payload};
+        if(match){
+          await col.doc(match.id).update(body);
+          return {data:[{id:match.id,...body}],error:null};
+        }else{
+          if(body.created_at===undefined)body.created_at=new Date().toISOString();
+          const ref=await col.add(body);
+          return {data:[{id:ref.id,...body}],error:null};
+        }
+      }
+      return {data:null,error:new Error('未支援的操作')};
+    }catch(e){return {data:null,error:e};}
+  }
+}
+function makeDb(firestore){return {from(table){return new FQ(firestore,table);}};}
+
+// ── Firebase 初始化 / 連線 ────────────────────────────────
+let fbApp=null, fbAuth=null;
 async function connectDB(){
   sdot('');
   try{
-    let w=0;while(!window.supabase&&w<5000){await new Promise(r=>setTimeout(r,200));w+=200;}
-    if(!window.supabase)throw new Error('SDK未載入');
-    const c=window.supabase.createClient(SB_URL,SB_KEY);
-    const {error}=await c.from('daily_records').select('id').limit(1);
+    if(!fbApp){
+      fbApp=firebase.initializeApp(FIREBASE_CONFIG);
+      fbAuth=firebase.auth();
+    }
+    // 用匿名登入取得 request.auth，讓 Firestore 安全規則可以擋掉未登入的存取；
+    // 店務系統本身的帳號/密碼邏輯仍走自訂的 staff_accounts / 內建帳號機制，不受影響。
+    if(!fbAuth.currentUser){
+      await fbAuth.signInAnonymously();
+    }
+    const firestore=firebase.firestore();
+    const testDb=makeDb(firestore);
+    const {error}=await testDb.from('daily_records').select('id').limit(1);
     if(error)throw error;
-    db=c;sdot('ok');return true;
+    db=testDb;sdot('ok');return true;
   }catch(e){sdot('err');console.error('DB:',e);return false;}
+}
+
+// ── 圖片壓縮（Firebase Storage 目前需要 Blaze 付費方案才能開通，暫不使用；
+// 圖片改壓縮後以 base64 直接存進 Firestore 文件，需壓在 Firestore 單一文件 1MB 上限內）──
+function compressImageToDataURL(file,maxDim=1280,quality=0.7){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('讀取檔案失敗'));
+    reader.onload=e=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('圖片解析失敗'));
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+        else if(h>=w&&h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 // ── Login ──────────────────────────────────────────────────
@@ -1564,7 +1714,7 @@ function renderTransfers(){
   const filtered=ym?transfers.filter(r=>r.date_to?.startsWith(ym)||r.date_from?.startsWith(ym)):transfers;
   if(!filtered.length){el.innerHTML='<div class="empty-hint">此月份尚無匯款記錄</div>';return;}
   el.innerHTML=filtered.map(r=>`
-    <div class="tr-row" style="flex-direction:column;align-items:stretch;padding:0;cursor:pointer;" onclick="toggleTransfer(${r.id})">
+    <div class="tr-row" style="flex-direction:column;align-items:stretch;padding:0;cursor:pointer;" onclick="toggleTransfer('${r.id}')">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
         <div>
           <div>${r.date_from} ～ ${r.date_to}</div>
@@ -1574,7 +1724,7 @@ function renderTransfers(){
           <span class="tr-amt">${fmt(r.transfer_amt)}</span>
           ${r.img?'<i class="ti ti-photo" style="color:var(--gs);font-size:14px;"></i>':''}
           <i class="ti ti-chevron-down" style="color:var(--t3);font-size:14px;" id="tr-chev-${r.id}"></i>
-          <button class="tr-del" onclick="event.stopPropagation();delTransfer(${r.id})"><i class="ti ti-trash"></i></button>
+          <button class="tr-del" onclick="event.stopPropagation();delTransfer('${r.id}')"><i class="ti ti-trash"></i></button>
         </div>
       </div>
       <div id="tr-detail-${r.id}" style="display:none;border-top:1px solid var(--bd);padding:12px 14px;">
@@ -1598,31 +1748,28 @@ function toggleTransfer(id){
 
 async function uploadTransferImg(id, input){
   if(!input.files||!input.files[0])return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const imgData=e.target.result;
-    showLoad();
-    try{
-      await db.from('transfer_records').update({img:imgData}).eq('id',id);
-      hideLoad();toast('✓ 憑證已上傳');
-      // 找到 detail div，直接插入圖片
-      const detailId='tr-detail-'+id;
-      const detail=document.getElementById(detailId);
-      if(detail){
-        detail.style.display='block';
-        // 移除舊內容，重新寫入
-        detail.innerHTML=`
-          <div style="margin-bottom:8px;">
-            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px;">上傳匯款憑證</label>
-            <input type="file" accept="image/*" onchange="uploadTransferImg(${id},this)" style="font-size:12px;width:100%;"/>
-          </div>
-          <img src="${imgData}" style="width:100%;border-radius:8px;margin-top:6px;"/>`;
-      }
-      const tr=transfers.find(r=>r.id===id);
-      if(tr)tr.img=imgData;
-    }catch(err){hideLoad();toast('✗ '+err.message);}
-  };
-  reader.readAsDataURL(input.files[0]);
+  const file=input.files[0];
+  showLoad();
+  try{
+    const dataUrl=await compressImageToDataURL(file);
+    await db.from('transfer_records').update({img:dataUrl}).eq('id',id);
+    hideLoad();toast('✓ 憑證已上傳');
+    // 找到 detail div，直接插入圖片
+    const detailId='tr-detail-'+id;
+    const detail=document.getElementById(detailId);
+    if(detail){
+      detail.style.display='block';
+      // 移除舊內容，重新寫入
+      detail.innerHTML=`
+        <div style="margin-bottom:8px;">
+          <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px;">上傳匯款憑證</label>
+          <input type="file" accept="image/*" onchange="uploadTransferImg('${id}',this)" style="font-size:12px;width:100%;"/>
+        </div>
+        <img src="${dataUrl}" style="width:100%;border-radius:8px;margin-top:6px;"/>`;
+    }
+    const tr=transfers.find(r=>r.id===id);
+    if(tr)tr.img=dataUrl;
+  }catch(err){hideLoad();toast('✗ '+err.message);}
 }
 async function calcTransferPreview(){
   if(!db||!currentStore)return;
@@ -1720,10 +1867,10 @@ function renderHistory(rs){
     }).join(''):'';
     const isManager=!currentUser;
     const finishDraftBtn=isManager&&!isFinal?`
-      <button class="his-edit-btn" style="background:var(--gd);color:#fff;border-color:var(--gd);" onclick="finishDraftRecord(${r.id},'${r.date}')"><i class="ti ti-check"></i> 完成結帳</button>`:'';    const editBtn=isManager?`<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button class="his-edit-btn" style="background:var(--gd);color:#fff;border-color:var(--gd);" onclick="finishDraftRecord('${r.id}','${r.date}')"><i class="ti ti-check"></i> 完成結帳</button>`:'';    const editBtn=isManager?`<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
       ${finishDraftBtn}
       <button class="his-edit-btn" onclick="openEditModal(${idx})"><i class="ti ti-edit"></i> 編輯</button>
-      <button class="his-edit-btn" style="color:var(--red);border-color:#f0c0c0;" onclick="deleteDateRecord(${r.id},'${r.date}')"><i class="ti ti-trash"></i> 刪除</button>
+      <button class="his-edit-btn" style="color:var(--red);border-color:#f0c0c0;" onclick="deleteDateRecord('${r.id}','${r.date}')"><i class="ti ti-trash"></i> 刪除</button>
     </div>`:'';
     return`<div class="his-item">
       <div class="his-head" onclick="toggleHis(${idx})">
@@ -2188,7 +2335,7 @@ function renderAdmPanel(store){
   }).join(''):'<div class="empty-hint">本月尚無紀錄</div>';
 
   const trRows=trs.filter(r=>r.store===store).length?trs.filter(r=>r.store===store).map(r=>`
-    <div class="adm-tr-row" style="flex-direction:column;padding:0;cursor:pointer;" onclick="toggleAdmTransfer('${store}',${r.id})">
+    <div class="adm-tr-row" style="flex-direction:column;padding:0;cursor:pointer;" onclick="toggleAdmTransfer('${store}','${r.id}')">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;">
         <div>
           <div>${r.date_from} ～ ${r.date_to}</div>
@@ -2447,8 +2594,8 @@ async function renderAccountRequests(){
         </div>
       </div>
       <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);">
-        <button onclick="approveRequest(${r.id},'${r.username}','${r.display_name}','${r.password}','${r.store}')" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 同意</button>
-        <button onclick="rejectRequest(${r.id})" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✗ 拒絕</button>
+        <button onclick="approveRequest('${r.id}','${r.username}','${r.display_name}','${r.password}','${r.store}')" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 同意</button>
+        <button onclick="rejectRequest('${r.id}')" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:9px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✗ 拒絕</button>
       </div>
     </div>`).join('');
   // 更新計數
@@ -2542,7 +2689,7 @@ function goToPanel(panel){
   setTimeout(()=>toggleGPanel(panel),200);
 }
 
-// ── Office Supabase ────────────────────────────────────────
+// ── Office（公告/備忘錄/留言牆，統一存在 office_posts，走 Firestore）──
 let officePostsCache={announces:[],memos:[],wall:[]};
 let wallSessionId=null;
 
@@ -2662,16 +2809,16 @@ function addPollOption(){
   wrap.appendChild(inp);
 }
 
-let annImgData=null;
+let annImgFile=null;
 function previewAnnImg(input){
   if(!input.files||!input.files[0])return;
+  annImgFile=input.files[0];
   const reader=new FileReader();
   reader.onload=e=>{
-    annImgData=e.target.result;
     const prev=$('o-ann-img-preview');
-    if(prev)prev.innerHTML=`<img src="${annImgData}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;"/>`;
+    if(prev)prev.innerHTML=`<img src="${e.target.result}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;"/>`;
   };
-  reader.readAsDataURL(input.files[0]);
+  reader.readAsDataURL(input.files[0]); // 僅供本機預覽，實際發布時會另外壓縮成較小的 base64 存進 Firestore
 }
 
 async function postAnnounce(){
@@ -2690,8 +2837,10 @@ async function postAnnounce(){
   }
   showLoad();
   try{
+    let imgUrl=null;
+    if(annImgFile)imgUrl=await compressImageToDataURL(annImgFile);
     await db.from('office_posts').insert({
-      type:'announce',title,body,img:annImgData||null,
+      type:'announce',title,body,img:imgUrl,
       by_name:getByName(),by_account:getCurrentId(),
       poll,read_by:[getCurrentId()],likes:[],replies:[]
     });
@@ -2702,7 +2851,7 @@ async function postAnnounce(){
     if($('o-poll-end'))$('o-poll-end').value='';
     if($('o-ann-poll-toggle'))$('o-ann-poll-toggle').checked=false;
     if($('o-poll-form'))$('o-poll-form').style.display='none';
-    annImgData=null;
+    annImgFile=null;
     const prev=$('o-ann-img-preview');if(prev)prev.innerHTML='';
     const fileInp=$('o-ann-img');if(fileInp)fileInp.value='';
     toast('✓ 公告已發布');
@@ -2723,7 +2872,7 @@ function renderAnnounces(){
   el.innerHTML=list.map(a=>{
     const isRead=(a.read_by||[]).includes(myId);
     const isMine=a.by_account===myId;
-    return`<div class="o-card" style="cursor:pointer;" onclick="openAnnounce(${a.id})">
+    return`<div class="o-card" style="cursor:pointer;" onclick="openAnnounce('${a.id}')">
       <div class="o-card-hd">
         <div style="flex:1;">
           <div class="o-card-title">${a.title}</div>
@@ -2732,8 +2881,8 @@ function renderAnnounces(){
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
           ${a.poll?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#E8F0E4;color:#4A7C59;">📊</span>':''}
           <span class="o-badge ${isRead?'read':'unread'}">${isRead?'已讀':'未讀'}</span>
-          ${isMine?`<button onclick="event.stopPropagation();editAnnounce(${a.id})" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;">✏️</button>
-          <button onclick="event.stopPropagation();deleteAnnounce(${a.id})" style="background:none;border:none;color:#B83030;font-size:13px;cursor:pointer;">🗑</button>`:''}
+          ${isMine?`<button onclick="event.stopPropagation();editAnnounce('${a.id}')" style="background:none;border:none;color:#888;font-size:13px;cursor:pointer;">✏️</button>
+          <button onclick="event.stopPropagation();deleteAnnounce('${a.id}')" style="background:none;border:none;color:#B83030;font-size:13px;cursor:pointer;">🗑</button>`:''}
           <i class="ti ti-chevron-right" style="color:#C8C0B0;font-size:14px;"></i>
         </div>
       </div>
@@ -2764,7 +2913,7 @@ async function openAnnounce(id){
   if(readBar){
     readBar.innerHTML=isRead
       ?'<span style="font-size:12px;color:#4A7C59;background:#E8F0E4;padding:4px 14px;border-radius:20px;">✓ 已讀</span>'
-      :`<button onclick="markAnnRead(${ann.id})" style="background:#1C2B1A;border:none;border-radius:20px;color:#C8DBC0;padding:6px 20px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 標記已讀</button>`;
+      :`<button onclick="markAnnRead('${ann.id}')" style="background:#1C2B1A;border:none;border-radius:20px;color:#C8DBC0;padding:6px 20px;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✓ 標記已讀</button>`;
   }
   modal.style.display='flex';
   renderAnnounces();
@@ -2805,7 +2954,7 @@ function renderPollHTML(ann,myId){
         <div style="background:#E0D8CC;border-radius:20px;height:6px;"><div style="background:${voted?'#1C2B1A':'#4A7C59'};border-radius:20px;height:6px;width:${pct}%;"></div></div>
       </div>`;
     }
-    return`<button onclick="votePoll(${ann.id},${oi})" style="width:100%;text-align:left;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 14px;font-size:13px;background:#fff;color:#2C2C2C;cursor:pointer;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">${o.text}</button>`;
+    return`<button onclick="votePoll('${ann.id}',${oi})" style="width:100%;text-align:left;border:1.5px solid #C8C0B0;border-radius:8px;padding:10px 14px;font-size:13px;background:#fff;color:#2C2C2C;cursor:pointer;margin-bottom:6px;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;">${o.text}</button>`;
   }).join('');
   return`<div style="background:#F5F0E8;border-radius:10px;padding:12px;margin-top:12px;">
     <div style="font-size:12px;color:#888;margin-bottom:8px;">📊 ${p.question}</div>
@@ -2860,7 +3009,7 @@ async function renderMemos(){
     return`<div class="o-card">
       <div class="o-card-hd">
         <div><div class="o-card-title">${m.body}</div><div class="o-card-meta">${m.by_name} · ${(m.created_at||'').slice(0,10)}${isDone&&m.done_by?' · 完成：'+m.done_by:''}</div></div>
-        <button class="o-status-btn ${isDone?'done':'pending'}" onclick="toggleMemoStatus(${m.id},'${isDone?'pending':'done'}')">${isDone?'✓ 已完成':'待處理'}</button>
+        <button class="o-status-btn ${isDone?'done':'pending'}" onclick="toggleMemoStatus('${m.id}','${isDone?'pending':'done'}')">${isDone?'✓ 已完成':'待處理'}</button>
       </div>
     </div>`;
   }).join('');
@@ -2920,20 +3069,20 @@ async function renderWall(){
     const showReply=w._showReply?`
       <div style="display:flex;gap:6px;margin-top:8px;">
         <input id="reply-inp-${w.id}" placeholder="匿名回覆…" style="flex:1;border:1px solid #E0D8CC;border-radius:8px;padding:6px 10px;font-size:13px;background:#FAFAF8;outline:none;font-family:'Noto Sans TC',sans-serif;box-sizing:border-box;min-width:0;"/>
-        <button onclick="submitReply(${w.id})" style="background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap;">送出</button>
+        <button onclick="submitReply('${w.id}')" style="background:#2D4A28;border:none;border-radius:8px;color:#C8DBC0;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap;">送出</button>
       </div>`:'';
     const editMode=w._editing?`
       <div style="margin-top:8px;">
         <textarea id="edit-wall-${w.id}" rows="2" style="width:100%;border:1.5px solid #C8C0B0;border-radius:8px;padding:8px 10px;font-size:13px;background:#FAFAF8;outline:none;box-sizing:border-box;resize:none;font-family:'Noto Sans TC',sans-serif;">${w.body}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px;">
-          <button onclick="saveWallEdit(${w.id})" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:7px;font-size:12px;cursor:pointer;">儲存</button>
-          <button onclick="cancelWallEdit(${w.id})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#888;padding:7px;font-size:12px;cursor:pointer;">取消</button>
+          <button onclick="saveWallEdit('${w.id}')" style="flex:1;background:#1C2B1A;border:none;border-radius:8px;color:#C8DBC0;padding:7px;font-size:12px;cursor:pointer;">儲存</button>
+          <button onclick="cancelWallEdit('${w.id}')" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#888;padding:7px;font-size:12px;cursor:pointer;">取消</button>
         </div>
       </div>`:'';
     const editBar=isMine?`
       <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid #E0D8CC;">
-        <button onclick="editWallPost(${w.id})" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#555;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✏️ 編輯</button>
-        <button onclick="deleteWallPost(${w.id})" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">🗑 刪除</button>
+        <button onclick="editWallPost('${w.id}')" style="flex:1;background:none;border:1px solid #C8C0B0;border-radius:8px;color:#555;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✏️ 編輯</button>
+        <button onclick="deleteWallPost('${w.id}')" style="flex:1;background:none;border:1px solid #f0c0c0;border-radius:8px;color:#B83030;padding:5px;font-size:11px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">🗑 刪除</button>
       </div>`:'';
     const isRead2=(w.read_by||[]).includes(myId);
     return`<div class="o-msg" style="flex-direction:column;gap:0;margin-bottom:12px;">
@@ -2945,9 +3094,9 @@ async function renderWall(){
           ${w._editing?'':showReply}
           <div class="o-bubble-s" style="margin-top:6px;">
             <span>${(w.created_at||'').slice(0,10)}</span>
-            <button class="o-like" onclick="likeWall(${w.id})" style="color:${isLiked?'#4A7C59':'#aaa'}">👍 ${(w.likes||[]).length}</button>
-            <button class="o-like" onclick="toggleReply(${w.id})">💬 ${replies.length?replies.length+' 則':''} 回覆</button>
-            ${!isRead2?`<button class="o-like" onclick="markWallRead(${w.id})" style="color:#4A7C59;font-size:11px;border:1px solid #C8DBC0;border-radius:8px;padding:2px 8px;">✓ 已讀</button>`:'<span style="font-size:10px;color:#bbb;">已讀</span>'}
+            <button class="o-like" onclick="likeWall('${w.id}')" style="color:${isLiked?'#4A7C59':'#aaa'}">👍 ${(w.likes||[]).length}</button>
+            <button class="o-like" onclick="toggleReply('${w.id}')">💬 ${replies.length?replies.length+' 則':''} 回覆</button>
+            ${!isRead2?`<button class="o-like" onclick="markWallRead('${w.id}')" style="color:#4A7C59;font-size:11px;border:1px solid #C8DBC0;border-radius:8px;padding:2px 8px;">✓ 已讀</button>`:'<span style="font-size:10px;color:#bbb;">已讀</span>'}
           </div>
           ${w._editing?'':editBar}
         </div>
