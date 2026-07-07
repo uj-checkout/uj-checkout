@@ -2762,10 +2762,15 @@ async function loadOfficePostsMerge(){
 }
 
 let _notifPollingStarted=false;
+function isQuietHours(){
+  const h=new Date().getHours();
+  return h>=1&&h<9; // 凌晨 1:00–9:00 之間暫停背景自動更新，省下不必要的 Firestore 讀取次數
+}
 function startNotifPolling(){
   if(_notifPollingStarted)return;
   _notifPollingStarted=true;
   setInterval(async()=>{
+    if(isQuietHours())return; // 凌晨時段：完全跳過這次輪詢，不打任何 Firestore 讀取
     // 員工帳號：驗證是否還存在，被刪除則強制登出
     if(currentUser){
       try{
