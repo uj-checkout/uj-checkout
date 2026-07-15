@@ -2200,7 +2200,7 @@ async function lndAdd(){
   showLoad();
   try{
     const done_at=new Date(date+'T'+time).toISOString();
-    await db.from('laundry_records').insert({qty,deduct,who,done_at});
+    await db.from('laundry_records').insert({qty,deduct,who,done_at,store:'taipei'});
     if($('lnd-qty-new'))$('lnd-qty-new').value='';
     if($('lnd-deduct-new'))$('lnd-deduct-new').value='';
     hideLoad();toast('✓ 已新增');
