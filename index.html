@@ -1730,7 +1730,7 @@ function renderTransfers(){
       <div id="tr-detail-${r.id}" style="display:none;border-top:1px solid var(--bd);padding:12px 14px;">
         <div style="margin-bottom:8px;">
           <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px;">上傳匯款憑證</label>
-          <input type="file" accept="image/*" onchange="uploadTransferImg(${r.id},this)" style="font-size:12px;width:100%;"/>
+          <input type="file" accept="image/*" onchange="uploadTransferImg('${r.id}',this)" style="font-size:12px;width:100%;"/>
         </div>
         ${r.img?`<img src="${r.img}" style="width:100%;border-radius:8px;margin-top:6px;" onclick="event.stopPropagation()"/>`:'<div style="font-size:12px;color:var(--t3);">尚未上傳憑證</div>'}
       </div>
